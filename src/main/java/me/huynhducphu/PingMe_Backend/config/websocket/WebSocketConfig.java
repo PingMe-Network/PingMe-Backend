@@ -15,16 +15,15 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    private final CustomHandshakeHandler customHandshakeHandler;
+    private final StompAuthChannelInterceptor stompAuthChannelInterceptor;
 
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
-    
+
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry
                 .addEndpoint("/ws")
-                .setHandshakeHandler(customHandshakeHandler)
                 .setAllowedOrigins(allowedOrigins.split(","))
                 .withSockJS();
     }
@@ -36,4 +35,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.setUserDestinationPrefix("/user");
     }
 
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(
+                stompAuthChannelInterceptor
+        );
+    }
 }

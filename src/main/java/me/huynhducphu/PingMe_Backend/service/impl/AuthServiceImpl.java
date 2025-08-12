@@ -78,8 +78,7 @@ public class AuthServiceImpl implements me.huynhducphu.PingMe_Backend.service.Au
                 .from("refresh_token", null)
                 .httpOnly(true)
                 .path("/")
-                .sameSite("None")
-                .secure(true)
+                .sameSite("Strict")
                 .maxAge(0)
                 .build();
     }
@@ -124,8 +123,7 @@ public class AuthServiceImpl implements me.huynhducphu.PingMe_Backend.service.Au
                 .from("refresh_token", refreshToken)
                 .httpOnly(true)
                 .path("/")
-                .sameSite("None")
-                .secure(true)
+                .sameSite("Strict")
                 .maxAge(refreshTokenExpiration)
                 .build();
 
