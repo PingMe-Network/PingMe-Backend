@@ -44,6 +44,12 @@ public class AuthServiceImpl implements me.huynhducphu.PingMe_Backend.service.Au
     @Value("${jwt.refresh-token-expiration}")
     private Long refreshTokenExpiration;
 
+    @Value("${cookie.sameSite}")
+    private String sameSite;
+
+    @Value("${cookie.secure}")
+    private boolean secure;
+
     @Override
     public UserSessionResponseDto registerLocal(
             UserRegisterLocalRequestDto userRegisterLocalRequestDto) {
@@ -75,10 +81,11 @@ public class AuthServiceImpl implements me.huynhducphu.PingMe_Backend.service.Au
     @Override
     public ResponseCookie logout() {
         return ResponseCookie
-                .from("refresh_token", null)
+                .from("refresh_token", "")
                 .httpOnly(true)
                 .path("/")
-                .sameSite("Strict")
+                .sameSite(sameSite)
+                .secure(secure)
                 .maxAge(0)
                 .build();
     }
@@ -123,7 +130,8 @@ public class AuthServiceImpl implements me.huynhducphu.PingMe_Backend.service.Au
                 .from("refresh_token", refreshToken)
                 .httpOnly(true)
                 .path("/")
-                .sameSite("Strict")
+                .sameSite(sameSite)
+                .secure(secure)
                 .maxAge(refreshTokenExpiration)
                 .build();
 
