@@ -2,7 +2,7 @@ package me.huynhducphu.PingMe_Backend.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.config.auth.AuthConfiguration;
-import me.huynhducphu.PingMe_Backend.dto.response.auth.UserSessionResponseDto;
+import me.huynhducphu.PingMe_Backend.dto.response.auth.UserSessionResponse;
 import me.huynhducphu.PingMe_Backend.model.User;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.oauth2.jwt.*;
@@ -36,7 +36,7 @@ public class JwtServiceImpl implements me.huynhducphu.PingMe_Backend.service.Jwt
                 .issuedAt(now)
                 .expiresAt(validity)
                 .subject(user.getEmail())
-                .claim("user", modelMapper.map(user, UserSessionResponseDto.class))
+                .claim("user", modelMapper.map(user, UserSessionResponse.class))
                 .build();
 
         return jwtEncoder

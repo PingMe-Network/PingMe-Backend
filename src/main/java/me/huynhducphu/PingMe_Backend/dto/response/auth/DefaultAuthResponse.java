@@ -3,7 +3,6 @@ package me.huynhducphu.PingMe_Backend.dto.response.auth;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.http.ResponseCookie;
 
 /**
  * Admin 8/4/2025
@@ -11,9 +10,9 @@ import org.springframework.http.ResponseCookie;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class AuthResultWrapper {
+public class DefaultAuthResponse {
 
-    private DefaultAuthResponse defaultAuthResponse;
-    private ResponseCookie refreshTokenCookie;
+    private UserSessionResponse userSession;
+    private String accessToken;
 
 }

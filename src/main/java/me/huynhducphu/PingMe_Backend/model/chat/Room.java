@@ -16,6 +16,7 @@ import me.huynhducphu.PingMe_Backend.model.constant.RoomType;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
 public class Room extends BaseEntity {
 
     @Id

@@ -1,8 +1,5 @@
 package me.huynhducphu.PingMe_Backend.dto.request.auth;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -19,7 +16,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class UserRegisterLocalRequestDto {
+public class RegisterLocalRequest {
 
     @NotBlank(message = "Email người dùng không được để trống")
     @Email(

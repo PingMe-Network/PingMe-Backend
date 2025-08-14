@@ -2,8 +2,8 @@ package me.huynhducphu.PingMe_Backend.service.impl;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import me.huynhducphu.PingMe_Backend.dto.request.user.CreateUserRequestDto;
-import me.huynhducphu.PingMe_Backend.dto.response.user.DefaultUserResponseDto;
+import me.huynhducphu.PingMe_Backend.dto.request.user.CreateUserRequest;
+import me.huynhducphu.PingMe_Backend.dto.response.user.DefaultUserResponse;
 import me.huynhducphu.PingMe_Backend.model.User;
 import me.huynhducphu.PingMe_Backend.model.constant.AuthProvider;
 import me.huynhducphu.PingMe_Backend.repository.UserRepository;
@@ -26,30 +26,30 @@ public class UserServiceImpl implements me.huynhducphu.PingMe_Backend.service.Us
     private final ModelMapper modelMapper;
 
     @Override
-    public DefaultUserResponseDto saveUser(CreateUserRequestDto createUserRequestDto) {
-        if (userRepository.existsByEmail(createUserRequestDto.getEmail()))
+    public DefaultUserResponse saveUser(CreateUserRequest createUserRequest) {
+        if (userRepository.existsByEmail(createUserRequest.getEmail()))
             throw new DataIntegrityViolationException("Email đã tồn tại");
 
-        var user = modelMapper.map(createUserRequestDto, User.class);
+        var user = modelMapper.map(createUserRequest, User.class);
         user.setAuthProvider(AuthProvider.LOCAL);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         var savedUser = userRepository.save(user);
 
-        return modelMapper.map(savedUser, DefaultUserResponseDto.class);
+        return modelMapper.map(savedUser, DefaultUserResponse.class);
     }
 
     @Override
-    public Page<DefaultUserResponseDto> getAllUsers(Pageable pageable) {
+    public Page<DefaultUserResponse> getAllUsers(Pageable pageable) {
         return userRepository
                 .findAll(pageable)
-                .map(user -> modelMapper.map(user, DefaultUserResponseDto.class));
+                .map(user -> modelMapper.map(user, DefaultUserResponse.class));
     }
 
     @Override
-    public DefaultUserResponseDto getUserById(Long id) {
+    public DefaultUserResponse getUserById(Long id) {
         return userRepository
                 .findById(id)
-                .map(user -> modelMapper.map(user, DefaultUserResponseDto.class))
+                .map(user -> modelMapper.map(user, DefaultUserResponse.class))
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng với id này"));
     }
 

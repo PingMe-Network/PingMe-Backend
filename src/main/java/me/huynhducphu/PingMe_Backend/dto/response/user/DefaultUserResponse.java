@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class DefaultUserResponseDto {
+public class DefaultUserResponse {
 
     private Long id;
     private String email;

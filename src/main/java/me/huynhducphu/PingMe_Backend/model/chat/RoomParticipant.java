@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import me.huynhducphu.PingMe_Backend.model.User;
+import me.huynhducphu.PingMe_Backend.model.common.BaseEntity;
 import me.huynhducphu.PingMe_Backend.model.common.RoomMemberId;
 import me.huynhducphu.PingMe_Backend.model.constant.RoomRole;
 
@@ -19,8 +20,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class RoomParticipant {
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
+public class RoomParticipant extends BaseEntity {
 
     @EmbeddedId
     @EqualsAndHashCode.Include

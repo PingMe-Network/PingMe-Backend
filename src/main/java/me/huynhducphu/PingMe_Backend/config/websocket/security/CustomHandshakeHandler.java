@@ -1,6 +1,7 @@
 package me.huynhducphu.PingMe_Backend.config.websocket.security;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,7 +26,8 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 public class CustomHandshakeHandler extends DefaultHandshakeHandler {
-    private final AuthenticationManager wsAuthManager;
+
+    private final @Qualifier("wsAuthManager") AuthenticationManager wsAuthManager;
     private final JwtDecoder jwtDecoder;
 
     @Override
@@ -64,6 +66,7 @@ public class CustomHandshakeHandler extends DefaultHandshakeHandler {
 
         userSocketPrincipal.setEmail((String) claims.get("email"));
         userSocketPrincipal.setName((String) claims.get("name"));
+
         return userSocketPrincipal;
     }
 

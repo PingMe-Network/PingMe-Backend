@@ -5,14 +5,16 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Admin 8/4/2025
+ * Admin 8/3/2025
  **/
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class DefaultAuthResponseDto {
+public class UserSessionResponse {
 
-    private UserSessionResponseDto userSession;
-    private String accessToken;
+    private String email;
+    private String name;
+    private String avatarUrl;
+    private String updatedAt;
 
 }

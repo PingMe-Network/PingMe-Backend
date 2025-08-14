@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class PageResponseDto<T> {
+public class PageResponse<T> {
 
     private List<T> content;
 
@@ -22,7 +22,7 @@ public class PageResponseDto<T> {
     private long totalElements;
     private int totalPages;
 
-    public PageResponseDto(Page<T> page) {
+    public PageResponse(Page<T> page) {
         this.content = page.getContent();
         this.page = page.getNumber() + 1;
         this.size = page.getSize();

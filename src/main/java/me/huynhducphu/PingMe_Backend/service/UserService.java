@@ -1,7 +1,7 @@
 package me.huynhducphu.PingMe_Backend.service;
 
-import me.huynhducphu.PingMe_Backend.dto.request.user.CreateUserRequestDto;
-import me.huynhducphu.PingMe_Backend.dto.response.user.DefaultUserResponseDto;
+import me.huynhducphu.PingMe_Backend.dto.request.user.CreateUserRequest;
+import me.huynhducphu.PingMe_Backend.dto.response.user.DefaultUserResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -9,9 +9,9 @@ import org.springframework.data.domain.Pageable;
  * Admin 8/3/2025
  **/
 public interface UserService {
-    DefaultUserResponseDto saveUser(CreateUserRequestDto createUserRequestDto);
+    DefaultUserResponse saveUser(CreateUserRequest createUserRequest);
 
-    Page<DefaultUserResponseDto> getAllUsers(Pageable pageable);
+    Page<DefaultUserResponse> getAllUsers(Pageable pageable);
 
-    DefaultUserResponseDto getUserById(Long id);
+    DefaultUserResponse getUserById(Long id);
 }

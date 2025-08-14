@@ -2,10 +2,10 @@ package me.huynhducphu.PingMe_Backend.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import me.huynhducphu.PingMe_Backend.dto.request.user.CreateUserRequestDto;
+import me.huynhducphu.PingMe_Backend.dto.request.user.CreateUserRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.ApiResponse;
-import me.huynhducphu.PingMe_Backend.dto.response.PageResponseDto;
-import me.huynhducphu.PingMe_Backend.dto.response.user.DefaultUserResponseDto;
+import me.huynhducphu.PingMe_Backend.dto.response.PageResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.user.DefaultUserResponse;
 import me.huynhducphu.PingMe_Backend.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,28 +26,28 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<DefaultUserResponseDto>> saveUser(
-            @RequestBody @Valid CreateUserRequestDto createUserRequestDto
+    public ResponseEntity<ApiResponse<DefaultUserResponse>> saveUser(
+            @RequestBody @Valid CreateUserRequest createUserRequest
     ) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(new ApiResponse<>(userService.saveUser(createUserRequestDto)));
+                .body(new ApiResponse<>(userService.saveUser(createUserRequest)));
     }
 
     @GetMapping
-    public ResponseEntity<PageResponseDto<DefaultUserResponseDto>> getAllUsers(
+    public ResponseEntity<PageResponse<DefaultUserResponse>> getAllUsers(
             @PageableDefault(size = 5) Pageable pageable
     ) {
-        Page<DefaultUserResponseDto> defaultUserResponseDtoPage =
+        Page<DefaultUserResponse> defaultUserResponseDtoPage =
                 userService.getAllUsers(pageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new PageResponseDto<>(defaultUserResponseDtoPage));
+                .body(new PageResponse<>(defaultUserResponseDtoPage));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<DefaultUserResponseDto>> getUserById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<DefaultUserResponse>> getUserById(@PathVariable Long id) {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new ApiResponse<>(userService.getUserById(id)));
