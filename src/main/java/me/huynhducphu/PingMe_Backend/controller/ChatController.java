@@ -20,9 +20,6 @@ public class ChatController {
             Principal principal
     ) {
         System.out.println(principal);
-        // Nếu dùng class extends từ DefaultHandshakeHandler thì Principal không null
-        // Nếu dùng class extends từ ChannelInterceptor thì nó lại null
-        // cho dù đã accessor.setUser(auth)
 
         return chatMessage;
     }

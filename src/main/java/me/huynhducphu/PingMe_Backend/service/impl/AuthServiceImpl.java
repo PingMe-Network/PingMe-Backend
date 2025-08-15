@@ -148,7 +148,7 @@ public class AuthServiceImpl implements me.huynhducphu.PingMe_Backend.service.Au
             ChangeProfileRequest changeProfileRequest
     ) {
         var user = getCurrentUser();
-
+        
         user.setName(changeProfileRequest.getName());
         user.setGender(changeProfileRequest.getGender());
         user.setAddress(changeProfileRequest.getAddress());
