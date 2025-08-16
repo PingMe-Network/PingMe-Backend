@@ -1,4 +1,4 @@
-package me.huynhducphu.PingMe_Backend.config;
+package me.huynhducphu.PingMe_Backend.config.common;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;

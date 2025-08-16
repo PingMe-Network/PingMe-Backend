@@ -11,11 +11,11 @@ import me.huynhducphu.PingMe_Backend.dto.response.auth.DefaultAuthResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.auth.UserDetailResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.auth.UserSessionResponse;
 import me.huynhducphu.PingMe_Backend.service.AuthService;
-import org.apache.coyote.Response;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Admin 8/4/2025
@@ -98,6 +98,15 @@ public class AuthController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new ApiResponse<>(authService.updateCurrentUserProfile(changeProfileRequest)));
+    }
+
+    @PostMapping("/me/avatar")
+    public ResponseEntity<ApiResponse<UserSessionResponse>> updateCurrentUserAvatar(
+            @RequestParam("avatar") MultipartFile avatarFile
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new ApiResponse<>(authService.updateCurrentUserAvatar(avatarFile)));
     }
 
 }

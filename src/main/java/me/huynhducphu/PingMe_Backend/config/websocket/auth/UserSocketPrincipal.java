@@ -1,4 +1,4 @@
-package me.huynhducphu.PingMe_Backend.config.websocket.security;
+package me.huynhducphu.PingMe_Backend.config.websocket.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package me.huynhducphu.PingMe_Backend.config.websocket.security;
+package me.huynhducphu.PingMe_Backend.config.websocket.auth;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;

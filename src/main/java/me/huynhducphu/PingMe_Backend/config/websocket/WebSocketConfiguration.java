@@ -1,7 +1,7 @@
 package me.huynhducphu.PingMe_Backend.config.websocket;
 
 import lombok.RequiredArgsConstructor;
-import me.huynhducphu.PingMe_Backend.config.websocket.security.CustomHandshakeHandler;
+import me.huynhducphu.PingMe_Backend.config.websocket.auth.CustomHandshakeHandler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -13,7 +13,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
  **/
 @Configuration
 @RequiredArgsConstructor
-public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer {
 
     private final CustomHandshakeHandler customHandshakeHandler;
 

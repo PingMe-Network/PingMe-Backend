@@ -9,6 +9,7 @@ import me.huynhducphu.PingMe_Backend.dto.response.auth.UserDetailResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.auth.UserSessionResponse;
 import me.huynhducphu.PingMe_Backend.model.User;
 import org.springframework.http.ResponseCookie;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Admin 8/4/2025
@@ -35,5 +36,9 @@ public interface AuthService {
 
     UserSessionResponse updateCurrentUserProfile(
             ChangeProfileRequest changeProfileRequest
+    );
+
+    UserSessionResponse updateCurrentUserAvatar(
+            MultipartFile avatarFile
     );
 }
