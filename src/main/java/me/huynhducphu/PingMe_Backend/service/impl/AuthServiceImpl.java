@@ -2,23 +2,23 @@ package me.huynhducphu.PingMe_Backend.service.impl;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import me.huynhducphu.PingMe_Backend.dto.request.auth.ChangePasswordRequest;
-import me.huynhducphu.PingMe_Backend.dto.request.auth.ChangeProfileRequest;
-import me.huynhducphu.PingMe_Backend.dto.request.auth.LocalLoginRequest;
-import me.huynhducphu.PingMe_Backend.dto.request.auth.RegisterLocalRequest;
-import me.huynhducphu.PingMe_Backend.dto.response.auth.AuthResultWrapper;
+import me.huynhducphu.PingMe_Backend.dto.request.auth.*;
+import me.huynhducphu.PingMe_Backend.dto.common.AuthResultWrapper;
 import me.huynhducphu.PingMe_Backend.dto.response.auth.DefaultAuthResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.auth.SessionMetaResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.auth.UserDetailResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.auth.UserSessionResponse;
 import me.huynhducphu.PingMe_Backend.model.User;
 import me.huynhducphu.PingMe_Backend.model.constant.AuthProvider;
 import me.huynhducphu.PingMe_Backend.repository.UserRepository;
 import me.huynhducphu.PingMe_Backend.service.JwtService;
+import me.huynhducphu.PingMe_Backend.service.RefreshTokenRedisService;
 import me.huynhducphu.PingMe_Backend.service.S3Service;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseCookie;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,7 +28,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Admin 8/3/2025
@@ -44,6 +46,7 @@ public class AuthServiceImpl implements me.huynhducphu.PingMe_Backend.service.Au
 
     private final JwtService jwtService;
     private final S3Service s3Service;
+    private final RefreshTokenRedisService refreshTokenRedisService;
 
     private final ModelMapper modelMapper;
 
@@ -65,11 +68,11 @@ public class AuthServiceImpl implements me.huynhducphu.PingMe_Backend.service.Au
     private boolean secure;
 
     @Override
-    public UserSessionResponse registerLocal(
-            RegisterLocalRequest registerLocalRequest) {
-        var user = modelMapper.map(registerLocalRequest, User.class);
+    public UserSessionResponse register(
+            RegisterRequest registerRequest) {
+        var user = modelMapper.map(registerRequest, User.class);
 
-        if (userRepository.existsByEmail(registerLocalRequest.getEmail()))
+        if (userRepository.existsByEmail(registerRequest.getEmail()))
             throw new DataIntegrityViolationException("Email đã tồn tại");
 
         user.setAuthProvider(AuthProvider.LOCAL);
@@ -80,20 +83,29 @@ public class AuthServiceImpl implements me.huynhducphu.PingMe_Backend.service.Au
     }
 
     @Override
-    public AuthResultWrapper loginLocal(LocalLoginRequest localLoginRequest) {
+    public AuthResultWrapper login(LoginRequest loginRequest) {
         var authenticationToken = new UsernamePasswordAuthenticationToken(
-                localLoginRequest.getEmail(),
-                localLoginRequest.getPassword()
+                loginRequest.getEmail(),
+                loginRequest.getPassword()
         );
 
         var authentication = authenticationManager.authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        return buildAuthResultWrapper(getCurrentUser());
+        return buildAuthResultWrapper(getCurrentUser(), loginRequest.getSessionMetaRequest());
     }
 
     @Override
-    public ResponseCookie logout() {
+    public ResponseCookie logout(String refreshToken) {
+        if (refreshToken != null) {
+            String email = jwtService.decodeJwt(refreshToken).getSubject();
+            var refreshTokenUser = userRepository
+                    .getUserByEmail(email)
+                    .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng"));
+
+            refreshTokenRedisService.deleteRefreshToken(refreshToken, refreshTokenUser.getId().toString());
+        }
+
         return ResponseCookie
                 .from(REFRESH_TOKEN_COOKIE_NAME, "")
                 .httpOnly(true)
@@ -105,13 +117,20 @@ public class AuthServiceImpl implements me.huynhducphu.PingMe_Backend.service.Au
     }
 
     @Override
-    public AuthResultWrapper refreshSession(String refreshToken) {
+    public AuthResultWrapper refreshSession(
+            String refreshToken, SessionMetaRequest sessionMetaRequest
+    ) {
         String email = jwtService.decodeJwt(refreshToken).getSubject();
-        var user = userRepository
+        var refreshTokenUser = userRepository
                 .getUserByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng"));
 
-        return buildAuthResultWrapper(user);
+        if (!refreshTokenRedisService.validateToken(refreshToken, refreshTokenUser.getId().toString()))
+            throw new AccessDeniedException("Không có quyền truy cập");
+
+        refreshTokenRedisService.deleteRefreshToken(refreshToken, refreshTokenUser.getId().toString());
+
+        return buildAuthResultWrapper(refreshTokenUser, sessionMetaRequest);
     }
 
     @Override
@@ -124,6 +143,23 @@ public class AuthServiceImpl implements me.huynhducphu.PingMe_Backend.service.Au
     public UserDetailResponse getCurrentUserDetail() {
         var user = getCurrentUser();
         return modelMapper.map(user, UserDetailResponse.class);
+    }
+
+    @Override
+    public List<SessionMetaResponse> getCurrentUserSessions(
+            String refreshToken
+    ) {
+        var currentUser = getCurrentUser();
+
+        String email = jwtService.decodeJwt(refreshToken).getSubject();
+        var refreshTokenUser = userRepository
+                .getUserByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng"));
+
+        if (!refreshTokenUser.getId().equals(currentUser.getId()))
+            throw new AccessDeniedException("Không có quyền truy cập");
+
+        return refreshTokenRedisService.getAllSessionMetas(currentUser.getId().toString(), refreshToken);
     }
 
     @Override
@@ -174,10 +210,22 @@ public class AuthServiceImpl implements me.huynhducphu.PingMe_Backend.service.Au
         return modelMapper.map(user, UserSessionResponse.class);
     }
 
-    // =====================================
-    // Ulities methods
-    // =====================================
+    @Override
+    public void deleteCurrentUserSession(String sessionId) {
+        String[] part = sessionId.split(":");
+        String sessionUserId = part[3];
 
+        var currentUser = getCurrentUser();
+
+        if (!currentUser.getId().toString().equals(sessionUserId))
+            throw new AccessDeniedException("Không có quyền truy cập");
+
+        refreshTokenRedisService.deleteRefreshToken(sessionId);
+    }
+
+    // =====================================
+    // Utilities methods
+    // =====================================
     @Override
     public User getCurrentUser() {
         String email = SecurityContextHolder
@@ -190,14 +238,30 @@ public class AuthServiceImpl implements me.huynhducphu.PingMe_Backend.service.Au
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng hiện tại"));
     }
 
-    private AuthResultWrapper buildAuthResultWrapper(User user) {
+    private AuthResultWrapper buildAuthResultWrapper(
+            User user,
+            SessionMetaRequest sessionMetaRequest
+    ) {
+        // ================================================
+        // HANDLE ACCESS TOKEN
+        // ================================================
         var accessToken = jwtService.buildJwt(user, accessTokenExpiration);
-        var refreshToken = jwtService.buildJwt(user, refreshTokenExpiration);
-
         var defaultAuthResponseDto = new DefaultAuthResponse(
                 modelMapper.map(user, UserSessionResponse.class),
                 accessToken
         );
+
+        // ================================================
+        // HANDLE REFRESH TOKEN
+        // ================================================
+        var refreshToken = jwtService.buildJwt(user, refreshTokenExpiration);
+        refreshTokenRedisService.saveRefreshToken(
+                refreshToken,
+                user.getId().toString(),
+                sessionMetaRequest,
+                Duration.ofSeconds(refreshTokenExpiration)
+        );
+
         var refreshTokenCookie = ResponseCookie
                 .from(REFRESH_TOKEN_COOKIE_NAME, refreshToken)
                 .httpOnly(true)

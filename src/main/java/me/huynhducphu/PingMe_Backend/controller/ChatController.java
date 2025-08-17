@@ -13,15 +13,15 @@ import java.security.Principal;
 @Controller
 public class ChatController {
 
-    @MessageMapping("/chat")
-    @SendTo("/topic/messages")
-    public ChatMessage sendMessage(
-            ChatMessage chatMessage,
-            Principal principal
-    ) {
-        System.out.println(principal);
-
-        return chatMessage;
-    }
+//    @MessageMapping("/chat")
+//    @SendTo("/topic/messages")
+//    public ChatMessage sendMessage(
+//            ChatMessage chatMessage,
+//            Principal principal
+//    ) {
+//        System.out.println(principal);
+//
+//        return chatMessage;
+//    }
 
 }

@@ -19,6 +19,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
 public class User extends BaseEntity {
 
     @Id

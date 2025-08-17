@@ -107,13 +107,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(value = AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Void>> handleAuthorizationException(Exception e) {
-        log.error(e.getMessage(), e);
-
-        String message = "Không có quyền truy cập";
-
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
-                .body(new ApiResponse<>(message));
+                .body(new ApiResponse<>(e.getMessage()));
     }
 
 

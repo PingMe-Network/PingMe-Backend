@@ -1,34 +1,40 @@
 package me.huynhducphu.PingMe_Backend.service;
 
-import me.huynhducphu.PingMe_Backend.dto.request.auth.ChangePasswordRequest;
-import me.huynhducphu.PingMe_Backend.dto.request.auth.ChangeProfileRequest;
-import me.huynhducphu.PingMe_Backend.dto.request.auth.LocalLoginRequest;
-import me.huynhducphu.PingMe_Backend.dto.request.auth.RegisterLocalRequest;
-import me.huynhducphu.PingMe_Backend.dto.response.auth.AuthResultWrapper;
+import me.huynhducphu.PingMe_Backend.dto.request.auth.*;
+import me.huynhducphu.PingMe_Backend.dto.common.AuthResultWrapper;
+import me.huynhducphu.PingMe_Backend.dto.response.auth.SessionMetaResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.auth.UserDetailResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.auth.UserSessionResponse;
 import me.huynhducphu.PingMe_Backend.model.User;
 import org.springframework.http.ResponseCookie;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 /**
  * Admin 8/4/2025
  **/
 public interface AuthService {
-    UserSessionResponse registerLocal(
-            RegisterLocalRequest registerLocalRequest);
+    UserSessionResponse register(
+            RegisterRequest registerRequest);
 
-    AuthResultWrapper loginLocal(LocalLoginRequest localLoginRequest);
+    AuthResultWrapper login(LoginRequest loginRequest);
 
-    ResponseCookie logout();
+    ResponseCookie logout(String refreshToken);
 
-    AuthResultWrapper refreshSession(String refreshToken);
+    AuthResultWrapper refreshSession(String refreshToken, SessionMetaRequest sessionMetaRequest);
+
+    void deleteCurrentUserSession(String sessionId);
 
     User getCurrentUser();
 
     UserSessionResponse getCurrentUserSession();
 
     UserDetailResponse getCurrentUserDetail();
+
+    List<SessionMetaResponse> getCurrentUserSessions(
+            String refreshToken
+    );
 
     UserSessionResponse updateCurrentUserPassword(
             ChangePasswordRequest changePasswordRequest
