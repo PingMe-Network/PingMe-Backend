@@ -2,7 +2,7 @@ package me.huynhducphu.PingMe_Backend.config.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import me.huynhducphu.PingMe_Backend.model.common.SessionMeta;
+import me.huynhducphu.PingMe_Backend.model.common.DeviceMeta;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -55,8 +55,8 @@ public class RedisConfiguration {
     // 2. Đăng ký RedisTemplate
     // =====================================================================
     @Bean
-    public RedisTemplate<String, SessionMeta> redisSessionMetaTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, SessionMeta> template = new RedisTemplate<>();
+    public RedisTemplate<String, DeviceMeta> redisSessionMetaTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, DeviceMeta> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
         // KEY
@@ -66,8 +66,8 @@ public class RedisConfiguration {
         // VALUE
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
-        Jackson2JsonRedisSerializer<SessionMeta> valueSerializer =
-                new Jackson2JsonRedisSerializer<>(objectMapper, SessionMeta.class);
+        Jackson2JsonRedisSerializer<DeviceMeta> valueSerializer =
+                new Jackson2JsonRedisSerializer<>(objectMapper, DeviceMeta.class);
 
         template.setValueSerializer(valueSerializer);
         template.setHashValueSerializer(valueSerializer);

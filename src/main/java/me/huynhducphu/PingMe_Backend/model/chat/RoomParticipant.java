@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import me.huynhducphu.PingMe_Backend.model.User;
+import me.huynhducphu.PingMe_Backend.model.user.User;
 import me.huynhducphu.PingMe_Backend.model.common.BaseEntity;
 import me.huynhducphu.PingMe_Backend.model.common.RoomMemberId;
 import me.huynhducphu.PingMe_Backend.model.constant.RoomRole;

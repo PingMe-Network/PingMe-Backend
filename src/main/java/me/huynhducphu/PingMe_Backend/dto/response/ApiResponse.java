@@ -31,5 +31,6 @@ public class ApiResponse<T> {
     public ApiResponse(T data) {
         this.data = data;
         this.errorMessage = null;
+        this.errorCode = null;
     }
 }
