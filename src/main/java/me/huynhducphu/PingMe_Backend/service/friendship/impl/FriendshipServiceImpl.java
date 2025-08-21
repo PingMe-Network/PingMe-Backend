@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.friendship.FriendInvitationRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummaryResponse;
 import me.huynhducphu.PingMe_Backend.model.constant.FriendshipStatus;
-import me.huynhducphu.PingMe_Backend.model.user.Friendship;
+import me.huynhducphu.PingMe_Backend.model.Friendship;
 import me.huynhducphu.PingMe_Backend.repository.FriendshipRepository;
 import me.huynhducphu.PingMe_Backend.repository.UserRepository;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
@@ -86,10 +86,27 @@ public class FriendshipServiceImpl implements me.huynhducphu.PingMe_Backend.serv
         if (friendship.getFriendshipStatus() != FriendshipStatus.PENDING)
             throw new DataIntegrityViolationException("Trạng thái lời mời không thích hợp");
 
-        var isParticipant = friendship.getUserA().getId().equals(current.getId())
-                || friendship.getUserB().getId().equals(current.getId());
+        var isParticipant = friendship.getUserB().getId().equals(current.getId());
         if (!isParticipant)
-            throw new DataIntegrityViolationException("Chỉ có người được nhận/gửi lời mời mới có thể hủy");
+            throw new DataIntegrityViolationException("Chỉ có người được nhận lời mời mới có thể hủy");
+
+        friendshipRepository.delete(friendship);
+    }
+
+    @Override
+    public void cancelInvitation(Long friendRequestId) {
+        var current = currentUserProvider.get();
+
+        var friendship = friendshipRepository
+                .findById(friendRequestId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy lời mời kết bạn này"));
+
+        if (friendship.getFriendshipStatus() != FriendshipStatus.PENDING)
+            throw new DataIntegrityViolationException("Trạng thái lời mời không thích hợp");
+
+        var isParticipant = friendship.getUserA().getId().equals(current.getId());
+        if (!isParticipant)
+            throw new DataIntegrityViolationException("Chỉ có người được gửi lời mời mới có thể thu hồi");
 
         friendshipRepository.delete(friendship);
     }

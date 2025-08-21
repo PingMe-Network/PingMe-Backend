@@ -8,7 +8,7 @@ import me.huynhducphu.PingMe_Backend.dto.response.user_account.DefaultAuthRespon
 import me.huynhducphu.PingMe_Backend.dto.response.user_account.UserDeviceMetaResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.user_account.UserInfoResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.user_account.UserSessionResponse;
-import me.huynhducphu.PingMe_Backend.model.user.User;
+import me.huynhducphu.PingMe_Backend.model.User;
 import me.huynhducphu.PingMe_Backend.model.constant.AuthProvider;
 import me.huynhducphu.PingMe_Backend.repository.UserRepository;
 import me.huynhducphu.PingMe_Backend.service.user_account.UserAccountService;

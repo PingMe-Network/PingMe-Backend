@@ -1,4 +1,4 @@
-package me.huynhducphu.PingMe_Backend.model.user;
+package me.huynhducphu.PingMe_Backend.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

@@ -1,6 +1,6 @@
 package me.huynhducphu.PingMe_Backend.service.common;
 
-import me.huynhducphu.PingMe_Backend.model.user.User;
+import me.huynhducphu.PingMe_Backend.model.User;
 
 /**
  * Admin 8/19/2025

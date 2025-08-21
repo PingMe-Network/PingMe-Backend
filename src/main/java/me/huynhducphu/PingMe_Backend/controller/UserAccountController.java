@@ -1,5 +1,6 @@
 package me.huynhducphu.PingMe_Backend.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.user_account.*;
@@ -20,6 +21,10 @@ import java.util.List;
 /**
  * Admin 8/4/2025
  **/
+@Tag(
+        name = "Authentication & User Account",
+        description = "Các endpoint phục vụ đăng ký, đăng nhập, xác thực phiên và quản lý tài khoản cá nhân"
+)
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -53,7 +58,7 @@ public class UserAccountController {
             @CookieValue(value = "refresh_token", required = false) String refreshToken
     ) {
         return ResponseEntity
-                .status(HttpStatus.OK)
+                .status(HttpStatus.NO_CONTENT)
                 .header(HttpHeaders.SET_COOKIE, userAccountService.logout(refreshToken).toString())
                 .build();
     }

@@ -4,7 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.admin.request.user.CreateUserRequest;
 import me.huynhducphu.PingMe_Backend.dto.admin.response.user.DefaultUserResponse;
-import me.huynhducphu.PingMe_Backend.model.user.User;
+import me.huynhducphu.PingMe_Backend.model.User;
 import me.huynhducphu.PingMe_Backend.model.constant.AuthProvider;
 import me.huynhducphu.PingMe_Backend.repository.UserRepository;
 import me.huynhducphu.PingMe_Backend.service.admin.UserManagementService;

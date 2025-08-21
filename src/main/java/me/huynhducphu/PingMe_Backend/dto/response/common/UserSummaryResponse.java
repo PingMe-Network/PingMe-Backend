@@ -13,6 +13,7 @@ import me.huynhducphu.PingMe_Backend.model.constant.FriendshipStatus;
 @NoArgsConstructor
 public class UserSummaryResponse {
 
+    private Long id;
     private String email;
     private String name;
     private String avatarUrl;

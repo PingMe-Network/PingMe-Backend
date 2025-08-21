@@ -1,6 +1,6 @@
 package me.huynhducphu.PingMe_Backend.repository;
 
-import me.huynhducphu.PingMe_Backend.model.user.User;
+import me.huynhducphu.PingMe_Backend.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

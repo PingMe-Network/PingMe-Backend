@@ -1,5 +1,6 @@
 package me.huynhducphu.PingMe_Backend.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.friendship.FriendInvitationRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.ApiResponse;
@@ -15,6 +16,10 @@ import org.springframework.web.bind.annotation.*;
 /**
  * Admin 8/19/2025
  **/
+@Tag(
+        name = "Friendships",
+        description = "Gửi/nhận lời mời kết bạn và quản lý danh sách bạn bè"
+)
 @RestController
 @RequestMapping("/friendships")
 @RequiredArgsConstructor
@@ -23,25 +28,40 @@ public class FriendshipController {
     private final FriendshipService friendshipService;
 
     @PostMapping
-    public void sendInvitation(@RequestBody FriendInvitationRequest friendInvitationRequest) {
+    public ResponseEntity<ApiResponse<Void>> sendInvitation(@RequestBody FriendInvitationRequest friendInvitationRequest) {
         friendshipService.sendInvitation(friendInvitationRequest);
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new ApiResponse<>());
     }
 
     @PostMapping("/{id}/accept")
-    public void acceptInvitation(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> acceptInvitation(@PathVariable Long id) {
         friendshipService.acceptInvitation(id);
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new ApiResponse<>());
     }
 
     @DeleteMapping("/{id}/reject")
-    public void rejectInvitation(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> rejectInvitation(@PathVariable Long id) {
         friendshipService.rejectInvitation(id);
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new ApiResponse<>());
+    }
+
+    @DeleteMapping("/{id}/cancel")
+    public ResponseEntity<ApiResponse<Void>> cancelInvitation(@PathVariable Long id) {
+        friendshipService.cancelInvitation(id);
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new ApiResponse<>());
     }
 
     @DeleteMapping("/{id}")
-    public void deleteFriendship(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteFriendship(@PathVariable Long id) {
         friendshipService.deleteFriendship(id);
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new ApiResponse<>());
     }
-    
+
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<UserSummaryResponse>>> getAcceptedFriendshipList(
             @PageableDefault(size = 5) Pageable pageable

@@ -15,6 +15,8 @@ public interface FriendshipService {
 
     void rejectInvitation(Long friendRequestId);
 
+    void cancelInvitation(Long friendRequestId);
+
     void deleteFriendship(Long friendRequestId);
 
     Page<UserSummaryResponse> getAcceptedFriendshipList(Pageable pageable);

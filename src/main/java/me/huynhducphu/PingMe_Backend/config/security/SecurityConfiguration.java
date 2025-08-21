@@ -28,13 +28,14 @@ public class SecurityConfiguration {
             "/auth/register",
             "/auth/refresh",
 
+            // API DOCS
+            "/swagger-ui/**",
+            "/v3/api-docs/**",
+
             // WebSocket
             // Bỏ qua kiểm tra tại lớp BearerTokenFilter
             // Kiểm tra ở lại lớp HandShakeInterceptor
             "/ws/**",
-
-            // User (chỉ dùng để test)
-            "/users",
 
             // Health check
             "/actuator/health",
