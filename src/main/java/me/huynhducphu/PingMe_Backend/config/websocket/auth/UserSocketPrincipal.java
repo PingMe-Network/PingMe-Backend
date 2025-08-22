@@ -14,12 +14,13 @@ import java.security.Principal;
 @Data
 public class UserSocketPrincipal implements Principal {
 
+    private Long id;
     private String email;
     private String name;
 
     @Override
     public String getName() {
-        return email;
+        return String.valueOf(id);
     }
 
 }

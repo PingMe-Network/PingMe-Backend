@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class UserSessionResponse {
 
+    private Long id;
     private String email;
     private String name;
     private String avatarUrl;

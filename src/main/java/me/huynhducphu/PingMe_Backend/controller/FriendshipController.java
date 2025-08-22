@@ -28,7 +28,9 @@ public class FriendshipController {
     private final FriendshipService friendshipService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Void>> sendInvitation(@RequestBody FriendInvitationRequest friendInvitationRequest) {
+    public ResponseEntity<ApiResponse<Void>> sendInvitation(
+            @RequestBody FriendInvitationRequest friendInvitationRequest
+    ) {
         friendshipService.sendInvitation(friendInvitationRequest);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new ApiResponse<>());

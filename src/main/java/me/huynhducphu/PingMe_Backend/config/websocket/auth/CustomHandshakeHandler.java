@@ -64,6 +64,7 @@ public class CustomHandshakeHandler extends DefaultHandshakeHandler {
         var jwt = jwtDecoder.decode(accessToken);
         Map<String, Object> claims = jwt.getClaim("user");
 
+        userSocketPrincipal.setId((Long) claims.get("id"));
         userSocketPrincipal.setEmail((String) claims.get("email"));
         userSocketPrincipal.setName((String) claims.get("name"));
 

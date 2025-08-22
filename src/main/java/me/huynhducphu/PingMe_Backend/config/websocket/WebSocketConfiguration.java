@@ -24,6 +24,7 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry
+                // Đăng ký endpoint cho client kết nối STOMP qua WebSocket
                 .addEndpoint("/ws")
                 .setHandshakeHandler(customHandshakeHandler)
                 .setAllowedOrigins(allowedOrigins.split(","))
@@ -32,8 +33,16 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
+        // Các publisher (nơi BE có thể đẩy message xuống FE)
+        // /topic/... → broadcast cho nhiều người (public channel).
+        // /queue/... → hàng đợi point-to-point hoặc riêng tư (thường kết hợp /user).
         registry.enableSimpleBroker("/topic", "/queue");
-        registry.setApplicationDestinationPrefixes("/app");
+
+        // Prefix để Spring map các message riêng theo user
         registry.setUserDestinationPrefix("/user");
+
+        // Prefix khi FE muốn gửi message lên BE (MessageMapping)
+        registry.setApplicationDestinationPrefixes("/app");
+
     }
 }
