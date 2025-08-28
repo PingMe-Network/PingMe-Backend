@@ -45,7 +45,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.METHOD_NOT_ALLOWED)
-                .body(new ApiResponse<>("Đường dẫn API không hỗ trợ phương thức này"));
+                .body(new ApiResponse<>("API không hỗ trợ phương thức này"));
     }
 
     @ExceptionHandler(value = EntityNotFoundException.class)
