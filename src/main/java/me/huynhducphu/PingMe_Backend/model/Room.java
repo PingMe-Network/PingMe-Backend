@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import me.huynhducphu.PingMe_Backend.model.common.BaseEntity;
 import me.huynhducphu.PingMe_Backend.model.constant.RoomType;
 
+import java.time.LocalDateTime;
+
 /**
  * Admin 8/10/2025
  **/
@@ -36,4 +38,10 @@ public class Room extends BaseEntity {
     private String name;
     // ROOM NAME (nếu chat 1-1 thì NULL)
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "last_message_id")
+    private Message lastMessage;
+
+    @Column(name = "last_message_at")
+    private LocalDateTime lastMessageAt;
 }

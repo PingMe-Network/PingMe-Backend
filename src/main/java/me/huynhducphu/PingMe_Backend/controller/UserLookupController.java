@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
  **/
 @Tag(
         name = "User Lookup",
-        description = "Các endpoint tra cứu người dùng"
+        description = "Các endpoints tra cứu người dùng"
 )
 @RestController
 @RequestMapping("/users/lookup")

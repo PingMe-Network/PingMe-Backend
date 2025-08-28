@@ -23,7 +23,7 @@ import java.util.List;
  **/
 @Tag(
         name = "Authentication & User Account",
-        description = "Các endpoint phục vụ đăng ký, đăng nhập, xác thực phiên và quản lý tài khoản cá nhân"
+        description = "Các endpoints phục vụ đăng ký, đăng nhập, xác thực phiên và quản lý tài khoản cá nhân"
 )
 @RestController
 @RequestMapping("/auth")

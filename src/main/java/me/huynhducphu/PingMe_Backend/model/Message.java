@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import me.huynhducphu.PingMe_Backend.model.common.BaseEntity;
+import me.huynhducphu.PingMe_Backend.model.constant.MessageType;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -41,6 +42,9 @@ public class Message extends BaseEntity {
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
+
+    @Enumerated(EnumType.STRING)
+    private MessageType type;
 
     @JdbcTypeCode(SqlTypes.BINARY)
     @Column(name = "client_msg_id", columnDefinition = "BINARY(16)", updatable = false, nullable = false)

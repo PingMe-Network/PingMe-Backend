@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
  **/
 @Tag(
         name = "Friendships",
-        description = "Gửi/nhận lời mời kết bạn và quản lý danh sách bạn bè"
+        description = "Các endpoints gửi/nhận lời mời kết bạn và quản lý danh sách bạn bè"
 )
 @RestController
 @RequestMapping("/friendships")

@@ -15,7 +15,13 @@ import java.time.LocalDateTime;
  * Admin 8/10/2025
  **/
 @Entity
-@Table(name = "room_participants")
+@Table(
+        name = "room_participants",
+        indexes = {
+                @Index(name = "idx_rp_user", columnList = "user_id"),
+                @Index(name = "idx_rp_room_user", columnList = "room_id, user_id")
+        }
+)
 @AllArgsConstructor
 @NoArgsConstructor
 @Data

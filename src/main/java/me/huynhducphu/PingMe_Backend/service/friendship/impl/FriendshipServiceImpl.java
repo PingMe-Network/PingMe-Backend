@@ -40,7 +40,7 @@ public class FriendshipServiceImpl implements me.huynhducphu.PingMe_Backend.serv
         var currentUser = currentUserProvider.get();
 
         if (currentUser.getId().equals(friendInvitationRequest.getTargetUserId()))
-            throw new EntityNotFoundException("Không thể kết bạn với chính mình");
+            throw new IllegalArgumentException("Không thể kết bạn với chính mình");
 
         var targetUser = userRepository
                 .findById(friendInvitationRequest.getTargetUserId())
@@ -102,11 +102,11 @@ public class FriendshipServiceImpl implements me.huynhducphu.PingMe_Backend.serv
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy lời mời kết bạn này"));
 
         if (friendship.getFriendshipStatus() != FriendshipStatus.PENDING)
-            throw new DataIntegrityViolationException("Trạng thái lời mời không thích hợp");
+            throw new IllegalArgumentException("Trạng thái lời mời không thích hợp");
 
         var isParticipant = friendship.getUserB().getId().equals(currentUser.getId());
         if (!isParticipant)
-            throw new DataIntegrityViolationException("Chỉ có người được nhận lời mời mới có thể hủy");
+            throw new IllegalArgumentException("Chỉ có người được nhận lời mời mới có thể hủy");
 
         friendshipRepository.delete(friendship);
 
@@ -127,11 +127,11 @@ public class FriendshipServiceImpl implements me.huynhducphu.PingMe_Backend.serv
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy lời mời kết bạn này"));
 
         if (friendship.getFriendshipStatus() != FriendshipStatus.PENDING)
-            throw new DataIntegrityViolationException("Trạng thái lời mời không thích hợp");
+            throw new IllegalArgumentException("Trạng thái lời mời không thích hợp");
 
         var isParticipant = friendship.getUserA().getId().equals(currentUser.getId());
         if (!isParticipant)
-            throw new DataIntegrityViolationException("Chỉ có người được gửi lời mời mới có thể thu hồi");
+            throw new IllegalArgumentException("Chỉ có người được gửi lời mời mới có thể thu hồi");
 
         friendshipRepository.delete(friendship);
 
@@ -152,12 +152,12 @@ public class FriendshipServiceImpl implements me.huynhducphu.PingMe_Backend.serv
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy mối quan hệ"));
 
         if (friendship.getFriendshipStatus() != FriendshipStatus.ACCEPTED)
-            throw new DataIntegrityViolationException("Trạng thái lời mời không thích hợp");
+            throw new IllegalArgumentException("Trạng thái lời mời không thích hợp");
 
         var isParticipant = friendship.getUserA().getId().equals(currentUser.getId())
                 || friendship.getUserB().getId().equals(currentUser.getId());
         if (!isParticipant)
-            throw new DataIntegrityViolationException("Chỉ có người trong mối quan hệ này mới có thể xóa");
+            throw new IllegalArgumentException("Chỉ có người trong mối quan hệ này mới có thể xóa");
 
         friendshipRepository.delete(friendship);
 

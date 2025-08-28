@@ -30,6 +30,7 @@ public class CommonConfiguration {
         ModelMapper modelMapper = new ModelMapper();
         modelMapper
                 .getConfiguration()
+                .setSkipNullEnabled(true)
                 .setMatchingStrategy(MatchingStrategies.STRICT);
 
         return modelMapper;
