@@ -6,6 +6,7 @@ import me.huynhducphu.PingMe_Backend.dto.request.chat.message.MarkReadRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.ReadStateResponse;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.message.SendMessageRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageResponse;
+import me.huynhducphu.PingMe_Backend.dto.ws.chat.MessageCreatedEvent;
 import me.huynhducphu.PingMe_Backend.model.Message;
 import me.huynhducphu.PingMe_Backend.model.Room;
 import me.huynhducphu.PingMe_Backend.model.RoomParticipant;
@@ -16,6 +17,7 @@ import me.huynhducphu.PingMe_Backend.repository.RoomParticipantRepository;
 import me.huynhducphu.PingMe_Backend.repository.RoomRepository;
 import me.huynhducphu.PingMe_Backend.repository.UserRepository;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -43,6 +45,8 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
     private final RoomParticipantRepository roomParticipantRepository;
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public MessageResponse sendMessage(SendMessageRequest sendMessageRequest) {
@@ -99,6 +103,13 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
             rp.setLastReadAt(finalMsg.getCreatedAt());
         });
 
+        var dtoResult = toDto(msg);
+
+        eventPublisher.publishEvent(new MessageCreatedEvent(
+                msg.getRoom().getId(),
+                dtoResult
+        ));
+
         return toDto(msg);
     }
 
@@ -149,7 +160,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
 
         var currentUser = currentUserProvider.get();
         var userId = currentUser.getId();
-        
+
         roomRepository
                 .findById(roomId)
                 .orElseThrow(() -> new EntityNotFoundException("Phòng chat này không tồn tại"));

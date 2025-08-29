@@ -1,10 +1,8 @@
-package me.huynhducphu.PingMe_Backend.dto.ws;
+package me.huynhducphu.PingMe_Backend.dto.ws.friendship;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.Instant;
 
 /**
  * Admin 8/21/2025

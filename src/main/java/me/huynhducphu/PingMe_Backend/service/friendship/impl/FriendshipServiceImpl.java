@@ -4,7 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.friendship.FriendInvitationRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummaryResponse;
-import me.huynhducphu.PingMe_Backend.dto.ws.FriendshipEvent;
+import me.huynhducphu.PingMe_Backend.dto.ws.friendship.FriendshipEvent;
 import me.huynhducphu.PingMe_Backend.model.constant.FriendshipStatus;
 import me.huynhducphu.PingMe_Backend.model.Friendship;
 import me.huynhducphu.PingMe_Backend.repository.FriendshipRepository;

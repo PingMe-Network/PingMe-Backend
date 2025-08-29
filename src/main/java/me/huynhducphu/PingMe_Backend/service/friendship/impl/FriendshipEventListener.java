@@ -1,7 +1,7 @@
 package me.huynhducphu.PingMe_Backend.service.friendship.impl;
 
 import lombok.RequiredArgsConstructor;
-import me.huynhducphu.PingMe_Backend.dto.ws.FriendshipEvent;
+import me.huynhducphu.PingMe_Backend.dto.ws.friendship.FriendshipEvent;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
