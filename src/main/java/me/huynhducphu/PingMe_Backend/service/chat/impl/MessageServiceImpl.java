@@ -6,7 +6,8 @@ import me.huynhducphu.PingMe_Backend.dto.request.chat.message.MarkReadRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.ReadStateResponse;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.message.SendMessageRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageResponse;
-import me.huynhducphu.PingMe_Backend.dto.ws.chat.MessageCreatedEvent;
+import me.huynhducphu.PingMe_Backend.dto.ws.chat.event.MessageCreatedEvent;
+import me.huynhducphu.PingMe_Backend.dto.ws.chat.event.RoomUpdatedEvent;
 import me.huynhducphu.PingMe_Backend.model.Message;
 import me.huynhducphu.PingMe_Backend.model.Room;
 import me.huynhducphu.PingMe_Backend.model.RoomParticipant;
@@ -16,6 +17,7 @@ import me.huynhducphu.PingMe_Backend.repository.MessageRepository;
 import me.huynhducphu.PingMe_Backend.repository.RoomParticipantRepository;
 import me.huynhducphu.PingMe_Backend.repository.RoomRepository;
 import me.huynhducphu.PingMe_Backend.repository.UserRepository;
+import me.huynhducphu.PingMe_Backend.service.chat.util.ChatDtoUtils;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -48,16 +50,26 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
 
     private final ApplicationEventPublisher eventPublisher;
 
+    private final ChatDtoUtils chatDtoUtils;
+
     @Override
     public MessageResponse sendMessage(SendMessageRequest sendMessageRequest) {
+        // Lấy người dùng gửi tin nhắn
         var currentUser = currentUserProvider.get();
 
+        // Trích xuất ra thông tin người gửi
+        // + Mã người dùng
+        // + Mã phòng chat người đã gửi
         var senderId = currentUser.getId();
         var roomId = sendMessageRequest.getRoomId();
 
+        // Kiểm tra loại tin nhắn người đó gửi (TEXT, FILE, IMG, ...)
         if (sendMessageRequest.getType() != MessageType.TEXT)
             validateUrl(sendMessageRequest.getContent());
 
+        // Kiểm tra clientMsgId có hợp lệ không
+        // clientMsgId tránh người dùng spam khi
+        // đường truyền không ổn định
         UUID clientMsgId;
         try {
             clientMsgId = UUID.fromString(sendMessageRequest.getClientMsgId());
@@ -65,6 +77,8 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
             throw new IllegalArgumentException("clientMsg không hợp lệ");
         }
 
+        // Tìm phòng chat mà người dùng đã gửi tin nhắn
+        // Nếu tìm không được trả về lỗi
         Room room = roomRepository
                 .findById(roomId)
                 .orElseThrow(() -> new EntityNotFoundException("Phòng chat này không tồn tại"));
@@ -72,45 +86,76 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         if (!roomParticipantRepository.existsById(roomMemberId))
             throw new AccessDeniedException("Bạn không phải thành viên của phòng chat này");
 
+        // Kiểm tra tin nhắn người dùng gửi đã tồn tại chưa, Kiểm tra bằng mã clientMsgId
+        // Nếu tìm thấy thì trả về tin nhắn đã tồn tại trong cơ sở dữ liệu
         var existed = messageRepository
                 .findByRoom_IdAndSender_IdAndClientMsgId(roomId, senderId, clientMsgId)
                 .orElse(null);
-        if (existed != null) return toDto(existed);
+        if (existed != null) return chatDtoUtils.toMessageResponseDto(existed);
 
-        Message msg = new Message();
-        msg.setRoom(room);
-        msg.setSender(userRepository.getReferenceById(senderId));
-        msg.setContent(sendMessageRequest.getContent());
-        msg.setType(sendMessageRequest.getType());
-        msg.setClientMsgId(clientMsgId);
-        msg.setCreatedAt(LocalDateTime.now());
+        // Nếu chưa tồn tại, tạo tin nhắn mới
+        Message message = new Message();
+        message.setRoom(room);
+        message.setSender(userRepository.getReferenceById(senderId));
+        message.setContent(sendMessageRequest.getContent());
+        message.setType(sendMessageRequest.getType());
+        message.setClientMsgId(clientMsgId);
+        message.setCreatedAt(LocalDateTime.now());
 
+        // Lưu tin nhắn vào cơ sở dữ liệu
+        // Thực hiện Try Catch để tránh Race Condition
+        // cho trường hợp User dùng 2 máy gửi tin nhắn cùng lúc
         try {
-            msg = messageRepository.save(msg);
+            message = messageRepository.save(message);
         } catch (DataIntegrityViolationException ex) {
-            msg = messageRepository
+            message = messageRepository
                     .findByRoom_IdAndSender_IdAndClientMsgId(roomId, senderId, clientMsgId)
                     .orElseThrow(() -> ex);
         }
 
-        room.setLastMessage(msg);
-        room.setLastMessageAt(msg.getCreatedAt());
-        roomRepository.save(room);
+        // Cập nhật trạng thái phòng khi người dùng nhắn tin
+        // Thông tin cập nhật bao gồm:
+        // + Tin nhắn cuối cùng
+        // + Thời gian nhắn tin nhắn cuối cùng
+        room.setLastMessage(message);
+        room.setLastMessageAt(message.getCreatedAt());
+        var savedRoom = roomRepository.save(room);
 
-        Message finalMsg = msg;
-        roomParticipantRepository.findById(roomMemberId).ifPresent(rp -> {
-            rp.setLastReadMessageId(finalMsg.getId());
-            rp.setLastReadAt(finalMsg.getCreatedAt());
-        });
+        // Cập nhật trạng thái của người dùng tham gia phòng (người dùng hiện tại)
+        // Thông tin cập nhật bao gồm:
+        // + Tin nhắn lần cuối đọc (seen)
+        // + Thời gian đọc tin nhắn cuối cùng
+        //
+        // Dễ hiểu: người dùng A chat tin nhắn đó, thì mặc
+        // định người dùng A đọc tất cả tin nhắn từ đầu đến tin nhắn
+        // hiện tại của người dùng A
+        Message finalMsg = message;
+        roomParticipantRepository
+                .findById(roomMemberId)
+                .ifPresent(rp -> {
+                    rp.setLastReadMessageId(finalMsg.getId());
+                    rp.setLastReadAt(finalMsg.getCreatedAt());
+                });
 
-        var dtoResult = toDto(msg);
+        // ===================================================================================================
+        // WEBSOCKET
 
-        eventPublisher.publishEvent(new MessageCreatedEvent(
-                msg.getRoom().getId(),
-                dtoResult
-        ));
+        // Sự kiện MESSAGE_CREATED (tạo tin nhắn mới)
+        var messageCreatedEvent = new MessageCreatedEvent(message);
 
-        return toDto(msg);
+        // Sử kiện ROOM_UPDATED (thông báo phòng có tin nhắn mới)
+        var roomUpdatedEvent = new RoomUpdatedEvent(
+                savedRoom, // Dữ liệu mới nhất của phòng
+                roomParticipantRepository.findByRoom_Id(savedRoom.getId()) // Người trong phòng chat
+        );
+
+        // Bắn sự kiện Websocket
+        eventPublisher.publishEvent(messageCreatedEvent);
+        eventPublisher.publishEvent(roomUpdatedEvent);
+        // ===================================================================================================
+
+        // Trả dữ liệu về cho người gửi tin nhắn
+        return chatDtoUtils.toMessageResponseDto(message);
     }
 
     @Override
@@ -174,7 +219,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         return messageRepository
                 .findHistoryMessagesByKeySet(roomId, beforeId, limit)
                 .stream()
-                .map(this::toDto)
+                .map(chatDtoUtils::toMessageResponseDto)
                 .toList();
     }
 
@@ -189,18 +234,6 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Dữ liệu phải là URL hợp lệ");
         }
-    }
-
-    private MessageResponse toDto(Message message) {
-        return new MessageResponse(
-                message.getId(),
-                message.getRoom().getId(),
-                (message.getClientMsgId() == null ? null : message.getClientMsgId().toString()),
-                message.getSender().getId(),
-                message.getContent(),
-                message.getType(),
-                message.getCreatedAt()
-        );
     }
 
 }

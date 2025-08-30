@@ -1,8 +1,9 @@
-package me.huynhducphu.PingMe_Backend.dto.ws.friendship;
+package me.huynhducphu.PingMe_Backend.dto.ws.friendship.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import me.huynhducphu.PingMe_Backend.dto.ws.friendship.FriendshipEventType;
 
 /**
  * Admin 8/21/2025
@@ -11,11 +12,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class FriendshipEvent {
-    public enum Type {INVITED, ACCEPTED, REJECTED, CANCELED, DELETED}
 
-    private Type type;
+    private FriendshipEventType type;
     private Long friendshipId;
-    private Long actorId;
     private Long targetId;
 
 }

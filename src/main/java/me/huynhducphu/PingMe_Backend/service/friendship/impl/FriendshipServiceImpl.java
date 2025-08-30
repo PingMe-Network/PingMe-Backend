@@ -4,7 +4,8 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.friendship.FriendInvitationRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummaryResponse;
-import me.huynhducphu.PingMe_Backend.dto.ws.friendship.FriendshipEvent;
+import me.huynhducphu.PingMe_Backend.dto.ws.friendship.event.FriendshipEvent;
+import me.huynhducphu.PingMe_Backend.dto.ws.friendship.FriendshipEventType;
 import me.huynhducphu.PingMe_Backend.model.constant.FriendshipStatus;
 import me.huynhducphu.PingMe_Backend.model.Friendship;
 import me.huynhducphu.PingMe_Backend.repository.FriendshipRepository;
@@ -62,10 +63,9 @@ public class FriendshipServiceImpl implements me.huynhducphu.PingMe_Backend.serv
         friendshipRepository.save(friendship);
 
         eventPublisher.publishEvent(new FriendshipEvent(
-                FriendshipEvent.Type.INVITED,
+                FriendshipEventType.INVITED,
                 friendship.getId(),
-                currentUser.getId(),
-                targetUser.getId()
+                friendship.getUserB().getId()
         ));
     }
 
@@ -86,9 +86,8 @@ public class FriendshipServiceImpl implements me.huynhducphu.PingMe_Backend.serv
         friendship.setFriendshipStatus(FriendshipStatus.ACCEPTED);
 
         eventPublisher.publishEvent(new FriendshipEvent(
-                FriendshipEvent.Type.ACCEPTED,
+                FriendshipEventType.ACCEPTED,
                 friendship.getId(),
-                currentUser.getId(),
                 friendship.getUserA().getId()
         ));
     }
@@ -111,9 +110,8 @@ public class FriendshipServiceImpl implements me.huynhducphu.PingMe_Backend.serv
         friendshipRepository.delete(friendship);
 
         eventPublisher.publishEvent(new FriendshipEvent(
-                FriendshipEvent.Type.REJECTED,
+                FriendshipEventType.REJECTED,
                 friendship.getId(),
-                currentUser.getId(),
                 friendship.getUserA().getId()
         ));
     }
@@ -136,9 +134,8 @@ public class FriendshipServiceImpl implements me.huynhducphu.PingMe_Backend.serv
         friendshipRepository.delete(friendship);
 
         eventPublisher.publishEvent(new FriendshipEvent(
-                FriendshipEvent.Type.CANCELED,
+                FriendshipEventType.CANCELED,
                 friendship.getId(),
-                currentUser.getId(),
                 friendship.getUserB().getId()
         ));
     }
@@ -163,9 +160,8 @@ public class FriendshipServiceImpl implements me.huynhducphu.PingMe_Backend.serv
 
         var isUserA = friendship.getUserA().getId().equals(currentUser.getId());
         eventPublisher.publishEvent(new FriendshipEvent(
-                FriendshipEvent.Type.DELETED,
+                FriendshipEventType.DELETED,
                 friendship.getId(),
-                currentUser.getId(),
                 isUserA ? friendship.getUserB().getId() : friendship.getUserA().getId()
         ));
     }

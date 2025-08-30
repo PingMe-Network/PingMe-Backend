@@ -1,8 +1,8 @@
-package me.huynhducphu.PingMe_Backend.dto.ws.chat;
+package me.huynhducphu.PingMe_Backend.dto.ws.chat.event;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import me.huynhducphu.PingMe_Backend.dto.ws.chat.ChatEventType;
 
 import java.time.LocalDateTime;
 
