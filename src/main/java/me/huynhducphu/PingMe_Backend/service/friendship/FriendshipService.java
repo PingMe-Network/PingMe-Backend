@@ -1,10 +1,8 @@
 package me.huynhducphu.PingMe_Backend.service.friendship;
 
 import me.huynhducphu.PingMe_Backend.dto.request.friendship.FriendInvitationRequest;
-import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummaryResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.friendship.HistoryFriendshipResponse;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import me.huynhducphu.PingMe_Backend.dto.response.friendship.UserFriendshipStatsResponse;
 
 /**
  * Admin 8/19/2025
@@ -34,4 +32,6 @@ public interface FriendshipService {
             Long beforeId,
             Integer size
     );
+
+    UserFriendshipStatsResponse getUserFrendshipStats();
 }

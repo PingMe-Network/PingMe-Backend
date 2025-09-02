@@ -4,12 +4,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.friendship.FriendInvitationRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.ApiResponse;
-import me.huynhducphu.PingMe_Backend.dto.response.PageResponse;
-import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummaryResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.friendship.HistoryFriendshipResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.friendship.UserFriendshipStatsResponse;
 import me.huynhducphu.PingMe_Backend.service.friendship.FriendshipService;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -104,6 +101,15 @@ public class FriendshipController {
                 beforeId,
                 size
         );
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new ApiResponse<>(res));
+    }
+
+    @GetMapping("/me/stats")
+    public ResponseEntity<ApiResponse<UserFriendshipStatsResponse>> getUserFriendshipStats() {
+        var res = friendshipService.getUserFrendshipStats();
 
         return ResponseEntity
                 .status(HttpStatus.OK)

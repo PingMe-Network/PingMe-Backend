@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.friendship.FriendInvitationRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummaryResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.friendship.HistoryFriendshipResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.friendship.UserFriendshipStatsResponse;
 import me.huynhducphu.PingMe_Backend.dto.ws.friendship.event.FriendshipEvent;
 import me.huynhducphu.PingMe_Backend.dto.ws.friendship.FriendshipEventType;
 import me.huynhducphu.PingMe_Backend.model.User;
@@ -302,6 +303,14 @@ public class FriendshipServiceImpl implements me.huynhducphu.PingMe_Backend.serv
                 .toList();
 
         return new HistoryFriendshipResponse(userSummaryResponses, page.getTotalElements());
+    }
+
+    @Override
+    public UserFriendshipStatsResponse getUserFrendshipStats() {
+        // Lấy thông tin người dùng hiện tại
+        var currentUser = currentUserProvider.get();
+
+        return friendshipRepository.getStats(currentUser.getId());
     }
 
     // =====================================

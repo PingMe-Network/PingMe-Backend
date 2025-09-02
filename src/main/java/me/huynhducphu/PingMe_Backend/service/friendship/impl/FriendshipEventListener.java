@@ -44,12 +44,24 @@ public class FriendshipEventListener {
 
         switch (event.getType()) {
             case ACCEPTED, REJECTED,
-                 CANCELED, DELETED,
-                 INVITED -> messagingTemplate.convertAndSendToUser(
+                 CANCELED, DELETED -> messagingTemplate.convertAndSendToUser(
                     event.getTargetId().toString(),
                     "/queue/friendship",
                     payload
             );
+
+            case INVITED -> {
+                messagingTemplate.convertAndSendToUser(
+                        friendship.getUserA().getId().toString(),
+                        "/queue/friendship",
+                        payload);
+
+                messagingTemplate.convertAndSendToUser(
+                        friendship.getUserB().getId().toString(),
+                        "/queue/friendship",
+                        payload);
+
+            }
         }
     }
 
