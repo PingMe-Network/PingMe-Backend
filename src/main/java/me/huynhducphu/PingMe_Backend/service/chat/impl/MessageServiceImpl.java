@@ -3,6 +3,7 @@ package me.huynhducphu.PingMe_Backend.service.chat.impl;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.message.MarkReadRequest;
+import me.huynhducphu.PingMe_Backend.dto.response.chat.message.HistoryMessageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.ReadStateResponse;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.message.SendMessageRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageResponse;
@@ -21,6 +22,7 @@ import me.huynhducphu.PingMe_Backend.service.chat.util.ChatDtoUtils;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -54,7 +56,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
 
     @Override
     public MessageResponse sendMessage(SendMessageRequest sendMessageRequest) {
-        // Lấy người dùng gửi tin nhắn
+        // Lấy thộng tin người dùng hiện tại
         var currentUser = currentUserProvider.get();
 
         // Trích xuất ra thông tin người gửi
@@ -195,33 +197,46 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
     }
 
     @Override
-    public List<MessageResponse> getHistoryMessages(
+    public HistoryMessageResponse getHistoryMessages(
             Long roomId,
             Long beforeId,
             Integer size
     ) {
+        // Kiểm tra dữ liệu đầu vào
         if (roomId == null || size == null)
-            throw new IllegalArgumentException("Mã phòng hoặc số lượng tin nhắn yêu cầu không hợp lệ");
+            throw new IllegalArgumentException("Mã phòng hoặc số lượng tin nhắn không hợp lệ");
 
+        // Lấy thông tin người dùng hiện tại
         var currentUser = currentUserProvider.get();
         var userId = currentUser.getId();
 
+        // Kiểm tra phòng chat có tồn tại không
         roomRepository
                 .findById(roomId)
-                .orElseThrow(() -> new EntityNotFoundException("Phòng chat này không tồn tại"));
+                .orElseThrow(() -> new EntityNotFoundException("Phòng chat không tồn tại"));
+
+        // Kiểm tra người dùng có phải thành viên của phòng hay không
         var roomMemberId = new RoomMemberId(roomId, userId);
         if (!roomParticipantRepository.existsById(roomMemberId))
             throw new AccessDeniedException("Bạn không phải thành viên của phòng chat này");
 
+        // Giới hạn số lượng tin nhắn lấy ra (1 → 20)
         int fixedSize = Math.max(1, Math.min(size, 20));
         Pageable limit = PageRequest.of(0, fixedSize);
 
-        return messageRepository
-                .findHistoryMessagesByKeySet(roomId, beforeId, limit)
+        // Truy vấn tin nhắn từ database, sau đó map sang DTO
+        Page<Message> page = messageRepository.findHistoryMessagesByKeySet(roomId, beforeId, limit);
+        List<MessageResponse> messageResponses = page
+                .getContent()
                 .stream()
                 .map(chatDtoUtils::toMessageResponseDto)
                 .toList();
+
+        Long total = page.getTotalElements();
+
+        return new HistoryMessageResponse(messageResponses, total);
     }
+
 
     // =====================================
     // Utilities methods

@@ -27,12 +27,21 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public String buildJwt(User user, Long expirationRate) {
-
+        // Lấy thời điểm hiện tại
         Instant now = Instant.now();
+
+        // Tính toán thời điểm JWT sẽ hết hạn
         Instant validity = now.plus(expirationRate, ChronoUnit.SECONDS);
 
+        // Khai báo phần Header của JWT
+        // Ở đây chứa thông tin về thuật toán ký (MAC algorithm) mà hệ thống đang dùng
         JwsHeader jwsHeader = JwsHeader.with(AuthConfiguration.MAC_ALGORITHM).build();
 
+        // Khai báo phần Body (Claims) của JWT, bao gồm:
+        // + issuedAt: thời điểm token được tạo ra
+        // + expiresAt: thời điểm token hết hạn
+        // + subject: email của người dùng (được dùng làm định danh chính)
+        // + claim "user": thông tin cơ bản của người dùng, được map sang DTO UserSessionResponse
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuedAt(now)
                 .expiresAt(validity)
@@ -40,10 +49,12 @@ public class JwtServiceImpl implements JwtService {
                 .claim("user", modelMapper.map(user, UserSessionResponse.class))
                 .build();
 
+        // Cuối cùng, encode JWT và lấy ra chuỗi token trả về
         return jwtEncoder
                 .encode(JwtEncoderParameters.from(jwsHeader, claims))
                 .getTokenValue();
     }
+
 
     @Override
     public Jwt decodeJwt(String token) {

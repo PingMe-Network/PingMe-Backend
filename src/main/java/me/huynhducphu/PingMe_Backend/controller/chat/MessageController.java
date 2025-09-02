@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.message.MarkReadRequest;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.message.SendMessageRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.ApiResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.chat.message.HistoryMessageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.ReadStateResponse;
 import me.huynhducphu.PingMe_Backend.service.chat.MessageService;
@@ -51,13 +52,13 @@ public class MessageController {
     }
 
     @GetMapping("/history")
-    public ResponseEntity<ApiResponse<List<MessageResponse>>> getHistoryMessages(
+    public ResponseEntity<ApiResponse<HistoryMessageResponse>> getHistoryMessages(
             @RequestParam Long roomId,
             @RequestParam(required = false) Long beforeId,
             @RequestParam(defaultValue = "20") Integer size
     ) {
         var data = messageService.getHistoryMessages(roomId, beforeId, size);
-        
+
         return ResponseEntity
                 .ok(new ApiResponse<>(data));
     }

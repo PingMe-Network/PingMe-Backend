@@ -5,6 +5,8 @@ import me.huynhducphu.PingMe_Backend.model.Friendship;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -15,17 +17,59 @@ import java.util.Optional;
 @Repository
 public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
 
-    Page<Friendship> findAllByFriendshipStatusAndUserA_IdOrFriendshipStatusAndUserB_Id(
-            FriendshipStatus status1, Long userId1,
-            FriendshipStatus status2, Long userId2,
+    boolean existsByUserLowIdAndUserHighId(Long userLowId, Long userHighId);
+
+    Optional<Friendship> findByUserLowIdAndUserHighId(Long userLowId, Long userHighId);
+    
+    @Query("""
+                SELECT f
+                FROM Friendship f
+                WHERE f.friendshipStatus = :status
+                  AND f.userA.id = :userId
+                  AND (:beforeId IS NULL OR f.id < :beforeId)
+                ORDER BY f.id DESC
+            """)
+    Page<Friendship> findByStatusAndUserA_IdWithBeforeId(
+            @Param("status") FriendshipStatus status,
+            @Param("userId") Long userId,
+            @Param("beforeId") Long beforeId,
             Pageable pageable
     );
 
-    boolean existsByUserLowIdAndUserHighId(Long userLowId, Long userHighId);
 
-    Page<Friendship> findByFriendshipStatusAndUserA_Id(FriendshipStatus status, Long userId, Pageable pageable);
+    @Query("""
+                SELECT f
+                FROM Friendship f
+                WHERE f.friendshipStatus = :status
+                  AND f.userB.id = :userId
+                  AND (:beforeId IS NULL OR f.id < :beforeId)
+                ORDER BY f.id DESC
+            """)
+    Page<Friendship> findByStatusAndUserB_IdWithBeforeId(
+            @Param("status") FriendshipStatus status,
+            @Param("userId") Long userId,
+            @Param("beforeId") Long beforeId,
+            Pageable pageable
+    );
 
-    Page<Friendship> findByFriendshipStatusAndUserB_Id(FriendshipStatus status, Long userId, Pageable pageable);
 
-    Optional<Friendship> findByUserLowIdAndUserHighId(Long userLowId, Long userHighId);
+    @Query("""
+                SELECT f
+                FROM Friendship f
+                WHERE f.friendshipStatus = :status
+                  AND (
+                    (f.userA.id = :userId)
+                    OR (f.userB.id = :userId)
+                  )
+                  AND (:beforeId IS NULL OR f.id < :beforeId)
+                ORDER BY f.id DESC
+            """)
+    Page<Friendship> findAllByStatusAndUserWithBeforeId(
+            @Param("status") FriendshipStatus status,
+            @Param("userId") Long userId,
+            @Param("beforeId") Long beforeId,
+            Pageable pageable
+    );
+
+
 }

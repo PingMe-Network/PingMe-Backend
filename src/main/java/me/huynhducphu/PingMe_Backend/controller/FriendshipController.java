@@ -6,6 +6,7 @@ import me.huynhducphu.PingMe_Backend.dto.request.friendship.FriendInvitationRequ
 import me.huynhducphu.PingMe_Backend.dto.response.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.PageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummaryResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.friendship.HistoryFriendshipResponse;
 import me.huynhducphu.PingMe_Backend.service.friendship.FriendshipService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -64,40 +65,49 @@ public class FriendshipController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new ApiResponse<>());
     }
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<PageResponse<UserSummaryResponse>>> getAcceptedFriendshipList(
-            @PageableDefault(size = 5) Pageable pageable
+    @GetMapping("/history")
+    public ResponseEntity<ApiResponse<HistoryFriendshipResponse>> getAcceptedFriendshipHistoryList(
+            @RequestParam(required = false) Long beforeId,
+            @RequestParam(defaultValue = "20") Integer size
     ) {
-        var page = friendshipService.getAcceptedFriendshipList(pageable);
-        var pageResponse = new PageResponse<>(page);
+        var res = friendshipService.getAcceptedFriendshipHistoryList(
+                beforeId,
+                size
+        );
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new ApiResponse<>(pageResponse));
+                .body(new ApiResponse<>(res));
     }
 
-    @GetMapping("/received")
-    public ResponseEntity<ApiResponse<PageResponse<UserSummaryResponse>>> getReceivedInvitations(
-            @PageableDefault(size = 5) Pageable pageable
+    @GetMapping("/history/received")
+    public ResponseEntity<ApiResponse<HistoryFriendshipResponse>> getReceivedHistoryInvitations(
+            @RequestParam(required = false) Long beforeId,
+            @RequestParam(defaultValue = "20") Integer size
     ) {
-        var page = friendshipService.getReceivedInvitations(pageable);
-        var pageResponse = new PageResponse<>(page);
+        var res = friendshipService.getReceivedHistoryInvitations(
+                beforeId,
+                size
+        );
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new ApiResponse<>(pageResponse));
+                .body(new ApiResponse<>(res));
     }
 
-    @GetMapping("/sent")
-    public ResponseEntity<ApiResponse<PageResponse<UserSummaryResponse>>> getSentInvitations(
-            @PageableDefault(size = 5) Pageable pageable
+    @GetMapping("/history/sent")
+    public ResponseEntity<ApiResponse<HistoryFriendshipResponse>> getSentHistoryInvitations(
+            @RequestParam(required = false) Long beforeId,
+            @RequestParam(defaultValue = "20") Integer size
     ) {
-        var page = friendshipService.getSentInvitations(pageable);
-        var pageResponse = new PageResponse<>(page);
+        var res = friendshipService.getSentHistoryInvitations(
+                beforeId,
+                size
+        );
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new ApiResponse<>(pageResponse));
+                .body(new ApiResponse<>(res));
     }
 
 }

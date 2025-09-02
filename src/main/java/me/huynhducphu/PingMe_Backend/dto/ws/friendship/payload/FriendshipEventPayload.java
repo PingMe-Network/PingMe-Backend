@@ -3,6 +3,7 @@ package me.huynhducphu.PingMe_Backend.dto.ws.friendship.payload;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummaryResponse;
 import me.huynhducphu.PingMe_Backend.dto.ws.friendship.FriendshipEventType;
 
 /**
@@ -15,6 +16,5 @@ import me.huynhducphu.PingMe_Backend.dto.ws.friendship.FriendshipEventType;
 public class FriendshipEventPayload {
 
     private FriendshipEventType type;
-    private Long friendshipId;
-
+    private UserSummaryResponse userSummaryResponse;
 }
