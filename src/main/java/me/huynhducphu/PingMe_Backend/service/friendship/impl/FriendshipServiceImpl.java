@@ -68,7 +68,7 @@ public class FriendshipServiceImpl implements me.huynhducphu.PingMe_Backend.serv
         // - userA: người gửi lời mời
         // - userB: người nhận lời mời
         // - status: PENDING (chưa được chấp nhận/từ chối)
-        // - userLowId/userHighId: id nhỏ/lớn hơn để tránh trùng lặp
+        // - userLowId/userHighId: id nhỏ/lớn hơn để tránh trùng
         var friendship = new Friendship();
         friendship.setUserA(currentUser);
         friendship.setUserB(targetUser);
