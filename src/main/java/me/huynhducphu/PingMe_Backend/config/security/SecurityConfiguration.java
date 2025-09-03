@@ -37,7 +37,7 @@ public class SecurityConfiguration {
             // Kiểm tra tại lớp HandShakeInterceptor
             "/ws/**",
 
-            // Health check
+            // Health check - Kiểm tra nhịp tim
             "/actuator/health",
             "/actuator/health/**",
     };
