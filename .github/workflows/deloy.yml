@@ -3,7 +3,7 @@ name: CI/CD Deploy to Elastic Beanstalk
 on:
   push:
     branches:
-      - main
+      '**'
 
 jobs:
   build:

@@ -10,6 +10,7 @@ import me.huynhducphu.PingMe_Backend.model.constant.AuthProvider;
 import me.huynhducphu.PingMe_Backend.model.constant.Gender;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Admin 8/3/2025
@@ -48,5 +49,11 @@ public class User extends BaseEntity {
 
     @Column(name = "avatar_url")
     private String avatarUrl;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<Blog> blogs;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<Comment> comments;
 
 }

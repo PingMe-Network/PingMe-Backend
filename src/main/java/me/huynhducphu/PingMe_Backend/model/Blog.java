@@ -1,0 +1,61 @@
+package me.huynhducphu.PingMe_Backend.model;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import me.huynhducphu.PingMe_Backend.model.common.BaseEntity;
+import me.huynhducphu.PingMe_Backend.model.constant.BlogCategory;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Admin 9/15/2025
+ *
+ **/
+@Entity
+@Table(name = "blogs")
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
+public class Blog extends BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
+    private Long id;
+
+    private String title;
+
+    private String imgPreviewUrl;
+
+    private String description;
+
+    @Column(columnDefinition = "TEXT")
+    private String content;
+
+    @Enumerated(EnumType.STRING)
+    private BlogCategory category;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @OneToMany(mappedBy = "blog")
+    private List<Comment> comments;
+
+    @Column(nullable = false)
+    private Boolean isApproved = false;
+
+    public Blog(String title, String description, String content, BlogCategory category) {
+        this.title = title;
+        this.description = description;
+        this.content = content;
+        this.category = category;
+        this.isApproved = true;
+        this.comments = new ArrayList<>();
+    }
+}
