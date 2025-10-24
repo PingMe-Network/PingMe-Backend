@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummaryResponse;
 import me.huynhducphu.PingMe_Backend.model.constant.BlogCategory;
 
+import java.time.LocalDateTime;
+
 /**
  * Admin 10/14/2025
  *
@@ -23,5 +25,7 @@ public class BlogDetailsResponse {
     private String imgPreviewUrl;
     private Boolean isApproved;
     private String content;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
 }
