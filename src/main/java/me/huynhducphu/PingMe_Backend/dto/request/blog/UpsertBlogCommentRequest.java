@@ -15,8 +15,8 @@ import lombok.NoArgsConstructor;
 @Data
 public class UpsertBlogCommentRequest {
 
-    @NotBlank(message = "Nội dung Blog không được bỏ trống")
-    @Size(max = 500, message = "Mô tả Blog không quá 500 ký tự")
+    @NotBlank(message = "Nội dung bình luận không được bỏ trống")
+    @Size(max = 500, message = "Mô tả bình luận không quá 500 ký tự")
     private String content;
 
 }

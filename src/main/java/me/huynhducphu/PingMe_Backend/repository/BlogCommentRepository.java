@@ -2,7 +2,9 @@ package me.huynhducphu.PingMe_Backend.repository;
 
 import me.huynhducphu.PingMe_Backend.model.BlogComment;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -17,14 +19,25 @@ public interface BlogCommentRepository extends
         JpaRepository<BlogComment, Long>,
         JpaSpecificationExecutor<BlogComment> {
 
-    default Page<BlogComment> findByBlogId(Long blogId, Specification<BlogComment> filterSpec, Pageable pageable) {
-        Specification<BlogComment> blogSpec = (root, query, cb) ->
-                cb.equal(root.get("blog").get("id"), blogId);
+    default Page<BlogComment> findByBlogId(
+            Long blogId,
+            Specification<BlogComment> filterSpec,
+            Pageable pageable
+    ) {
+        Specification<BlogComment> blogSpec =
+                (root, query, cb)
+                        -> cb.equal(root.get("blog").get("id"), blogId);
+
+        Pageable sortedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Order.desc("createdAt"))
+        );
 
         Specification<BlogComment> combinedSpec =
                 (filterSpec != null) ? blogSpec.and(filterSpec) : blogSpec;
 
-        return findAll(combinedSpec, pageable);
+        return findAll(combinedSpec, sortedPageable);
     }
 
 }

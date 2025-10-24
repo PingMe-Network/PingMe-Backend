@@ -1,4 +1,4 @@
-package me.huynhducphu.PingMe_Backend.controller;
+package me.huynhducphu.PingMe_Backend.controller.blog;
 
 import com.turkraft.springfilter.boot.Filter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -58,7 +58,7 @@ public class BlogController {
     @GetMapping("/approved")
     public ResponseEntity<ApiResponse<PageResponse<BlogReviewResponse>>> getAllApprovedBlogs(
             @Filter Specification<Blog> spec,
-            @PageableDefault() Pageable pageable
+            @PageableDefault Pageable pageable
     ) {
         var page = blogService.getAllApprovedBlogs(spec, pageable);
         var res = new PageResponse<>(page);
@@ -84,7 +84,7 @@ public class BlogController {
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<PageResponse<BlogReviewResponse>>> getCurrentUserBlogs(
             @Filter Specification<Blog> spec,
-            @PageableDefault() Pageable pageable
+            @PageableDefault Pageable pageable
     ) {
         var page = blogService.getCurrentUserBlogs(spec, pageable);
         var res = new PageResponse<>(page);

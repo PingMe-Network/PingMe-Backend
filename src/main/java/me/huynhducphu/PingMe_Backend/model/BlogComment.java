@@ -35,4 +35,9 @@ public class BlogComment extends BaseEntity {
     @JoinColumn(name = "blog_id", nullable = false)
     private Blog blog;
 
+    public BlogComment(String content, User user, Blog blog) {
+        this.content = content;
+        this.user = user;
+        this.blog = blog;
+    }
 }

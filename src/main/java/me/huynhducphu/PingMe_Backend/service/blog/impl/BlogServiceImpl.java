@@ -42,8 +42,6 @@ public class BlogServiceImpl implements me.huynhducphu.PingMe_Backend.service.bl
      * Nếu blogImg khác null sẽ gọi service
      * s3 lưu trên aws
      *
-     * @param dto
-     * @param blogImg
      * @return BlogReviewResponse
      */
     @Override
@@ -82,9 +80,6 @@ public class BlogServiceImpl implements me.huynhducphu.PingMe_Backend.service.bl
      * Nếu blogImg khác null sẽ gọi service
      * s3 lưu trên aws
      *
-     * @param dto
-     * @param blogImg
-     * @param blogId
      * @return BlogReviewResponse
      */
     @Override
