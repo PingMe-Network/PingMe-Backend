@@ -12,19 +12,19 @@ import me.huynhducphu.PingMe_Backend.model.common.BaseEntity;
  *
  **/
 @Entity
-@Table(name = "comments")
+@Table(name = "blog_comments")
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
-public class Comment extends BaseEntity {
+public class BlogComment extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
     private Long id;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "VARCHAR(500)")
     private String content;
 
     @ManyToOne(fetch = FetchType.LAZY)

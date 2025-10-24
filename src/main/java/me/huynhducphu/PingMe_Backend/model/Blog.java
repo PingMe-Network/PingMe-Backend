@@ -46,7 +46,7 @@ public class Blog extends BaseEntity {
     private User user;
 
     @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL)
-    private List<Comment> comments;
+    private List<BlogComment> blogComments;
 
     @Column(nullable = false)
     private Boolean isApproved = false;
@@ -57,6 +57,6 @@ public class Blog extends BaseEntity {
         this.content = content;
         this.category = category;
         this.isApproved = false;
-        this.comments = new ArrayList<>();
+        this.blogComments = new ArrayList<>();
     }
 }
