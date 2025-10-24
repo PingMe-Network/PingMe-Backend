@@ -36,7 +36,16 @@ public class BlogServiceImpl implements me.huynhducphu.PingMe_Backend.service.bl
 
     private final ModelMapper modelMapper;
 
-
+    /**
+     * Lưu Blog bao gồm cả bài blog và ảnh
+     * <p>
+     * Nếu blogImg khác null sẽ gọi service
+     * s3 lưu trên aws
+     *
+     * @param dto
+     * @param blogImg
+     * @return BlogReviewResponse
+     */
     @Override
     public BlogReviewResponse saveBlog(
             UpsertBlogRequest dto,
@@ -67,6 +76,17 @@ public class BlogServiceImpl implements me.huynhducphu.PingMe_Backend.service.bl
         return modelMapper.map(blog, BlogReviewResponse.class);
     }
 
+    /**
+     * Cập nhật Blog bao gồm cả bài blog và ảnh
+     * <p>
+     * Nếu blogImg khác null sẽ gọi service
+     * s3 lưu trên aws
+     *
+     * @param dto
+     * @param blogImg
+     * @param blogId
+     * @return BlogReviewResponse
+     */
     @Override
     public BlogReviewResponse updateBlog(
             UpsertBlogRequest dto,
@@ -145,5 +165,25 @@ public class BlogServiceImpl implements me.huynhducphu.PingMe_Backend.service.bl
                 .map(blog -> modelMapper.map(blog, BlogReviewResponse.class));
     }
 
+
+    @Override
+    public void approveBlog(Long id) {
+        var blog = blogRepository
+                .findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy Blog"));
+
+        if (blog.getIsApproved() == true)
+            throw new IllegalArgumentException("Bài blog này đã được duyệt rồi");
+        blog.setIsApproved(true);
+    }
+
+    @Override
+    public void deleteBlog(Long id) {
+        var blog = blogRepository
+                .findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy Blog"));
+
+        blogRepository.delete(blog);
+    }
 
 }

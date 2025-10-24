@@ -42,4 +42,8 @@ public interface BlogService {
             Specification<Blog> spec,
             Pageable pageable
     );
+
+    void approveBlog(Long id);
+
+    void deleteBlog(Long id);
 }

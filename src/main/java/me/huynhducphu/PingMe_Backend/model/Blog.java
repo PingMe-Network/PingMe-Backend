@@ -32,6 +32,7 @@ public class Blog extends BaseEntity {
 
     private String imgPreviewUrl;
 
+    @Column(columnDefinition = "VARCHAR(150)")
     private String description;
 
     @Column(columnDefinition = "TEXT")
@@ -44,7 +45,7 @@ public class Blog extends BaseEntity {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @OneToMany(mappedBy = "blog")
+    @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL)
     private List<Comment> comments;
 
     @Column(nullable = false)
@@ -55,7 +56,7 @@ public class Blog extends BaseEntity {
         this.description = description;
         this.content = content;
         this.category = category;
-        this.isApproved = true;
+        this.isApproved = false;
         this.comments = new ArrayList<>();
     }
 }

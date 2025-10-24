@@ -2,6 +2,7 @@ package me.huynhducphu.PingMe_Backend.dto.request.blog;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,6 +21,7 @@ public class UpsertBlogRequest {
     private String title;
 
     @NotBlank(message = "Mô tả Blog không được để trống")
+    @Size(max = 150, message = "Mô tả Blog không quá 150 ký tự")
     private String description;
 
     @NotBlank(message = "Nội dung Blog không được bỏ trống")

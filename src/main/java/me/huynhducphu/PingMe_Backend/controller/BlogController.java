@@ -101,5 +101,17 @@ public class BlogController {
                 .body(new ApiResponse<>(blogService.getBlogDetailsById(id)));
     }
 
+    @PostMapping("/approve/{id}")
+    public ResponseEntity<ApiResponse<Void>> approveBlog(@PathVariable Long id) {
+        blogService.approveBlog(id);
+        return ResponseEntity.ok(new ApiResponse<>(null));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteBlog(@PathVariable Long id) {
+        blogService.deleteBlog(id);
+        return ResponseEntity.ok(new ApiResponse<>(null));
+    }
+
 
 }
