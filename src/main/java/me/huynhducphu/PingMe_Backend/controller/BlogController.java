@@ -68,6 +68,19 @@ public class BlogController {
                 .body(new ApiResponse<>(res));
     }
 
+    @GetMapping
+    public ResponseEntity<ApiResponse<PageResponse<BlogReviewResponse>>> getAllBlogs(
+            @Filter Specification<Blog> spec,
+            @PageableDefault() Pageable pageable
+    ) {
+        var page = blogService.getAllBlogs(spec, pageable);
+        var res = new PageResponse<>(page);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new ApiResponse<>(res));
+    }
+
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<PageResponse<BlogReviewResponse>>> getCurrentUserBlogs(
             @Filter Specification<Blog> spec,

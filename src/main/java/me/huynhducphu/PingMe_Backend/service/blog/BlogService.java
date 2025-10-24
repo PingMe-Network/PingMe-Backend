@@ -30,6 +30,11 @@ public interface BlogService {
             Pageable pageable
     );
 
+    Page<BlogReviewResponse> getAllBlogs(
+            Specification<Blog> spec,
+            Pageable pageable
+    );
+
     BlogDetailsResponse getBlogDetailsById(Long id);
 
 

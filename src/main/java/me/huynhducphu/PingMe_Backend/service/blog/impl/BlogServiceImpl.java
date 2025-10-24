@@ -113,6 +113,16 @@ public class BlogServiceImpl implements me.huynhducphu.PingMe_Backend.service.bl
     }
 
     @Override
+    public Page<BlogReviewResponse> getAllBlogs(
+            Specification<Blog> spec,
+            Pageable pageable
+    ) {
+        return blogRepository
+                .findAll(spec, pageable)
+                .map(blog -> modelMapper.map(blog, BlogReviewResponse.class));
+    }
+
+    @Override
     public BlogDetailsResponse getBlogDetailsById(Long id) {
         var blog = blogRepository.findById(id).orElse(null);
 
