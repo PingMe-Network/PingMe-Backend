@@ -13,10 +13,15 @@ import org.springframework.data.redis.connection.RedisPassword;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Admin 8/16/2025
@@ -55,24 +60,45 @@ public class RedisConfiguration {
     // 2. Đăng ký RedisTemplate
     // =====================================================================
     @Bean
-    public RedisTemplate<String, DeviceMeta> redisSessionMetaTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, DeviceMeta> template = new RedisTemplate<>();
-        template.setConnectionFactory(connectionFactory);
+    public ObjectMapper redisObjectMapper() {
+        ObjectMapper om = new ObjectMapper();
+        om.registerModule(new JavaTimeModule());
+        return om;
+    }
 
-        // KEY
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setHashKeySerializer(new StringRedisSerializer());
+    @Bean
+    public RedisTemplate<String, DeviceMeta>
+    redisSessionMetaTemplate(
+            RedisConnectionFactory cf,
+            ObjectMapper om
+    ) {
+        var keySer = new StringRedisSerializer();
+        var valSer = new Jackson2JsonRedisSerializer<>(om, DeviceMeta.class);
 
-        // VALUE
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        Jackson2JsonRedisSerializer<DeviceMeta> valueSerializer =
-                new Jackson2JsonRedisSerializer<>(objectMapper, DeviceMeta.class);
+        RedisTemplate<String, DeviceMeta> tpl = new RedisTemplate<>();
+        tpl.setConnectionFactory(cf);
+        tpl.setKeySerializer(keySer);
+        tpl.setHashKeySerializer(keySer);
+        tpl.setValueSerializer(valSer);
+        tpl.setHashValueSerializer(valSer);
+        return tpl;
+    }
 
-        template.setValueSerializer(valueSerializer);
-        template.setHashValueSerializer(valueSerializer);
+    @Bean
+    public RedisTemplate<String, List<String>> redisPermissionTemplate(
+            RedisConnectionFactory cf,
+            ObjectMapper om
+    ) {
+        var keySer = new StringRedisSerializer();
+        var valSer = new GenericJackson2JsonRedisSerializer(om);
 
-        return template;
+        RedisTemplate<String, List<String>> tpl = new RedisTemplate<>();
+        tpl.setConnectionFactory(cf);
+        tpl.setKeySerializer(keySer);
+        tpl.setHashKeySerializer(keySer);
+        tpl.setValueSerializer(valSer);
+        tpl.setHashValueSerializer(valSer);
+        return tpl;
     }
 
 
@@ -82,8 +108,18 @@ public class RedisConfiguration {
     //    - Chỉ áp dụng cho các cache dùng annotation (@Cacheable, @CacheEvict...)
     // =====================================================================
     @Bean
-    public RedisCacheConfiguration cacheConfiguration() {
+    public RedisCacheConfiguration cacheConfiguration(ObjectMapper om) {
         return RedisCacheConfiguration.defaultCacheConfig()
+                .serializeKeysWith(
+                        RedisSerializationContext
+                                .SerializationPair
+                                .fromSerializer(new StringRedisSerializer())
+                )
+                .serializeValuesWith(
+                        RedisSerializationContext
+                                .SerializationPair
+                                .fromSerializer(new GenericJackson2JsonRedisSerializer(om))
+                )
                 .entryTtl(Duration.ofMinutes(15))
                 .disableCachingNullValues();
     }
@@ -94,11 +130,14 @@ public class RedisConfiguration {
     //    - Tự động áp dụng các cấu hình phía trên cho toàn bộ cache
     // =====================================================================
     @Bean
-    public RedisCacheManager cacheManager(
-            RedisConnectionFactory factory,
-            RedisCacheConfiguration cacheConfiguration) {
+    public RedisCacheManager cacheManager(RedisConnectionFactory factory, RedisCacheConfiguration baseCfg) {
+        Map<String, RedisCacheConfiguration> configs = new HashMap<>();
+
+        configs.put("role_permissions", baseCfg.entryTtl(Duration.ofHours(2)));
+
         return RedisCacheManager.builder(factory)
-                .cacheDefaults(cacheConfiguration)
+                .cacheDefaults(baseCfg)
+                .withInitialCacheConfigurations(configs)
                 .transactionAware()
                 .build();
     }
