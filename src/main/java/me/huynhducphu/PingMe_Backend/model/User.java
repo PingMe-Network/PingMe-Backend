@@ -56,4 +56,8 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<BlogComment> blogComments;
 
+    @ManyToOne
+    @JoinColumn(name = "role_id")
+    private Role role;
+
 }
