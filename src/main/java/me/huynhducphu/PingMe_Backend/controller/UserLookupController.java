@@ -2,7 +2,7 @@ package me.huynhducphu.PingMe_Backend.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import me.huynhducphu.PingMe_Backend.dto.response.ApiResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummaryResponse;
 import me.huynhducphu.PingMe_Backend.service.user_lookup.UserLookupService;
 import org.springframework.http.HttpStatus;

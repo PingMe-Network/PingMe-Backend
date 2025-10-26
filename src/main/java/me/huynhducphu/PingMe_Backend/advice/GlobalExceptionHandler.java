@@ -2,7 +2,7 @@ package me.huynhducphu.PingMe_Backend.advice;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
-import me.huynhducphu.PingMe_Backend.dto.response.ApiResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;

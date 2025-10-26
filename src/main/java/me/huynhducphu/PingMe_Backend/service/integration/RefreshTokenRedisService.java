@@ -1,7 +1,7 @@
 package me.huynhducphu.PingMe_Backend.service.integration;
 
-import me.huynhducphu.PingMe_Backend.dto.request.user_account.SessionMetaRequest;
-import me.huynhducphu.PingMe_Backend.dto.response.user_account.UserDeviceMetaResponse;
+import me.huynhducphu.PingMe_Backend.dto.request.authentication.SubmitSessionMetaRequest;
+import me.huynhducphu.PingMe_Backend.dto.response.authentication.CurrentUserDeviceMetaResponse;
 
 import java.time.Duration;
 import java.util.List;
@@ -12,7 +12,7 @@ import java.util.List;
 public interface RefreshTokenRedisService {
     void saveRefreshToken(
             String token, String userId,
-            SessionMetaRequest sessionMetaRequest, Duration expire
+            SubmitSessionMetaRequest submitSessionMetaRequest, Duration expire
     );
 
     boolean validateToken(String token, String userId);
@@ -21,6 +21,6 @@ public interface RefreshTokenRedisService {
 
     void deleteRefreshToken(String key);
 
-    List<UserDeviceMetaResponse> getAllDeviceMetas(String userId, String currentRefreshToken);
+    List<CurrentUserDeviceMetaResponse> getAllDeviceMetas(String userId, String currentRefreshToken);
 
 }

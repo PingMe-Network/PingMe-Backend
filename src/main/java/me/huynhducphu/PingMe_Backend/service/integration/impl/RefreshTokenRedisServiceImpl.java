@@ -1,12 +1,13 @@
 package me.huynhducphu.PingMe_Backend.service.integration.impl;
 
 import lombok.RequiredArgsConstructor;
-import me.huynhducphu.PingMe_Backend.dto.request.user_account.SessionMetaRequest;
-import me.huynhducphu.PingMe_Backend.dto.response.user_account.UserDeviceMetaResponse;
+import me.huynhducphu.PingMe_Backend.dto.request.authentication.SubmitSessionMetaRequest;
+import me.huynhducphu.PingMe_Backend.dto.response.authentication.CurrentUserDeviceMetaResponse;
 import me.huynhducphu.PingMe_Backend.model.common.DeviceMeta;
 import me.huynhducphu.PingMe_Backend.service.integration.RefreshTokenRedisService;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -24,21 +25,23 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class RefreshTokenRedisServiceImpl implements RefreshTokenRedisService {
 
+    @Qualifier("redisSessionMetaTemplate")
     private final RedisTemplate<String, DeviceMeta> redisSessionMetaTemplate;
+
     private final ModelMapper modelMapper;
 
     @Override
     public void saveRefreshToken(
             String token, String userId,
-            SessionMetaRequest sessionMetaRequest, Duration expire
+            SubmitSessionMetaRequest submitSessionMetaRequest, Duration expire
     ) {
         String sessionId = buildKey(token, userId);
 
         DeviceMeta deviceMeta = new DeviceMeta(
                 sessionId,
-                sessionMetaRequest.getDeviceType(),
-                sessionMetaRequest.getBrowser(),
-                sessionMetaRequest.getOs(),
+                submitSessionMetaRequest.getDeviceType(),
+                submitSessionMetaRequest.getBrowser(),
+                submitSessionMetaRequest.getOs(),
                 Instant.now().toString()
         );
 
@@ -46,14 +49,14 @@ public class RefreshTokenRedisServiceImpl implements RefreshTokenRedisService {
     }
 
     @Override
-    public List<UserDeviceMetaResponse> getAllDeviceMetas(String userId, String currentRefreshToken) {
+    public List<CurrentUserDeviceMetaResponse> getAllDeviceMetas(String userId, String currentRefreshToken) {
         String keyPattern = "auth::refresh_token:" + userId + ":*";
         Set<String> keys = redisSessionMetaTemplate.keys(keyPattern);
 
         if (keys == null || keys.isEmpty()) return Collections.emptyList();
         String currentTokenHash = DigestUtils.sha256Hex(currentRefreshToken);
 
-        List<UserDeviceMetaResponse> sessionMetas = new ArrayList<>();
+        List<CurrentUserDeviceMetaResponse> sessionMetas = new ArrayList<>();
         for (String key : keys) {
             DeviceMeta meta = redisSessionMetaTemplate.opsForValue().get(key);
             if (meta == null) continue;
@@ -61,7 +64,7 @@ public class RefreshTokenRedisServiceImpl implements RefreshTokenRedisService {
             String keyHash = key.substring(key.lastIndexOf(":") + 1);
             boolean isCurrent = currentTokenHash.equals(keyHash);
 
-            var sessionMetaResponse = modelMapper.map(meta, UserDeviceMetaResponse.class);
+            var sessionMetaResponse = modelMapper.map(meta, CurrentUserDeviceMetaResponse.class);
             sessionMetaResponse.setCurrent(isCurrent);
 
             sessionMetas.add(sessionMetaResponse);
