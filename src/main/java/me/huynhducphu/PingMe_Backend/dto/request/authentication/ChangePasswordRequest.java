@@ -1,4 +1,4 @@
-package me.huynhducphu.PingMe_Backend.dto.request.user_account;
+package me.huynhducphu.PingMe_Backend.dto.request.authentication;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;

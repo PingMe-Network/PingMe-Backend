@@ -1,9 +1,9 @@
-package me.huynhducphu.PingMe_Backend.dto.response.user_account.common;
+package me.huynhducphu.PingMe_Backend.dto.response.authentication.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import me.huynhducphu.PingMe_Backend.dto.response.user_account.DefaultAuthResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.authentication.DefaultAuthResponse;
 import org.springframework.http.ResponseCookie;
 
 /**

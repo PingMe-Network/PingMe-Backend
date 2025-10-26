@@ -1,18 +1,18 @@
-package me.huynhducphu.PingMe_Backend.service.user_account.impl;
+package me.huynhducphu.PingMe_Backend.service.authentication.impl;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import me.huynhducphu.PingMe_Backend.dto.request.user_account.*;
-import me.huynhducphu.PingMe_Backend.dto.response.user_account.common.AuthResultWrapper;
-import me.huynhducphu.PingMe_Backend.dto.response.user_account.DefaultAuthResponse;
-import me.huynhducphu.PingMe_Backend.dto.response.user_account.UserDeviceMetaResponse;
-import me.huynhducphu.PingMe_Backend.dto.response.user_account.UserInfoResponse;
-import me.huynhducphu.PingMe_Backend.dto.response.user_account.UserSessionResponse;
+import me.huynhducphu.PingMe_Backend.dto.request.authentication.*;
+import me.huynhducphu.PingMe_Backend.dto.response.authentication.common.AuthResultWrapper;
+import me.huynhducphu.PingMe_Backend.dto.response.authentication.DefaultAuthResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.authentication.CurrentUserDeviceMetaResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.authentication.CurrentUserProfileResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.authentication.CurrentUserSessionResponse;
 import me.huynhducphu.PingMe_Backend.model.User;
 import me.huynhducphu.PingMe_Backend.model.constant.AuthProvider;
 import me.huynhducphu.PingMe_Backend.repository.UserRepository;
-import me.huynhducphu.PingMe_Backend.service.user_account.UserAccountService;
-import me.huynhducphu.PingMe_Backend.service.user_account.JwtService;
+import me.huynhducphu.PingMe_Backend.service.authentication.UserAccountService;
+import me.huynhducphu.PingMe_Backend.service.authentication.JwtService;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import me.huynhducphu.PingMe_Backend.service.integration.RefreshTokenRedisService;
 import me.huynhducphu.PingMe_Backend.service.integration.S3Service;
@@ -72,7 +72,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     private boolean secure;
 
     @Override
-    public UserSessionResponse register(
+    public CurrentUserSessionResponse register(
             RegisterRequest registerRequest) {
         var user = modelMapper.map(registerRequest, User.class);
 
@@ -83,7 +83,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         var savedUser = userRepository.save(user);
 
-        return modelMapper.map(savedUser, UserSessionResponse.class);
+        return modelMapper.map(savedUser, CurrentUserSessionResponse.class);
     }
 
     @Override
@@ -96,7 +96,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         var authentication = authenticationManager.authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        return buildAuthResultWrapper(currentUserProvider.get(), loginRequest.getSessionMetaRequest());
+        return buildAuthResultWrapper(currentUserProvider.get(), loginRequest.getSubmitSessionMetaRequest());
     }
 
     @Override
@@ -122,7 +122,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     public AuthResultWrapper refreshSession(
-            String refreshToken, SessionMetaRequest sessionMetaRequest
+            String refreshToken, SubmitSessionMetaRequest submitSessionMetaRequest
     ) {
         String email = jwtService.decodeJwt(refreshToken).getSubject();
         var refreshTokenUser = userRepository
@@ -134,23 +134,23 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         refreshTokenRedisService.deleteRefreshToken(refreshToken, refreshTokenUser.getId().toString());
 
-        return buildAuthResultWrapper(refreshTokenUser, sessionMetaRequest);
+        return buildAuthResultWrapper(refreshTokenUser, submitSessionMetaRequest);
     }
 
     @Override
-    public UserSessionResponse getCurrentUserSession() {
+    public CurrentUserSessionResponse getCurrentUserSession() {
         var user = currentUserProvider.get();
-        return modelMapper.map(user, UserSessionResponse.class);
+        return modelMapper.map(user, CurrentUserSessionResponse.class);
     }
 
     @Override
-    public UserInfoResponse getCurrentUserInfo() {
+    public CurrentUserProfileResponse getCurrentUserInfo() {
         var user = currentUserProvider.get();
-        return modelMapper.map(user, UserInfoResponse.class);
+        return modelMapper.map(user, CurrentUserProfileResponse.class);
     }
 
     @Override
-    public List<UserDeviceMetaResponse> getCurrentUserAllDeviceMetas(
+    public List<CurrentUserDeviceMetaResponse> getCurrentUserAllDeviceMetas(
             String refreshToken
     ) {
         var currentUser = currentUserProvider.get();
@@ -167,7 +167,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     @Override
-    public UserSessionResponse updateCurrentUserPassword(
+    public CurrentUserSessionResponse updateCurrentUserPassword(
             ChangePasswordRequest changePasswordRequest
     ) {
         var user = currentUserProvider.get();
@@ -177,11 +177,11 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         user.setPassword(passwordEncoder.encode(changePasswordRequest.getNewPassword()));
 
-        return modelMapper.map(user, UserSessionResponse.class);
+        return modelMapper.map(user, CurrentUserSessionResponse.class);
     }
 
     @Override
-    public UserSessionResponse updateCurrentUserProfile(
+    public CurrentUserSessionResponse updateCurrentUserProfile(
             ChangeProfileRequest changeProfileRequest
     ) {
         var user = currentUserProvider.get();
@@ -191,11 +191,11 @@ public class UserAccountServiceImpl implements UserAccountService {
         user.setAddress(changeProfileRequest.getAddress());
         user.setDob(changeProfileRequest.getDob());
 
-        return modelMapper.map(user, UserSessionResponse.class);
+        return modelMapper.map(user, CurrentUserSessionResponse.class);
     }
 
     @Override
-    public UserSessionResponse updateCurrentUserAvatar(
+    public CurrentUserSessionResponse updateCurrentUserAvatar(
             MultipartFile avatarFile
     ) {
         var user = currentUserProvider.get();
@@ -211,7 +211,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         user.setAvatarUrl(url);
         user.setUpdatedAt(LocalDateTime.now());
 
-        return modelMapper.map(user, UserSessionResponse.class);
+        return modelMapper.map(user, CurrentUserSessionResponse.class);
     }
 
     @Override
@@ -232,14 +232,14 @@ public class UserAccountServiceImpl implements UserAccountService {
     // =====================================
     private AuthResultWrapper buildAuthResultWrapper(
             User user,
-            SessionMetaRequest sessionMetaRequest
+            SubmitSessionMetaRequest submitSessionMetaRequest
     ) {
         // ================================================
         // HANDLE ACCESS TOKEN
         // ================================================
         var accessToken = jwtService.buildJwt(user, accessTokenExpiration);
         var defaultAuthResponseDto = new DefaultAuthResponse(
-                modelMapper.map(user, UserSessionResponse.class),
+                modelMapper.map(user, CurrentUserSessionResponse.class),
                 accessToken
         );
 
@@ -250,7 +250,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         refreshTokenRedisService.saveRefreshToken(
                 refreshToken,
                 user.getId().toString(),
-                sessionMetaRequest,
+                submitSessionMetaRequest,
                 Duration.ofSeconds(refreshTokenExpiration)
         );
 

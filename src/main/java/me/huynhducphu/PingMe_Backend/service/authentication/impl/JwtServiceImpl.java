@@ -1,10 +1,10 @@
-package me.huynhducphu.PingMe_Backend.service.user_account.impl;
+package me.huynhducphu.PingMe_Backend.service.authentication.impl;
 
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.config.auth.AuthConfiguration;
-import me.huynhducphu.PingMe_Backend.dto.response.user_account.UserSessionResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.authentication.CurrentUserSessionResponse;
 import me.huynhducphu.PingMe_Backend.model.User;
-import me.huynhducphu.PingMe_Backend.service.user_account.JwtService;
+import me.huynhducphu.PingMe_Backend.service.authentication.JwtService;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
@@ -42,11 +42,13 @@ public class JwtServiceImpl implements JwtService {
         // + expiresAt: thời điểm token hết hạn
         // + subject: email của người dùng (được dùng làm định danh chính)
         // + claim "user": thông tin cơ bản của người dùng, được map sang DTO UserSessionResponse
+        // + claim "role": tên chức vụ của người dùng
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuedAt(now)
                 .expiresAt(validity)
                 .subject(user.getEmail())
-                .claim("user", modelMapper.map(user, UserSessionResponse.class))
+                .claim("user", modelMapper.map(user, CurrentUserSessionResponse.class))
+                .claim("role", user.getRole().getName())
                 .build();
 
         // Cuối cùng, encode JWT và lấy ra chuỗi token trả về

@@ -3,13 +3,13 @@ package me.huynhducphu.PingMe_Backend.controller;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import me.huynhducphu.PingMe_Backend.dto.request.user_account.*;
+import me.huynhducphu.PingMe_Backend.dto.request.authentication.*;
 import me.huynhducphu.PingMe_Backend.dto.response.ApiResponse;
-import me.huynhducphu.PingMe_Backend.dto.response.user_account.DefaultAuthResponse;
-import me.huynhducphu.PingMe_Backend.dto.response.user_account.UserDeviceMetaResponse;
-import me.huynhducphu.PingMe_Backend.dto.response.user_account.UserInfoResponse;
-import me.huynhducphu.PingMe_Backend.dto.response.user_account.UserSessionResponse;
-import me.huynhducphu.PingMe_Backend.service.user_account.UserAccountService;
+import me.huynhducphu.PingMe_Backend.dto.response.authentication.DefaultAuthResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.authentication.CurrentUserDeviceMetaResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.authentication.CurrentUserProfileResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.authentication.CurrentUserSessionResponse;
+import me.huynhducphu.PingMe_Backend.service.authentication.UserAccountService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +33,7 @@ public class UserAccountController {
     private final UserAccountService userAccountService;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<UserSessionResponse>> registerLocal(
+    public ResponseEntity<ApiResponse<CurrentUserSessionResponse>> registerLocal(
             @RequestBody @Valid RegisterRequest registerRequest
     ) {
         return ResponseEntity
@@ -66,9 +66,9 @@ public class UserAccountController {
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<DefaultAuthResponse>> refreshSession(
             @CookieValue(value = "refresh_token") String refreshToken,
-            @RequestBody SessionMetaRequest sessionMetaRequest
+            @RequestBody SubmitSessionMetaRequest submitSessionMetaRequest
     ) {
-        var authResultWrapper = userAccountService.refreshSession(refreshToken, sessionMetaRequest);
+        var authResultWrapper = userAccountService.refreshSession(refreshToken, submitSessionMetaRequest);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -77,21 +77,21 @@ public class UserAccountController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<UserSessionResponse>> getCurrentUserSession() {
+    public ResponseEntity<ApiResponse<CurrentUserSessionResponse>> getCurrentUserSession() {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new ApiResponse<>(userAccountService.getCurrentUserSession()));
     }
 
     @GetMapping("/me/info")
-    public ResponseEntity<ApiResponse<UserInfoResponse>> getCurrentUserInfo() {
+    public ResponseEntity<ApiResponse<CurrentUserProfileResponse>> getCurrentUserInfo() {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new ApiResponse<>(userAccountService.getCurrentUserInfo()));
     }
 
     @GetMapping("/me/sessions")
-    public ResponseEntity<ApiResponse<List<UserDeviceMetaResponse>>> getCurrentUserAllDeviceMetas(
+    public ResponseEntity<ApiResponse<List<CurrentUserDeviceMetaResponse>>> getCurrentUserAllDeviceMetas(
             @CookieValue(value = "refresh_token") String refreshToken
     ) {
         return ResponseEntity
@@ -100,7 +100,7 @@ public class UserAccountController {
     }
 
     @PostMapping("/me/password")
-    public ResponseEntity<ApiResponse<UserSessionResponse>> updateCurrentUserPassword(
+    public ResponseEntity<ApiResponse<CurrentUserSessionResponse>> updateCurrentUserPassword(
             @RequestBody @Valid ChangePasswordRequest changePasswordRequest
     ) {
         return ResponseEntity
@@ -109,7 +109,7 @@ public class UserAccountController {
     }
 
     @PostMapping("/me/profile")
-    public ResponseEntity<ApiResponse<UserSessionResponse>> updateCurrentUserProfile(
+    public ResponseEntity<ApiResponse<CurrentUserSessionResponse>> updateCurrentUserProfile(
             @RequestBody @Valid ChangeProfileRequest changeProfileRequest
     ) {
         return ResponseEntity
@@ -118,7 +118,7 @@ public class UserAccountController {
     }
 
     @PostMapping("/me/avatar")
-    public ResponseEntity<ApiResponse<UserSessionResponse>> updateCurrentUserAvatar(
+    public ResponseEntity<ApiResponse<CurrentUserSessionResponse>> updateCurrentUserAvatar(
             @RequestParam("avatar") MultipartFile avatarFile
     ) {
         return ResponseEntity

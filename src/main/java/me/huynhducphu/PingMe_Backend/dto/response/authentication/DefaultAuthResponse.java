@@ -1,4 +1,4 @@
-package me.huynhducphu.PingMe_Backend.dto.response.user_account;
+package me.huynhducphu.PingMe_Backend.dto.response.authentication;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class DefaultAuthResponse {
 
-    private UserSessionResponse userSession;
+    private CurrentUserSessionResponse userSession;
     private String accessToken;
 
 }

@@ -1,4 +1,4 @@
-package me.huynhducphu.PingMe_Backend.dto.request.user_account;
+package me.huynhducphu.PingMe_Backend.dto.request.authentication;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -24,6 +24,6 @@ public class LoginRequest {
     @NotBlank(message = "Mật khẩu người dùng không được để trống")
     private String password;
 
-    private SessionMetaRequest sessionMetaRequest;
+    private SubmitSessionMetaRequest submitSessionMetaRequest;
 
 }
