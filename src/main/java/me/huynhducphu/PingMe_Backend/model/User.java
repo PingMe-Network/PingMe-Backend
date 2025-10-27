@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import me.huynhducphu.PingMe_Backend.model.common.BaseEntity;
 import me.huynhducphu.PingMe_Backend.model.constant.AuthProvider;
 import me.huynhducphu.PingMe_Backend.model.constant.Gender;
+import me.huynhducphu.PingMe_Backend.model.constant.UserStatus;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -42,6 +43,9 @@ public class User extends BaseEntity {
     private String address;
 
     private LocalDate dob;
+
+    @Enumerated(EnumType.STRING)
+    private UserStatus status;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "auth_provider", nullable = false)
