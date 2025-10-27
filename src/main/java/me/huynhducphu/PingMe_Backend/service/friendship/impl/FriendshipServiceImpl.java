@@ -325,4 +325,16 @@ public class FriendshipServiceImpl implements me.huynhducphu.PingMe_Backend.serv
     }
 
 
+    public List<Friendship> getAllFriendshipsOfCurrentUser(String email) {
+        // Lấy thông tin người dùng hiện tại
+        var currentUser = userRepository
+                .getUserByEmail(email)
+                .orElseThrow(()->new EntityNotFoundException("Khong tim thay nguoi dung"));
+
+        return friendshipRepository.findAllByStatusAndUserWithoutBeforeId(
+                FriendshipStatus.ACCEPTED, currentUser.getId()
+        );
+    }
+
+
 }
