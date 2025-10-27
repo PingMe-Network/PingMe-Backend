@@ -83,7 +83,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         var savedUser = userRepository.save(user);
 
-        return modelMapper.map(savedUser, CurrentUserSessionResponse.class);
+        return mapToCurrentUserSessionResponse(savedUser);
     }
 
     @Override
@@ -139,14 +139,15 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     public CurrentUserSessionResponse getCurrentUserSession() {
-        var user = currentUserProvider.get();
-        return modelMapper.map(user, CurrentUserSessionResponse.class);
+        return mapToCurrentUserSessionResponse(currentUserProvider.get());
     }
 
     @Override
     public CurrentUserProfileResponse getCurrentUserInfo() {
         var user = currentUserProvider.get();
-        return modelMapper.map(user, CurrentUserProfileResponse.class);
+        var currentUserProfileResponse = modelMapper.map(user, CurrentUserProfileResponse.class);
+        currentUserProfileResponse.setRoleName(user.getRole().getName());
+        return currentUserProfileResponse;
     }
 
     @Override
@@ -177,7 +178,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         user.setPassword(passwordEncoder.encode(changePasswordRequest.getNewPassword()));
 
-        return modelMapper.map(user, CurrentUserSessionResponse.class);
+        return mapToCurrentUserSessionResponse(user);
     }
 
     @Override
@@ -191,7 +192,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         user.setAddress(changeProfileRequest.getAddress());
         user.setDob(changeProfileRequest.getDob());
 
-        return modelMapper.map(user, CurrentUserSessionResponse.class);
+        return mapToCurrentUserSessionResponse(user);
     }
 
     @Override
@@ -211,7 +212,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         user.setAvatarUrl(url);
         user.setUpdatedAt(LocalDateTime.now());
 
-        return modelMapper.map(user, CurrentUserSessionResponse.class);
+        return mapToCurrentUserSessionResponse(user);
     }
 
     @Override
@@ -230,6 +231,14 @@ public class UserAccountServiceImpl implements UserAccountService {
     // =====================================
     // Utilities methods
     // =====================================
+    private CurrentUserSessionResponse mapToCurrentUserSessionResponse(User user) {
+        var res = modelMapper.map(user, CurrentUserSessionResponse.class);
+        
+        var roleName = user.getRole() != null ? user.getRole().getName() : "";
+        res.setRoleName(roleName);
+        return res;
+    }
+
     private AuthResultWrapper buildAuthResultWrapper(
             User user,
             SubmitSessionMetaRequest submitSessionMetaRequest
@@ -239,7 +248,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         // ================================================
         var accessToken = jwtService.buildJwt(user, accessTokenExpiration);
         var defaultAuthResponseDto = new DefaultAuthResponse(
-                modelMapper.map(user, CurrentUserSessionResponse.class),
+                mapToCurrentUserSessionResponse(user),
                 accessToken
         );
 

@@ -25,5 +25,6 @@ public class CurrentUserProfileResponse {
     private Gender gender;
     private String address;
     private LocalDate dob;
+    private String roleName;
 
 }

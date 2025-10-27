@@ -1,6 +1,7 @@
 package me.huynhducphu.PingMe_Backend.config.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import me.huynhducphu.PingMe_Backend.model.common.DeviceMeta;
 import org.springframework.beans.factory.annotation.Value;
@@ -63,12 +64,12 @@ public class RedisConfiguration {
     public ObjectMapper redisObjectMapper() {
         ObjectMapper om = new ObjectMapper();
         om.registerModule(new JavaTimeModule());
+        om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         return om;
     }
 
     @Bean
-    public RedisTemplate<String, DeviceMeta>
-    redisSessionMetaTemplate(
+    public RedisTemplate<String, DeviceMeta> redisSessionMetaTemplate(
             RedisConnectionFactory cf,
             ObjectMapper om
     ) {
@@ -83,24 +84,6 @@ public class RedisConfiguration {
         tpl.setHashValueSerializer(valSer);
         return tpl;
     }
-
-    @Bean
-    public RedisTemplate<String, List<String>> redisPermissionTemplate(
-            RedisConnectionFactory cf,
-            ObjectMapper om
-    ) {
-        var keySer = new StringRedisSerializer();
-        var valSer = new GenericJackson2JsonRedisSerializer(om);
-
-        RedisTemplate<String, List<String>> tpl = new RedisTemplate<>();
-        tpl.setConnectionFactory(cf);
-        tpl.setKeySerializer(keySer);
-        tpl.setHashKeySerializer(keySer);
-        tpl.setValueSerializer(valSer);
-        tpl.setHashValueSerializer(valSer);
-        return tpl;
-    }
-
 
     // =====================================================================
     // 3. Cấu hình Spring Cache với Redis

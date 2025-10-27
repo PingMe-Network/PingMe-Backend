@@ -2,12 +2,17 @@ package me.huynhducphu.PingMe_Backend.config.auth;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.util.Base64;
+import lombok.RequiredArgsConstructor;
+import me.huynhducphu.PingMe_Backend.service.authorization.PermissionCacheService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -17,10 +22,11 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Admin 8/3/2025
@@ -32,6 +38,7 @@ public class AuthConfiguration {
     private String jwtKey;
 
     public static final MacAlgorithm MAC_ALGORITHM = MacAlgorithm.HS512;
+
 
     @Bean
     public JwtEncoder jwtEncoder() {
@@ -47,13 +54,25 @@ public class AuthConfiguration {
     }
 
     @Bean
-    public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        grantedAuthoritiesConverter.setAuthorityPrefix("");
-        grantedAuthoritiesConverter.setAuthoritiesClaimName("permissions");
-
+    public JwtAuthenticationConverter jwtAuthenticationConverter(
+            PermissionCacheService permissionCacheService
+    ) {
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
-        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
+            String role = jwt.getClaimAsString("role");
+
+
+            if (role == null || role.isBlank())
+                return List.of();
+
+            List<GrantedAuthority> authorities = permissionCacheService
+                    .getPermissionsByRole(role)
+                    .stream()
+                    .map(p -> (GrantedAuthority) new SimpleGrantedAuthority(p))
+                    .toList();
+
+            return authorities;
+        });
         return jwtAuthenticationConverter;
     }
 
