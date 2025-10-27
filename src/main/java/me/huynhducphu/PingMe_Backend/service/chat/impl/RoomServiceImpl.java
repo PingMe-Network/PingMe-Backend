@@ -147,6 +147,7 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
                         rp.getUser().getId(),
                         rp.getUser().getName(),
                         rp.getUser().getAvatarUrl(),
+                        rp.getUser().getStatus(),
                         rp.getRole(),
                         rp.getLastReadMessageId(),
                         rp.getLastReadAt()
