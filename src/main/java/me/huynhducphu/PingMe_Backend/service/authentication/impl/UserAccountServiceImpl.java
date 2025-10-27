@@ -278,4 +278,12 @@ public class UserAccountServiceImpl implements UserAccountService {
         );
     }
 
+    public void connect (Long userId){
+        userRepository.connect(userId);
+    }
+
+    public void disconnect (Long userId){
+        userRepository.disconnect(userId);
+    }
+
 }
