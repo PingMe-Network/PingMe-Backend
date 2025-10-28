@@ -41,6 +41,7 @@ target/
 *.local
 .env
 .env.*
+application-dev.properties
 
 # ====================
 # Editor directories and files
