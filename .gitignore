@@ -62,3 +62,6 @@ application-dev.properties
 Thumbs.db
 Desktop.ini
 
+#Ignore properties file
+src/main/resources/*.properties
+

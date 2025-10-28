@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -89,4 +90,18 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
     UserFriendshipStatsResponse getStats(@Param("userId") Long userId);
 
 
+    @Query("""
+                SELECT f
+                FROM Friendship f
+                WHERE f.friendshipStatus = :status
+                  AND (
+                    (f.userA.id = :userId)
+                    OR (f.userB.id = :userId)
+                  )
+                ORDER BY f.id DESC
+            """)
+    List<Friendship> findAllByStatusAndUserWithoutBeforeId(
+            @Param("status") FriendshipStatus status,
+            @Param("userId") Long userId
+    );
 }

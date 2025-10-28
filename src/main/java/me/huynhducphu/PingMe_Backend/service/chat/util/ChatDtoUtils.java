@@ -40,6 +40,7 @@ public class ChatDtoUtils {
                         rp.getUser().getId(),
                         rp.getUser().getName(),
                         rp.getUser().getAvatarUrl(),
+                        rp.getUser().getStatus(),
                         rp.getRole(),
                         rp.getLastReadMessageId(),
                         rp.getLastReadAt()

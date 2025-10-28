@@ -44,4 +44,8 @@ public interface UserAccountService {
     CurrentUserSessionResponse updateCurrentUserAvatar(
             MultipartFile avatarFile
     );
+
+    void connect(Long userId);
+
+    void disconnect(Long userId);
 }

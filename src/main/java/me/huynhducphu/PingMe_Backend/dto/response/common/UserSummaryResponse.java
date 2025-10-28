@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import me.huynhducphu.PingMe_Backend.model.constant.FriendshipStatus;
+import me.huynhducphu.PingMe_Backend.model.constant.UserStatus;
 
 /**
  * Admin 8/19/2025
@@ -17,6 +18,7 @@ public class UserSummaryResponse {
     private String email;
     private String name;
     private String avatarUrl;
+    private UserStatus status;
     private FriendshipSummary friendshipSummary;
 
     @AllArgsConstructor

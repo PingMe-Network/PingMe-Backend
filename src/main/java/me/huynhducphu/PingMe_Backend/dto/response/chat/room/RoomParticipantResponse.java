@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import me.huynhducphu.PingMe_Backend.model.constant.RoomRole;
+import me.huynhducphu.PingMe_Backend.model.constant.UserStatus;
 
 import java.time.LocalDateTime;
 
@@ -18,6 +19,7 @@ public class RoomParticipantResponse {
     private Long userId;
     private String name;
     private String avatarUrl;
+    private UserStatus status;
     private RoomRole role;
     private Long lastReadMessageId;
     private LocalDateTime lastReadAt;
