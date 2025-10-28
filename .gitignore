@@ -42,7 +42,7 @@ target/
 .env
 .env.*
 #Ignore properties file
-src/main/resources/application-dev.propertie
+src/main/resources/application-dev.properties
 
 # ====================
 # Editor directories and files
