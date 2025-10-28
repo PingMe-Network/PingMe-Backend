@@ -41,7 +41,8 @@ target/
 *.local
 .env
 .env.*
-application-dev.properties
+#Ignore properties file
+src/main/resources/application-dev.propertie
 
 # ====================
 # Editor directories and files
@@ -62,6 +63,5 @@ application-dev.properties
 Thumbs.db
 Desktop.ini
 
-#Ignore properties file
-src/main/resources/application-dev.properties
+
 
