@@ -146,7 +146,9 @@ public class UserAccountServiceImpl implements UserAccountService {
     public CurrentUserProfileResponse getCurrentUserInfo() {
         var user = currentUserProvider.get();
         var currentUserProfileResponse = modelMapper.map(user, CurrentUserProfileResponse.class);
-        currentUserProfileResponse.setRoleName(user.getRole().getName());
+
+        String roleName = user.getRole() != null ? user.getRole().getName() : "";
+        currentUserProfileResponse.setRoleName(roleName);
         return currentUserProfileResponse;
     }
 
@@ -233,7 +235,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     // =====================================
     private CurrentUserSessionResponse mapToCurrentUserSessionResponse(User user) {
         var res = modelMapper.map(user, CurrentUserSessionResponse.class);
-        
+
         var roleName = user.getRole() != null ? user.getRole().getName() : "";
         res.setRoleName(roleName);
         return res;
@@ -278,11 +280,11 @@ public class UserAccountServiceImpl implements UserAccountService {
         );
     }
 
-    public void connect (Long userId){
+    public void connect(Long userId) {
         userRepository.connect(userId);
     }
 
-    public void disconnect (Long userId){
+    public void disconnect(Long userId) {
         userRepository.disconnect(userId);
     }
 
