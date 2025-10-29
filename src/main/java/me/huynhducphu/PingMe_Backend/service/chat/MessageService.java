@@ -5,6 +5,7 @@ import me.huynhducphu.PingMe_Backend.dto.request.chat.message.SendMessageRequest
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.HistoryMessageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.ReadStateResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -14,6 +15,11 @@ import java.util.List;
  **/
 public interface MessageService {
     MessageResponse sendMessage(SendMessageRequest sendMessageRequest);
+
+    MessageResponse sendFileMessage(
+            SendMessageRequest sendMessageRequest,
+            MultipartFile file
+    );
 
     ReadStateResponse markAsRead(MarkReadRequest markReadRequest);
 
