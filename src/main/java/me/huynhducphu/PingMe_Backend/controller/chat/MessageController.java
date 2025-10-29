@@ -41,7 +41,7 @@ public class MessageController {
 
     @PostMapping("/files")
     public ResponseEntity<ApiResponse<MessageResponse>> sendFileMessage(
-            @RequestBody @Valid SendMessageRequest sendMessageRequest,
+            @Valid @RequestPart(value = "message") SendMessageRequest sendMessageRequest,
             @RequestPart(value = "file") MultipartFile file
     ) {
         return ResponseEntity

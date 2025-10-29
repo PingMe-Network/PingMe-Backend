@@ -45,7 +45,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service.chat.MessageService {
 
-    private static final long MAX_BLOG_IMAGE_SIZE = 2 * 1024 * 1024L;
+    private static final long MAX_BLOG_IMAGE_SIZE = 10 * 1024 * 1024L;
 
     private final S3Service s3Service;
 

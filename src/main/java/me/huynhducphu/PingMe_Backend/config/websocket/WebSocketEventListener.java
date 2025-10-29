@@ -69,7 +69,7 @@ public class WebSocketEventListener {
             );
         }
 
-        log.info("User {} đã online", name);
+//        log.info("User {} đã online", name);
     }
 
     @EventListener
