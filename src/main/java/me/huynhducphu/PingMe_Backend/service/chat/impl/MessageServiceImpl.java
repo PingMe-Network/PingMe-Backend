@@ -20,6 +20,7 @@ import me.huynhducphu.PingMe_Backend.repository.RoomRepository;
 import me.huynhducphu.PingMe_Backend.repository.UserRepository;
 import me.huynhducphu.PingMe_Backend.service.chat.util.ChatDtoUtils;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
+import me.huynhducphu.PingMe_Backend.service.integration.S3Service;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -28,6 +29,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
 import java.time.LocalDateTime;
@@ -43,6 +45,10 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service.chat.MessageService {
 
+    private static final long MAX_BLOG_IMAGE_SIZE = 2 * 1024 * 1024L;
+
+    private final S3Service s3Service;
+
     private final CurrentUserProvider currentUserProvider;
 
     private final RoomRepository roomRepository;
@@ -54,6 +60,11 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
 
     private final ChatDtoUtils chatDtoUtils;
 
+    // ===========================================================================
+    // CÁC HÀM BÊN DƯỚI XỬ LÝ GỬI TIN NHẮN
+    // ===========================================================================
+
+    // HÀM CHÍNH XỬ LÝ GỬI TIN NHẮN
     @Override
     public MessageResponse sendMessage(SendMessageRequest sendMessageRequest) {
         // Lấy thộng tin người dùng hiện tại
@@ -65,7 +76,8 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         var senderId = currentUser.getId();
         var roomId = sendMessageRequest.getRoomId();
 
-        // Kiểm tra loại tin nhắn người đó gửi (TEXT, FILE, IMG, ...)
+        // Nếu không dạng file này một dạng file
+        // có thể chứa link qua từ s3
         if (sendMessageRequest.getType() != MessageType.TEXT)
             validateUrl(sendMessageRequest.getContent());
 
@@ -161,6 +173,37 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
     }
 
     @Override
+    public MessageResponse sendFileMessage(
+            SendMessageRequest sendMessageRequest,
+            MultipartFile file
+    ) {
+        if (file == null)
+            throw new IllegalArgumentException("File không tồn tại");
+
+        if (sendMessageRequest.getType() == MessageType.TEXT)
+            throw new IllegalArgumentException("Tin nhắn dạng TEXT không được upload file");
+
+        UUID fileName = UUID.randomUUID();
+
+        String url = s3Service.uploadFile(
+                file,
+                "chats",
+                fileName.toString(),
+                true,
+                MAX_BLOG_IMAGE_SIZE
+        );
+
+        sendMessageRequest.setContent(url);
+
+
+        return sendMessage(sendMessageRequest);
+    }
+
+    // ===========================================================================
+    // CÁC HÀM BÊN DƯỚI XỬ LÝ NGƯỜI DÙNG ĐÃ XEM TIN NHẮN
+    // ===========================================================================
+
+    @Override
     public ReadStateResponse markAsRead(MarkReadRequest markReadRequest) {
         var currentUser = currentUserProvider.get();
 
@@ -195,6 +238,10 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
 
         return new ReadStateResponse(roomId, userId, newPointer, roomParticipant.getLastReadAt(), unread);
     }
+
+    // ===========================================================================
+    // CÁC HÀM BÊN DƯỚI XỬ LÝ LẤY LỊCH SỬ TIN NHẮN
+    // ===========================================================================
 
     @Override
     public HistoryMessageResponse getHistoryMessages(
@@ -238,9 +285,9 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
     }
 
 
-    // =====================================
-    // Utilities methods
-    // =====================================
+    // ===========================================================================
+    // CÁC HÀM HỖ TRỢ KHÁC
+    // ===========================================================================
     private static void validateUrl(String url) {
         try {
             URI u = URI.create(url);

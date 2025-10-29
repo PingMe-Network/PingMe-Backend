@@ -13,6 +13,7 @@ import me.huynhducphu.PingMe_Backend.service.chat.MessageService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Admin 8/26/2025
@@ -36,6 +37,19 @@ public class MessageController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(messageService.sendMessage(sendMessageRequest)));
+    }
+
+    @PostMapping("/files")
+    public ResponseEntity<ApiResponse<MessageResponse>> sendFileMessage(
+            @RequestBody @Valid SendMessageRequest sendMessageRequest,
+            @RequestPart(value = "file") MultipartFile file
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(messageService.sendFileMessage(
+                        sendMessageRequest,
+                        file
+                )));
     }
 
     @PostMapping("/read")
