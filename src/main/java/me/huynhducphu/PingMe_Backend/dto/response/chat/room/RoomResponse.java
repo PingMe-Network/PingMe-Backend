@@ -3,6 +3,7 @@ package me.huynhducphu.PingMe_Backend.dto.response.chat.room;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import me.huynhducphu.PingMe_Backend.model.constant.MessageType;
 import me.huynhducphu.PingMe_Backend.model.constant.RoomType;
 
 import java.time.LocalDateTime;
@@ -31,6 +32,7 @@ public class RoomResponse {
         private Long messageId;
         private Long senderId;
         private String preview;
+        private MessageType messageType;
         private LocalDateTime createdAt;
     }
 }

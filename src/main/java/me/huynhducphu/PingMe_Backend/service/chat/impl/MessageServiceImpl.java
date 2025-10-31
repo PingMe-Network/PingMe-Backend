@@ -58,7 +58,6 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
 
     private final ApplicationEventPublisher eventPublisher;
 
-    private final ChatDtoUtils chatDtoUtils;
 
     // ===========================================================================
     // CÁC HÀM BÊN DƯỚI XỬ LÝ GỬI TIN NHẮN
@@ -105,7 +104,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         var existed = messageRepository
                 .findByRoom_IdAndSender_IdAndClientMsgId(roomId, senderId, clientMsgId)
                 .orElse(null);
-        if (existed != null) return chatDtoUtils.toMessageResponseDto(existed);
+        if (existed != null) return ChatDtoUtils.toMessageResponseDto(existed);
 
         // Nếu chưa tồn tại, tạo tin nhắn mới
         Message message = new Message();
@@ -169,7 +168,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         // ===================================================================================================
 
         // Trả dữ liệu về cho người gửi tin nhắn
-        return chatDtoUtils.toMessageResponseDto(message);
+        return ChatDtoUtils.toMessageResponseDto(message);
     }
 
     @Override
@@ -276,7 +275,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         List<MessageResponse> messageResponses = page
                 .getContent()
                 .stream()
-                .map(chatDtoUtils::toMessageResponseDto)
+                .map(x -> ChatDtoUtils.toMessageResponseDto(x))
                 .toList();
 
         Long total = page.getTotalElements();
