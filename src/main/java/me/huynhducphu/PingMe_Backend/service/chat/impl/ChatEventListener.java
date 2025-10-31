@@ -22,16 +22,15 @@ import java.util.List;
 public class ChatEventListener {
 
     private final SimpMessagingTemplate messagingTemplate;
-    private final ChatDtoUtils chatDtoUtils;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onMessageCreated(MessageCreatedEvent event) {
-        var messageResponse = chatDtoUtils.toMessageResponseDto(event.getMessage());
+        var messageResponse = ChatDtoUtils.toMessageResponseDto(event.getMessage());
         long roomId = messageResponse.getRoomId();
 
         String destination = "/topic/rooms/" + roomId + "/messages";
         var payload = new MessageCreatedEventPayload(messageResponse);
-        
+
         messagingTemplate.convertAndSend(destination, payload);
     }
 
@@ -44,7 +43,7 @@ public class ChatEventListener {
                 .toList();
 
         for (Long userId : participantIds) {
-            var payload = new RoomUpdatedEventPayload(chatDtoUtils.toRoomResponseDto(
+            var payload = new RoomUpdatedEventPayload(ChatDtoUtils.toRoomResponseDto(
                     event.getRoom(),
                     event.getRoomParticipants(),
                     userId

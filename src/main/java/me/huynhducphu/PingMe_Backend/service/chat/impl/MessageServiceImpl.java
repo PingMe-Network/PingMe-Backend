@@ -275,7 +275,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         List<MessageResponse> messageResponses = page
                 .getContent()
                 .stream()
-                .map(x -> ChatDtoUtils.toMessageResponseDto(x))
+                .map(ChatDtoUtils::toMessageResponseDto)
                 .toList();
 
         Long total = page.getTotalElements();
