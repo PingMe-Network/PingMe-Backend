@@ -2,9 +2,7 @@ package me.huynhducphu.PingMe_Backend.service.chat.impl;
 
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.room.CreateOrGetDirectRoomRequest;
-import me.huynhducphu.PingMe_Backend.dto.response.chat.room.RoomParticipantResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.room.RoomResponse;
-import me.huynhducphu.PingMe_Backend.model.Message;
 import me.huynhducphu.PingMe_Backend.model.Room;
 import me.huynhducphu.PingMe_Backend.model.RoomParticipant;
 import me.huynhducphu.PingMe_Backend.model.common.RoomMemberId;
@@ -13,6 +11,7 @@ import me.huynhducphu.PingMe_Backend.model.constant.RoomType;
 import me.huynhducphu.PingMe_Backend.repository.RoomParticipantRepository;
 import me.huynhducphu.PingMe_Backend.repository.RoomRepository;
 import me.huynhducphu.PingMe_Backend.repository.UserRepository;
+import me.huynhducphu.PingMe_Backend.service.chat.util.ChatDtoUtils;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -56,7 +55,11 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
 
         if (room != null) {
             ensureParticipants(room, currentUser.getId(), createOrGetDirectRoomRequest.getTargetUserId());
-            return toResponse(room, roomParticipantRepository.findByRoom_Id(room.getId()), currentUser.getId());
+            return ChatDtoUtils.toRoomResponseDto(
+                    room,
+                    roomParticipantRepository.findByRoom_Id(room.getId()),
+                    currentUser.getId()
+            );
         }
 
         try {
@@ -73,11 +76,15 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
             addParticipant(savedRoom, currentUser.getId());
             addParticipant(savedRoom, createOrGetDirectRoomRequest.getTargetUserId());
 
-            return toResponse(savedRoom, roomParticipantRepository.findByRoom_Id(savedRoom.getId()), currentUser.getId());
+            return ChatDtoUtils.toRoomResponseDto(
+                    savedRoom,
+                    roomParticipantRepository.findByRoom_Id(savedRoom.getId()),
+                    currentUser.getId()
+            );
         } catch (DataIntegrityViolationException ex) {
             Room existed = roomRepository.findByDirectKey(directKey).orElseThrow(() -> ex);
             ensureParticipants(existed, currentUser.getId(), createOrGetDirectRoomRequest.getTargetUserId());
-            return toResponse(existed, roomParticipantRepository.findByRoom_Id(existed.getId()), currentUser.getId());
+            return ChatDtoUtils.toRoomResponseDto(existed, roomParticipantRepository.findByRoom_Id(existed.getId()), currentUser.getId());
         }
     }
 
@@ -102,7 +109,7 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
                 .stream()
                 .map(room -> {
                     var members = participantsByRoom.getOrDefault(room.getId(), List.of());
-                    return toResponse(room, members, currentUserId);
+                    return ChatDtoUtils.toRoomResponseDto(room, members, currentUserId);
                 })
                 .toList();
 
@@ -138,56 +145,6 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
         } catch (DataIntegrityViolationException ignored) {
 
         }
-    }
-
-    private RoomResponse toResponse(Room room, List<RoomParticipant> members, Long userId) {
-        List<RoomParticipantResponse> roomParticipantResponses = members
-                .stream()
-                .map(rp -> new RoomParticipantResponse(
-                        rp.getUser().getId(),
-                        rp.getUser().getName(),
-                        rp.getUser().getAvatarUrl(),
-                        rp.getUser().getStatus(),
-                        rp.getRole(),
-                        rp.getLastReadMessageId(),
-                        rp.getLastReadAt()
-                ))
-                .toList();
-
-        Long currentUserLastReadIdMessage = members.stream()
-                .filter(rp -> rp.getUser().getId().equals(userId))
-                .findFirst()
-                .map(RoomParticipant::getLastReadMessageId)
-                .orElse(null);
-
-        long unread = 0;
-        if (room.getLastMessage() != null) {
-            long lastMsgId = room.getLastMessage().getId();
-            unread = (currentUserLastReadIdMessage == null)
-                    ? lastMsgId
-                    : Math.max(0, lastMsgId - currentUserLastReadIdMessage);
-        }
-
-        RoomResponse.LastMessage lastMessage = null;
-        if (room.getLastMessage() != null) {
-            Message message = room.getLastMessage();
-            lastMessage = new RoomResponse.LastMessage(
-                    message.getId(),
-                    message.getSender().getId(),
-                    message.getContent(),
-                    message.getCreatedAt()
-            );
-        }
-
-        RoomResponse res = new RoomResponse();
-        res.setRoomId(room.getId());
-        res.setRoomType(room.getRoomType());
-        res.setDirectKey(room.getDirectKey());
-        res.setName(room.getName());
-        res.setLastMessage(lastMessage);
-        res.setParticipants(roomParticipantResponses);
-        res.setUnreadCount(unread);
-        return res;
     }
 
 }
