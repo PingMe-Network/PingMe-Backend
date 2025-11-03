@@ -2,7 +2,6 @@ package me.huynhducphu.PingMe_Backend.dto.ws.chat.event;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import me.huynhducphu.PingMe_Backend.dto.ws.chat.ChatEventType;
 
 import java.time.LocalDateTime;
 
@@ -14,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class ReadStateChangedEvent {
 
-    private ChatEventType chatEventType = ChatEventType.READ_STATE_CHANGED;
+    private final ChatEventType chatEventType = ChatEventType.READ_STATE_CHANGED;
     private Long id;
     private Long roomId;
     private Long lastReadMessageId;

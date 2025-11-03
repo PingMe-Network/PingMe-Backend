@@ -2,7 +2,6 @@ package me.huynhducphu.PingMe_Backend.dto.ws.chat.event;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import me.huynhducphu.PingMe_Backend.dto.ws.chat.ChatEventType;
 import me.huynhducphu.PingMe_Backend.model.Room;
 import me.huynhducphu.PingMe_Backend.model.RoomParticipant;
 
@@ -16,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 public class RoomUpdatedEvent {
 
-    private ChatEventType chatEventType = ChatEventType.ROOM_UPDATED;
+    private final ChatEventType chatEventType = ChatEventType.ROOM_UPDATED;
     private Room room;
     private List<RoomParticipant> roomParticipants;
 
