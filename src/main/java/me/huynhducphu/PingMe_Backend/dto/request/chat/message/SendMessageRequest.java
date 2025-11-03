@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import me.huynhducphu.PingMe_Backend.model.constant.MessageType;
+import org.hibernate.validator.constraints.Length;
 
 /**
  * Admin 8/26/2025
@@ -17,6 +18,7 @@ import me.huynhducphu.PingMe_Backend.model.constant.MessageType;
 @Data
 public class SendMessageRequest {
     @NotBlank(message = "Nội dung không được để trống")
+    @Length(max = 1000, message = "Nội dung không được vượt quá 1000 ký tự")
     private String content;
 
     @NotBlank(message = "UUID không được để trống")

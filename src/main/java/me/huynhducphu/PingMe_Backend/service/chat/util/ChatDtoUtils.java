@@ -55,18 +55,6 @@ public class ChatDtoUtils {
                 .map(RoomParticipant::getLastReadMessageId)
                 .orElse(null);
 
-        // Tính số tin nhắn "chưa đọc" bằng chênh lệch ID.
-        // - Nếu phòng chưa có tin nhắn -> 0
-        // - Nếu có tin nhắn và user chưa từng đọc -> dùng ID tin nhắn mới nhất làm số lượng
-        // - Ngược lại -> unread = max(0, lastMsgId - lastReadId)
-        long unread = 0;
-        if (room.getLastMessage() != null) {
-            long lastMsgId = room.getLastMessage().getId();
-            unread = (currentUserLastReadIdMessage == null)
-                    ? lastMsgId
-                    : Math.max(0, lastMsgId - currentUserLastReadIdMessage);
-        }
-
         RoomResponse.LastMessage lastMessage = null;
         if (room.getLastMessage() != null) {
             Message message = room.getLastMessage();
@@ -86,7 +74,6 @@ public class ChatDtoUtils {
         res.setName(room.getName());
         res.setLastMessage(lastMessage);
         res.setParticipants(roomParticipantResponses);
-        res.setUnreadCount(unread);
         return res;
     }
 
