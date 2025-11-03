@@ -3,7 +3,7 @@ package me.huynhducphu.PingMe_Backend.dto.ws.chat.payload;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.room.RoomResponse;
-import me.huynhducphu.PingMe_Backend.dto.ws.chat.ChatEventType;
+import me.huynhducphu.PingMe_Backend.dto.ws.chat.event.ChatEventType;
 
 /**
  * Admin 8/30/2025
@@ -13,7 +13,7 @@ import me.huynhducphu.PingMe_Backend.dto.ws.chat.ChatEventType;
 @NoArgsConstructor
 public class RoomUpdatedEventPayload {
 
-    private ChatEventType chatEventType = ChatEventType.ROOM_UPDATED;
+    private final ChatEventType chatEventType = ChatEventType.ROOM_UPDATED;
     private RoomResponse roomResponse;
 
     public RoomUpdatedEventPayload(RoomResponse roomResponse) {

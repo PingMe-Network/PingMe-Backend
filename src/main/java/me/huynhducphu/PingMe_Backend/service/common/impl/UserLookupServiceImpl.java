@@ -1,4 +1,4 @@
-package me.huynhducphu.PingMe_Backend.service.user_lookup.impl;
+package me.huynhducphu.PingMe_Backend.service.common.impl;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -6,6 +6,7 @@ import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummaryResponse;
 import me.huynhducphu.PingMe_Backend.repository.FriendshipRepository;
 import me.huynhducphu.PingMe_Backend.repository.UserRepository;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
+import me.huynhducphu.PingMe_Backend.service.common.UserLookupService;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +15,7 @@ import org.springframework.stereotype.Service;
  **/
 @Service
 @RequiredArgsConstructor
-public class UserLookupServiceImpl implements me.huynhducphu.PingMe_Backend.service.user_lookup.UserLookupService {
+public class UserLookupServiceImpl implements UserLookupService {
 
     private final UserRepository userRepository;
     private final FriendshipRepository friendshipRepository;

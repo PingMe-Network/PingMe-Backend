@@ -1,10 +1,10 @@
-package me.huynhducphu.PingMe_Backend.controller;
+package me.huynhducphu.PingMe_Backend.controller.common;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummaryResponse;
-import me.huynhducphu.PingMe_Backend.service.user_lookup.UserLookupService;
+import me.huynhducphu.PingMe_Backend.service.common.UserLookupService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

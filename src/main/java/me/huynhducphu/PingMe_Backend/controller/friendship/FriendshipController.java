@@ -1,4 +1,4 @@
-package me.huynhducphu.PingMe_Backend.controller;
+package me.huynhducphu.PingMe_Backend.controller.friendship;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

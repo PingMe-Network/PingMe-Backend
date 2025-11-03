@@ -25,4 +25,6 @@ public class MessageResponse {
     private String content;
     private MessageType type;
     private LocalDateTime createdAt;
+
+    private Boolean isActive;
 }

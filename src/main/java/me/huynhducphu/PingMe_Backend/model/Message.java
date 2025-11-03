@@ -26,7 +26,7 @@ import java.util.UUID;
         },
         indexes = {
                 @Index(name = "idx_msg_room_created_id", columnList = "room_id, created_at DESC, id DESC"),
-                @Index(name = "idx_msg_room_created", columnList = "room_id, created_at")
+                @Index(name = "idx_msg_room_id_id_desc ", columnList = "room_id, id DESC"),
         }
 )
 @AllArgsConstructor
@@ -40,7 +40,7 @@ public class Message extends BaseEntity {
     @EqualsAndHashCode.Include
     private Long id;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(length = 1000, nullable = false)
     private String content;
 
     @Enumerated(EnumType.STRING)
