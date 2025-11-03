@@ -18,14 +18,19 @@ import java.util.List;
 public class ChatDtoUtils {
 
     public static MessageResponse toMessageResponseDto(Message message) {
+
+        String clientMsgId = message.getClientMsgId() == null ? null : message.getClientMsgId().toString();
+        String content = message.isActive() ? message.getContent() : null;
+
         return new MessageResponse(
                 message.getId(),
                 message.getRoom().getId(),
-                (message.getClientMsgId() == null ? null : message.getClientMsgId().toString()),
+                clientMsgId,
                 message.getSender().getId(),
-                message.getContent(),
+                content,
                 message.getType(),
-                message.getCreatedAt()
+                message.getCreatedAt(),
+                message.isActive()
         );
     }
 
@@ -47,13 +52,6 @@ public class ChatDtoUtils {
                         rp.getLastReadAt()
                 ))
                 .toList();
-
-        // Lấy tin nhắn id mà người dùng hiện tại đọc tới
-        Long currentUserLastReadIdMessage = roomParticipants.stream()
-                .filter(rp -> rp.getUser().getId().equals(userId))
-                .findFirst()
-                .map(RoomParticipant::getLastReadMessageId)
-                .orElse(null);
 
         RoomResponse.LastMessage lastMessage = null;
         if (room.getLastMessage() != null) {
