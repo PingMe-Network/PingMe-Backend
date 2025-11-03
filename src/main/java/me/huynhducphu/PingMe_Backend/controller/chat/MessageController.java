@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.message.MarkReadRequest;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.message.SendMessageRequest;
+import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageRecalledResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.HistoryMessageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageResponse;
@@ -30,7 +31,7 @@ public class MessageController {
 
     private final MessageService messageService;
 
-    @PostMapping("/send")
+    @PostMapping
     public ResponseEntity<ApiResponse<MessageResponse>> sendMessage(
             @RequestBody @Valid SendMessageRequest sendMessageRequest
     ) {
@@ -50,6 +51,15 @@ public class MessageController {
                         sendMessageRequest,
                         file
                 )));
+    }
+
+    @DeleteMapping("/{id}/recall")
+    public ResponseEntity<ApiResponse<MessageRecalledResponse>> recallMessage(
+            @PathVariable Long id
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new ApiResponse<>(messageService.recallMessage(id)));
     }
 
     @PostMapping("/read")

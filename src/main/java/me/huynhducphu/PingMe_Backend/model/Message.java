@@ -26,6 +26,7 @@ import java.util.UUID;
         },
         indexes = {
                 @Index(name = "idx_msg_room_created_id", columnList = "room_id, created_at DESC, id DESC"),
+                @Index(name = "idx_msg_room_id_id_desc ", columnList = "room_id, id DESC"),
         }
 )
 @AllArgsConstructor

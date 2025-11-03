@@ -4,10 +4,12 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.message.MarkReadRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.HistoryMessageResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageRecalledResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.ReadStateResponse;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.message.SendMessageRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageResponse;
 import me.huynhducphu.PingMe_Backend.dto.ws.chat.event.MessageCreatedEvent;
+import me.huynhducphu.PingMe_Backend.dto.ws.chat.event.MessageRecalledEvent;
 import me.huynhducphu.PingMe_Backend.dto.ws.chat.event.RoomUpdatedEvent;
 import me.huynhducphu.PingMe_Backend.model.Message;
 import me.huynhducphu.PingMe_Backend.model.Room;
@@ -59,11 +61,19 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
     private final ApplicationEventPublisher eventPublisher;
 
 
-    // ===========================================================================
-    // CÁC HÀM BÊN DƯỚI XỬ LÝ GỬI TIN NHẮN
-    // ===========================================================================
+    /* ========================================================================== */
+    /*                         CÁC HÀM XỬ LÝ GỬI TIN NHẮN                         */
+    /* ========================================================================== */
 
-    // HÀM CHÍNH XỬ LÝ GỬI TIN NHẮN
+    // Hàm chính xử lý tin nhắn
+    //
+    // Quy trình:
+    // 1. Lấy thông tin người dùng hiện tại
+    // 2. Kiểm tra phòng chat và quyền tham gia
+    // 3. Kiểm tra clientMsgId để tránh trùng tin nhắn
+    // 4. Tạo và lưu tin nhắn mới vào cơ sở dữ liệu
+    // 5. Cập nhật trạng thái phòng và người dùng
+    // 6. Phát sự kiện WebSocket thông báo tin nhắn mới
     @Override
     public MessageResponse sendMessage(SendMessageRequest sendMessageRequest) {
         // Lấy thộng tin người dùng hiện tại
@@ -96,8 +106,9 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
                 .findById(roomId)
                 .orElseThrow(() -> new EntityNotFoundException("Phòng chat này không tồn tại"));
         var roomMemberId = new RoomMemberId(roomId, senderId);
-        if (!roomParticipantRepository.existsById(roomMemberId))
-            throw new AccessDeniedException("Bạn không phải thành viên của phòng chat này");
+        var roomParticipant = roomParticipantRepository
+                .findById(roomMemberId)
+                .orElseThrow(() -> new AccessDeniedException("Bạn không phải thành viên của phòng chat này"));
 
         // Kiểm tra tin nhắn người dùng gửi đã tồn tại chưa, Kiểm tra bằng mã clientMsgId
         // Nếu tìm thấy thì trả về tin nhắn đã tồn tại trong cơ sở dữ liệu
@@ -132,7 +143,6 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         // + Thời gian nhắn tin nhắn cuối cùng
         room.setLastMessage(message);
         room.setLastMessageAt(message.getCreatedAt());
-        var savedRoom = roomRepository.save(room);
 
         // Cập nhật trạng thái của người dùng tham gia phòng (người dùng hiện tại)
         // Thông tin cập nhật bao gồm:
@@ -143,12 +153,8 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         // định người dùng A đọc tất cả tin nhắn từ đầu đến tin nhắn
         // hiện tại của người dùng A
         Message finalMsg = message;
-        roomParticipantRepository
-                .findById(roomMemberId)
-                .ifPresent(rp -> {
-                    rp.setLastReadMessageId(finalMsg.getId());
-                    rp.setLastReadAt(finalMsg.getCreatedAt());
-                });
+        roomParticipant.setLastReadMessageId(finalMsg.getId());
+        roomParticipant.setLastReadAt(finalMsg.getCreatedAt());
 
         // ===================================================================================================
         // WEBSOCKET
@@ -158,8 +164,8 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
 
         // Sử kiện ROOM_UPDATED (thông báo phòng có tin nhắn mới)
         var roomUpdatedEvent = new RoomUpdatedEvent(
-                savedRoom, // Dữ liệu mới nhất của phòng
-                roomParticipantRepository.findByRoom_Id(savedRoom.getId()) // Người trong phòng chat
+                room,
+                roomParticipantRepository.findByRoom_Id(room.getId())
         );
 
         // Bắn sự kiện Websocket
@@ -171,6 +177,16 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         return ChatDtoUtils.toMessageResponseDto(message);
     }
 
+    // Hàm xử lý gửi tin nhắn dạng MEDIA (File, Video, Image)
+    //
+    // Quy trình thực hiện:
+    // 1. Upload file media lên S3 (AWS)
+    // 2. Nhận lại URL và gán vào content của message
+    // 3. Gọi hàm sendMessage() để xử lý lưu tin nhắn
+    //
+    // Nếu quá trình gửi tin nhắn xảy ra lỗi:
+    // + Xóa file vừa upload khỏi S3 để tránh rác
+    // + Quăng lại exception để phía trên xử lý
     @Override
     public MessageResponse sendFileMessage(
             SendMessageRequest sendMessageRequest,
@@ -184,23 +200,65 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
 
         UUID fileName = UUID.randomUUID();
 
-        String url = s3Service.uploadFile(
-                file,
-                "chats",
-                fileName.toString(),
-                true,
-                MAX_BLOG_IMAGE_SIZE
-        );
+        String url = null;
+        try {
+            url = s3Service.uploadFile(
+                    file,
+                    "chats",
+                    fileName.toString(),
+                    true,
+                    MAX_BLOG_IMAGE_SIZE
+            );
+            sendMessageRequest.setContent(url);
 
-        sendMessageRequest.setContent(url);
-
-
-        return sendMessage(sendMessageRequest);
+            return sendMessage(sendMessageRequest);
+        } catch (Exception ex) {
+            if (url != null) s3Service.deleteFileByUrl(url);
+            throw ex;
+        }
     }
 
-    // ===========================================================================
-    // CÁC HÀM BÊN DƯỚI XỬ LÝ NGƯỜI DÙNG ĐÃ XEM TIN NHẮN
-    // ===========================================================================
+    /* ========================================================================== */
+    /*                         CÁC HÀM XỬ LÝ THU HỒI TIN NHẮN                     */
+    /* ========================================================================== */
+
+    @Override
+    public MessageRecalledResponse recallMessage(Long messageId) {
+        var currentUser = currentUserProvider.get();
+
+        Message messageToRecall = messageRepository
+                .findById(messageId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tin nhắn"));
+
+        if (!currentUser.getId().equals(messageToRecall.getSender().getId()))
+            throw new AccessDeniedException("Không có quyền truy cập");
+
+        messageToRecall.setActive(false);
+
+        // Nếu khác Text, tất là type Media thì gọi S3 xóa
+        if (!messageToRecall.getType().equals(MessageType.TEXT))
+            s3Service.deleteFileByUrl(messageToRecall.getContent());
+
+        // Xóa nội dung trong chat
+        messageToRecall.setContent(null);
+
+        // ===================================================================================================
+        // WEBSOCKET
+
+        // Sự kiện MESSAGE_CREATED (tạo tin nhắn mới)
+        var roomId = messageToRecall.getRoom().getId();
+        var messageRecalledEvent = new MessageRecalledEvent(messageId, roomId);
+
+        // Bắn sự kiện Websocket
+        eventPublisher.publishEvent(messageRecalledEvent);
+        // ===================================================================================================
+
+        return new MessageRecalledResponse(messageId);
+    }
+
+    /* ========================================================================== */
+    /*              CÁC HÀM XỬ LÝ NGƯỜI DÙNG ĐÃ XEM TIN NHẮN                     */
+    /* ========================================================================== */
 
     @Override
     public ReadStateResponse markAsRead(MarkReadRequest markReadRequest) {
@@ -238,10 +296,9 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         return new ReadStateResponse(roomId, userId, newPointer, roomParticipant.getLastReadAt(), unread);
     }
 
-    // ===========================================================================
-    // CÁC HÀM BÊN DƯỚI XỬ LÝ LẤY LỊCH SỬ TIN NHẮN
-    // ===========================================================================
-
+    /* ========================================================================== */
+    /*                  CÁC HÀM XỬ LÝ LẤY LỊCH SỬ TIN NHẮN                        */
+    /* ========================================================================== */
     @Override
     public HistoryMessageResponse getHistoryMessages(
             Long roomId,
@@ -283,10 +340,9 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         return new HistoryMessageResponse(messageResponses, total);
     }
 
-
-    // ===========================================================================
-    // CÁC HÀM HỖ TRỢ KHÁC
-    // ===========================================================================
+    /* ========================================================================== */
+    /*                           CÁC HÀM HỖ TRỢ KHÁC                              */
+    /* ========================================================================== */
     private static void validateUrl(String url) {
         try {
             URI u = URI.create(url);

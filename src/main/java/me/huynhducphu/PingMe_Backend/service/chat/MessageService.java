@@ -3,6 +3,7 @@ package me.huynhducphu.PingMe_Backend.service.chat;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.message.MarkReadRequest;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.message.SendMessageRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.HistoryMessageResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageRecalledResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.ReadStateResponse;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +21,8 @@ public interface MessageService {
             SendMessageRequest sendMessageRequest,
             MultipartFile file
     );
+
+    MessageRecalledResponse recallMessage(Long messageId);
 
     ReadStateResponse markAsRead(MarkReadRequest markReadRequest);
 

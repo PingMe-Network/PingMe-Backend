@@ -1,9 +1,12 @@
 package me.huynhducphu.PingMe_Backend.service.chat.impl;
 
 import lombok.RequiredArgsConstructor;
+import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageRecalledResponse;
 import me.huynhducphu.PingMe_Backend.dto.ws.chat.event.MessageCreatedEvent;
+import me.huynhducphu.PingMe_Backend.dto.ws.chat.event.MessageRecalledEvent;
 import me.huynhducphu.PingMe_Backend.dto.ws.chat.event.RoomUpdatedEvent;
 import me.huynhducphu.PingMe_Backend.dto.ws.chat.payload.MessageCreatedEventPayload;
+import me.huynhducphu.PingMe_Backend.dto.ws.chat.payload.MessageRecalledEventPayload;
 import me.huynhducphu.PingMe_Backend.dto.ws.chat.payload.RoomUpdatedEventPayload;
 import me.huynhducphu.PingMe_Backend.service.chat.util.ChatDtoUtils;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -26,10 +29,21 @@ public class ChatEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onMessageCreated(MessageCreatedEvent event) {
         var messageResponse = ChatDtoUtils.toMessageResponseDto(event.getMessage());
-        long roomId = messageResponse.getRoomId();
+        var roomId = event.getMessage().getRoom().getId();
 
         String destination = "/topic/rooms/" + roomId + "/messages";
         var payload = new MessageCreatedEventPayload(messageResponse);
+
+        messagingTemplate.convertAndSend(destination, payload);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onMessageRecalled(MessageRecalledEvent event) {
+        var roomId = event.getRoomId();
+        var messageRecalledResponse = new MessageRecalledResponse(event.getMessageId());
+
+        String destination = "/topic/rooms/" + roomId + "/messages";
+        var payload = new MessageRecalledEventPayload(messageRecalledResponse);
 
         messagingTemplate.convertAndSend(destination, payload);
     }
