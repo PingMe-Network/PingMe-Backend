@@ -1,4 +1,4 @@
-package me.huynhducphu.PingMe_Backend.service.user_lookup;
+package me.huynhducphu.PingMe_Backend.service.common;
 
 import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummaryResponse;
 
