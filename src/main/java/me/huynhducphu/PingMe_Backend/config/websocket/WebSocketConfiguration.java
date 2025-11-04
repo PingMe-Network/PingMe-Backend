@@ -3,8 +3,11 @@ package me.huynhducphu.PingMe_Backend.config.websocket;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.config.websocket.auth.CustomHandshakeHandler;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
@@ -12,10 +15,17 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
  * Admin 8/10/2025
  **/
 @Configuration
+@EnableWebSocketMessageBroker
 @RequiredArgsConstructor
 public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer {
 
     private final CustomHandshakeHandler customHandshakeHandler;
+
+    @Value("${app.websocket.heartbeat.server-send-interval}")
+    private long serverSendInterval;
+
+    @Value("${app.websocket.heartbeat.server-receive-interval}")
+    private long serverReceiveInterval;
 
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
@@ -33,10 +43,21 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        // Các publisher (nơi BE có thể đẩy message xuống FE)
-        // /topic/... → broadcast cho nhiều người (public channel).
-        // /queue/... → hàng đợi point-to-point hoặc riêng tư (thường kết hợp /user).
-        registry.enableSimpleBroker("/topic", "/queue");
+        var scheduler = new ThreadPoolTaskScheduler();
+        scheduler.setPoolSize(4);
+        scheduler.setThreadNamePrefix("pingme-wss-");
+        scheduler.initialize();
+
+        // /topic/... → broadcast cho nhiều người (kênh công khai)
+        // /queue/... → hàng đợi point-to-point hoặc riêng tư (thường kết hợp với /user)
+        //
+        // Heartbeat:
+        // serverSendInterval    = khoảng thời gian BE gửi heartbeat xuống FE (BE → FE)
+        // serverReceiveInterval = khoảng thời gian BE mong đợi nhận heartbeat từ FE (FE → BE)
+        registry
+                .enableSimpleBroker("/topic", "/queue")
+                .setHeartbeatValue(new long[]{serverSendInterval, serverReceiveInterval})
+                .setTaskScheduler(scheduler);
 
         // Prefix để Spring map các message riêng theo user
         registry.setUserDestinationPrefix("/user");
