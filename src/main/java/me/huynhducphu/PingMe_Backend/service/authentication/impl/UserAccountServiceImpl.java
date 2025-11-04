@@ -59,10 +59,10 @@ public class UserAccountServiceImpl implements UserAccountService {
     private static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
     private static final Long MAX_AVATAR_FILE_SIZE = 2 * 1024 * 1024L;
 
-    @Value("${jwt.access-token-expiration}")
+    @Value("${app.jwt.access-token-expiration}")
     private Long accessTokenExpiration;
 
-    @Value("${jwt.refresh-token-expiration}")
+    @Value("${app.jwt.refresh-token-expiration}")
     private Long refreshTokenExpiration;
 
     @Value("${cookie.sameSite}")
