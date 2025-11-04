@@ -2,12 +2,10 @@ package me.huynhducphu.PingMe_Backend.config.auth;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.util.Base64;
-import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.service.authorization.PermissionCacheService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -25,7 +23,6 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -34,7 +31,7 @@ import java.util.List;
 @Configuration
 public class AuthConfiguration {
 
-    @Value("${jwt.secret}")
+    @Value("${app.jwt.secret}")
     private String jwtKey;
 
     public static final MacAlgorithm MAC_ALGORITHM = MacAlgorithm.HS512;

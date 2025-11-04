@@ -13,7 +13,7 @@ import me.huynhducphu.PingMe_Backend.dto.ws.chat.event.ChatEventType;
 @NoArgsConstructor
 public class MessageRecalledEventPayload {
 
-    private final ChatEventType chatEventType = ChatEventType.MESSAGE_CREATED;
+    private final ChatEventType chatEventType = ChatEventType.MESSAGE_RECALLED;
     private MessageRecalledResponse messageRecalledResponse;
 
     public MessageRecalledEventPayload(MessageRecalledResponse messageRecalledResponse) {
