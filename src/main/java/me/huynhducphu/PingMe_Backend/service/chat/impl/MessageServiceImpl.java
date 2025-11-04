@@ -240,7 +240,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
             s3Service.deleteFileByUrl(messageToRecall.getContent());
 
         // Xóa nội dung trong chat
-        messageToRecall.setContent(null);
+        messageToRecall.setContent("");
 
         // ===================================================================================================
         // WEBSOCKET
