@@ -35,6 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
@@ -232,6 +233,10 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
 
         if (!currentUser.getId().equals(messageToRecall.getSender().getId()))
             throw new AccessDeniedException("Không có quyền truy cập");
+
+        long hours = ChronoUnit.HOURS.between(messageToRecall.getCreatedAt(), LocalDateTime.now());
+        if (hours > 24)
+            throw new IllegalArgumentException("Bạn chỉ có thể thu hồi tin nhắn trong vòng 24 giờ");
 
         messageToRecall.setActive(false);
 
