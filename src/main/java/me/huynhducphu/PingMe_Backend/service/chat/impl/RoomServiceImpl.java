@@ -118,13 +118,13 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
         var savedRoom = roomRepository.save(room);
 
         // Thêm người tạo nhóm (admin)
-        RoomMemberId adminPk = new RoomMemberId(savedRoom.getId(), currentUser.getId());
-        RoomParticipant admin = new RoomParticipant();
-        admin.setId(adminPk);
-        admin.setRoom(savedRoom);
-        admin.setUser(currentUser);
-        admin.setRole(RoomRole.OWNER);
-        roomParticipantRepository.save(admin);
+        RoomMemberId ownerPk = new RoomMemberId(savedRoom.getId(), currentUser.getId());
+        RoomParticipant owner = new RoomParticipant();
+        owner.setId(ownerPk);
+        owner.setRoom(savedRoom);
+        owner.setUser(currentUser);
+        owner.setRole(RoomRole.OWNER);
+        roomParticipantRepository.save(owner);
 
         // Thêm các thành viên khác
         memberIds.forEach(userId -> addParticipant(savedRoom, userId));
