@@ -3,6 +3,7 @@ package me.huynhducphu.PingMe_Backend.controller.chat;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import me.huynhducphu.PingMe_Backend.dto.request.chat.message.CreateGroupRoomRequest;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.room.CreateOrGetDirectRoomRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.common.PageResponse;
@@ -34,6 +35,14 @@ public class RoomController {
     ) {
         return ResponseEntity
                 .ok(new ApiResponse<>(roomService.createOrGetDirectRoom(createOrGetDirectRoomRequest)));
+    }
+
+    @PostMapping("/group")
+    public ResponseEntity<ApiResponse<RoomResponse>> createGroupRoom(
+            @RequestBody @Valid CreateGroupRoomRequest createGroupRoomRequest
+    ) {
+        return ResponseEntity
+                .ok(new ApiResponse<>(roomService.createGroupRoom(createGroupRoomRequest)));
     }
 
     @GetMapping
