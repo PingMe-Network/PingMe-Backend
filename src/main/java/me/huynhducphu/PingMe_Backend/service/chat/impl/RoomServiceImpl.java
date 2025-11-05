@@ -1,6 +1,7 @@
 package me.huynhducphu.PingMe_Backend.service.chat.impl;
 
 import lombok.RequiredArgsConstructor;
+import me.huynhducphu.PingMe_Backend.dto.request.chat.message.CreateGroupRoomRequest;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.room.CreateOrGetDirectRoomRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.room.RoomResponse;
 import me.huynhducphu.PingMe_Backend.model.Room;
@@ -86,6 +87,53 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
             ensureParticipants(existed, currentUser.getId(), createOrGetDirectRoomRequest.getTargetUserId());
             return ChatDtoUtils.toRoomResponseDto(existed, roomParticipantRepository.findByRoom_Id(existed.getId()), currentUser.getId());
         }
+    }
+
+    @Override
+    public RoomResponse createGroupRoom(CreateGroupRoomRequest createGroupRoomRequest) {
+        var currentUser = currentUserProvider.get();
+        List<Long> memberIds = createGroupRoomRequest.getMemberIds();
+
+        if (memberIds == null || memberIds.size() < 2)
+            throw new IllegalArgumentException("Nhóm phải có ít nhất 3 người bao gồm bạn");
+
+        if (memberIds.contains(currentUser.getId()))
+            throw new IllegalArgumentException("Không cần thêm chính mình vào danh sách");
+
+        // Kiểm tra người dùng có tồn tại
+        List<Long> invalidIds = memberIds.stream()
+                .filter(id -> !userRepository.existsById(id))
+                .toList();
+        if (!invalidIds.isEmpty())
+            throw new IllegalArgumentException("Một số người dùng không tồn tại: " + invalidIds);
+
+        // Tạo phòng
+        Room room = new Room();
+        room.setRoomType(RoomType.GROUP);
+        room.setName(createGroupRoomRequest.getName());
+        room.setDirectKey(null);
+        room.setLastMessage(null);
+        room.setLastMessageAt(null);
+
+        var savedRoom = roomRepository.save(room);
+
+        // Thêm người tạo nhóm (admin)
+        RoomMemberId ownerPk = new RoomMemberId(savedRoom.getId(), currentUser.getId());
+        RoomParticipant owner = new RoomParticipant();
+        owner.setId(ownerPk);
+        owner.setRoom(savedRoom);
+        owner.setUser(currentUser);
+        owner.setRole(RoomRole.OWNER);
+        roomParticipantRepository.save(owner);
+
+        // Thêm các thành viên khác
+        memberIds.forEach(userId -> addParticipant(savedRoom, userId));
+
+        return ChatDtoUtils.toRoomResponseDto(
+                savedRoom,
+                roomParticipantRepository.findByRoom_Id(savedRoom.getId()),
+                currentUser.getId()
+        );
     }
 
     @Override
