@@ -1,4 +1,4 @@
-package me.huynhducphu.PingMe_Backend.service.chat.impl;
+package me.huynhducphu.PingMe_Backend.service.chat.publisher;
 
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageRecalledResponse;
@@ -22,7 +22,7 @@ import java.util.List;
  **/
 @Component
 @RequiredArgsConstructor
-public class ChatEventListener {
+public class ChatEventPublisher {
 
     private final SimpMessagingTemplate messagingTemplate;
 
