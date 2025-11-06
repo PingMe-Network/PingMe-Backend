@@ -20,6 +20,7 @@ import me.huynhducphu.PingMe_Backend.repository.MessageRepository;
 import me.huynhducphu.PingMe_Backend.repository.RoomParticipantRepository;
 import me.huynhducphu.PingMe_Backend.repository.RoomRepository;
 import me.huynhducphu.PingMe_Backend.repository.UserRepository;
+import me.huynhducphu.PingMe_Backend.service.chat.MessageEncryptionService;
 import me.huynhducphu.PingMe_Backend.service.chat.util.ChatDtoUtils;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import me.huynhducphu.PingMe_Backend.service.integration.S3Service;
@@ -50,15 +51,20 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
 
     private static final long MAX_BLOG_IMAGE_SIZE = 10 * 1024 * 1024L;
 
+    // SERVICE
     private final S3Service s3Service;
+    private final MessageEncryptionService messageEncryptionService;
 
+    // PROVIDER
     private final CurrentUserProvider currentUserProvider;
 
+    // REPOSITORY
     private final RoomRepository roomRepository;
     private final RoomParticipantRepository roomParticipantRepository;
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
 
+    // PUBLISHER
     private final ApplicationEventPublisher eventPublisher;
 
 
