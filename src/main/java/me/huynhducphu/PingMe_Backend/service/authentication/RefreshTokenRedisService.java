@@ -1,4 +1,4 @@
-package me.huynhducphu.PingMe_Backend.service.integration;
+package me.huynhducphu.PingMe_Backend.service.authentication;
 
 import me.huynhducphu.PingMe_Backend.dto.request.authentication.SubmitSessionMetaRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.authentication.CurrentUserDeviceMetaResponse;

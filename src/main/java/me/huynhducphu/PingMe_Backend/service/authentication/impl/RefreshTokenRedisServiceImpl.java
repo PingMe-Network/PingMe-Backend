@@ -1,10 +1,10 @@
-package me.huynhducphu.PingMe_Backend.service.integration.impl;
+package me.huynhducphu.PingMe_Backend.service.authentication.impl;
 
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.authentication.SubmitSessionMetaRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.authentication.CurrentUserDeviceMetaResponse;
 import me.huynhducphu.PingMe_Backend.model.common.DeviceMeta;
-import me.huynhducphu.PingMe_Backend.service.integration.RefreshTokenRedisService;
+import me.huynhducphu.PingMe_Backend.service.authentication.RefreshTokenRedisService;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
