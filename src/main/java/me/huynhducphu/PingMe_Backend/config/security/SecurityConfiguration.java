@@ -40,6 +40,9 @@ public class SecurityConfiguration {
             // Health check - Kiểm tra nhịp tim
             "/actuator/health",
             "/actuator/health/**",
+
+            //weather
+            "/weather/**",
     };
 
     @Value("${app.cors.allowed-origins}")
