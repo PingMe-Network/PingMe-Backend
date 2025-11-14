@@ -21,6 +21,7 @@ import me.huynhducphu.PingMe_Backend.repository.RoomParticipantRepository;
 import me.huynhducphu.PingMe_Backend.repository.RoomRepository;
 import me.huynhducphu.PingMe_Backend.repository.UserRepository;
 import me.huynhducphu.PingMe_Backend.service.chat.MessageEncryptionService;
+import me.huynhducphu.PingMe_Backend.service.chat.MessageRedisService;
 import me.huynhducphu.PingMe_Backend.service.chat.util.ChatDtoUtils;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import me.huynhducphu.PingMe_Backend.service.integration.S3Service;
@@ -53,6 +54,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
 
     // SERVICE
     private final S3Service s3Service;
+    private final MessageRedisService messageRedisService;
     private final MessageEncryptionService messageEncryptionService;
 
     // PROVIDER
@@ -311,44 +313,46 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
     /*                  CÁC HÀM XỬ LÝ LẤY LỊCH SỬ TIN NHẮN                        */
     /* ========================================================================== */
     @Override
-    public HistoryMessageResponse getHistoryMessages(
-            Long roomId,
-            Long beforeId,
-            Integer size
-    ) {
-        // Kiểm tra dữ liệu đầu vào
+    public HistoryMessageResponse getHistoryMessages(Long roomId, Long beforeId, Integer size) {
         if (roomId == null || size == null)
-            throw new IllegalArgumentException("Mã phòng hoặc số lượng tin nhắn không hợp lệ");
+            throw new IllegalArgumentException("Tham số không hợp lệ");
 
-        // Lấy thông tin người dùng hiện tại
         var currentUser = currentUserProvider.get();
-        var userId = currentUser.getId();
+        var memberId = new RoomMemberId(roomId, currentUser.getId());
 
-        // Kiểm tra phòng chat có tồn tại không
-        roomRepository
-                .findById(roomId)
-                .orElseThrow(() -> new EntityNotFoundException("Phòng chat không tồn tại"));
+        if (!roomParticipantRepository.existsById(memberId))
+            throw new RuntimeException("Không phải thành viên");
 
-        // Kiểm tra người dùng có phải thành viên của phòng hay không
-        var roomMemberId = new RoomMemberId(roomId, userId);
-        if (!roomParticipantRepository.existsById(roomMemberId))
-            throw new AccessDeniedException("Bạn không phải thành viên của phòng chat này");
+        int fixed = Math.max(1, Math.min(size, 20));
 
-        // Giới hạn số lượng tin nhắn lấy ra (1 → 20)
-        int fixedSize = Math.max(1, Math.min(size, 20));
-        Pageable limit = PageRequest.of(0, fixedSize);
+        /* ========= CASE 1: load initial (beforeId == null) → newest messages ========= */
+        if (beforeId == null) {
+            var cached = messageRedisService.getLatestMessages(roomId, fixed);
+            if (!cached.isEmpty())
+                return new HistoryMessageResponse(cached, (long) cached.size());
 
-        // Truy vấn tin nhắn từ database, sau đó map sang DTO
-        Page<Message> page = messageRepository.findHistoryMessagesByKeySet(roomId, beforeId, limit);
-        List<MessageResponse> messageResponses = page
-                .getContent()
+            return loadFromDb(roomId, null, fixed);
+        }
+
+        /* ========= CASE 2: load older (scroll) from Redis ========= */
+        var older = messageRedisService.getOlderFromCache(roomId, beforeId, fixed);
+        if (!older.isEmpty())
+            return new HistoryMessageResponse(older, (long) older.size());
+
+        /* ========= CASE 3: fallback DB ========= */
+        return loadFromDb(roomId, beforeId, fixed);
+    }
+
+    private HistoryMessageResponse loadFromDb(Long roomId, Long beforeId, int size) {
+        Pageable limit = PageRequest.of(0, size);
+        List<Message> res = messageRepository.findHistoryMessagesByKeySet(roomId, beforeId, limit);
+
+        List<MessageResponse> list = res
                 .stream()
                 .map(ChatDtoUtils::toMessageResponseDto)
                 .toList();
 
-        Long total = page.getTotalElements();
-
-        return new HistoryMessageResponse(messageResponses, total);
+        return new HistoryMessageResponse(list, (long) res.size());
     }
 
     /* ========================================================================== */
