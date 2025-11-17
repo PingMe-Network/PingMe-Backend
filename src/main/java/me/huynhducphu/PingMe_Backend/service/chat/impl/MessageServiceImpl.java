@@ -24,6 +24,7 @@ import me.huynhducphu.PingMe_Backend.service.chat.MessageRedisService;
 import me.huynhducphu.PingMe_Backend.service.chat.util.ChatDtoUtils;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import me.huynhducphu.PingMe_Backend.service.integration.S3Service;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
@@ -48,7 +49,10 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service.chat.MessageService {
 
-    private static final long MAX_BLOG_IMAGE_SIZE = 10 * 1024 * 1024L;
+    private static final long MAX_IMAGE_SIZE = 10 * 1024 * 1024L;
+
+    @Value("${app.messages.cache.enabled}")
+    private boolean cacheEnabled;
 
     // SERVICE
     private final S3Service s3Service;
@@ -179,9 +183,11 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         eventPublisher.publishEvent(roomUpdatedEvent);
         // ===================================================================================================
 
-        // Caching Message
         var dto = ChatDtoUtils.toMessageResponseDto(message);
-        messageRedisService.cacheNewMessage(roomId, dto);
+
+        // Caching Message
+        if (cacheEnabled)
+            messageRedisService.cacheNewMessage(roomId, dto);
 
         return dto;
     }
@@ -216,7 +222,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
                     "chats",
                     fileName.toString(),
                     true,
-                    MAX_BLOG_IMAGE_SIZE
+                    MAX_IMAGE_SIZE
             );
             sendMessageRequest.setContent(url);
 
@@ -343,11 +349,13 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         // Ưu tiên đọc cache; nếu cache trống → đọc DB và cache lại.
         // ----------------------------------------
         if (beforeId == null) {
-            var cached = messageRedisService.getMessages(roomId, null, fixed);
 
-            if (!cached.isEmpty()) {
-                Long nextBeforeId = cached.getLast().getId();
-                return new HistoryMessageResponse(cached, true, nextBeforeId);
+            if (cacheEnabled) {
+                var cached = messageRedisService.getMessages(roomId, null, fixed);
+                if (!cached.isEmpty()) {
+                    Long nextBeforeId = cached.getLast().getId();
+                    return new HistoryMessageResponse(cached, true, nextBeforeId);
+                }
             }
 
             var db = loadFromDbCursor(roomId, null, fixed);
@@ -364,11 +372,13 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         // Case 2: beforeId != null → cố lấy older messages từ cache
         // Nếu cache có → trả luôn, tránh hit DB
         // ----------------------------------------
-        var older = messageRedisService.getMessages(roomId, beforeId, fixed);
+        if (cacheEnabled) {
+            var older = messageRedisService.getMessages(roomId, beforeId, fixed);
 
-        if (!older.isEmpty()) {
-            Long nextBeforeId = older.getLast().getId();
-            return new HistoryMessageResponse(older, true, nextBeforeId);
+            if (!older.isEmpty()) {
+                Long nextBeforeId = older.getLast().getId();
+                return new HistoryMessageResponse(older, true, nextBeforeId);
+            }
         }
 
 
@@ -378,9 +388,8 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         // ----------------------------------------
         var db = loadFromDbCursor(roomId, beforeId, fixed);
 
-        if (!db.getMessageResponses().isEmpty()) {
+        if (cacheEnabled && !db.getMessageResponses().isEmpty())
             messageRedisService.appendOlderMessages(roomId, db.getMessageResponses());
-        }
 
         return db;
         // =========================================================================================

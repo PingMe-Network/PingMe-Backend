@@ -16,7 +16,7 @@ import java.util.Base64;
 @Service
 public class MessageEncryptionServiceImpl implements me.huynhducphu.PingMe_Backend.service.chat.MessageEncryptionService {
 
-    @Value("${app.aes.key}")
+    @Value("${app.messages.aes.key}")
     private String aesKey;
 
     private static final int IV_LENGTH = 12;
