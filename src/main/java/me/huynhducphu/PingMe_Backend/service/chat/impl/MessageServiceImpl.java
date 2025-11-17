@@ -20,14 +20,12 @@ import me.huynhducphu.PingMe_Backend.repository.MessageRepository;
 import me.huynhducphu.PingMe_Backend.repository.RoomParticipantRepository;
 import me.huynhducphu.PingMe_Backend.repository.RoomRepository;
 import me.huynhducphu.PingMe_Backend.repository.UserRepository;
-import me.huynhducphu.PingMe_Backend.service.chat.MessageEncryptionService;
 import me.huynhducphu.PingMe_Backend.service.chat.MessageRedisService;
 import me.huynhducphu.PingMe_Backend.service.chat.util.ChatDtoUtils;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import me.huynhducphu.PingMe_Backend.service.integration.S3Service;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -55,7 +53,6 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
     // SERVICE
     private final S3Service s3Service;
     private final MessageRedisService messageRedisService;
-    private final MessageEncryptionService messageEncryptionService;
 
     // PROVIDER
     private final CurrentUserProvider currentUserProvider;
@@ -349,7 +346,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
             var cached = messageRedisService.getMessages(roomId, null, fixed);
 
             if (!cached.isEmpty()) {
-                Long nextBeforeId = cached.get(cached.size() - 1).getId();
+                Long nextBeforeId = cached.getLast().getId();
                 return new HistoryMessageResponse(cached, true, nextBeforeId);
             }
 
@@ -370,7 +367,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         var older = messageRedisService.getMessages(roomId, beforeId, fixed);
 
         if (!older.isEmpty()) {
-            Long nextBeforeId = older.get(older.size() - 1).getId();
+            Long nextBeforeId = older.getLast().getId();
             return new HistoryMessageResponse(older, true, nextBeforeId);
         }
 
@@ -403,7 +400,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
                 .toList();
 
         Long nextBeforeId =
-                responses.isEmpty() ? null : responses.get(responses.size() - 1).getId();
+                responses.isEmpty() ? null : responses.getLast().getId();
 
         return new HistoryMessageResponse(responses, hasMore, nextBeforeId);
     }
