@@ -182,8 +182,11 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         eventPublisher.publishEvent(roomUpdatedEvent);
         // ===================================================================================================
 
-        // Trả dữ liệu về cho người gửi tin nhắn
-        return ChatDtoUtils.toMessageResponseDto(message);
+        // Caching Message
+        var dto = ChatDtoUtils.toMessageResponseDto(message);
+        messageRedisService.cacheNewMessage(roomId, dto);
+
+        return dto;
     }
 
     // Hàm xử lý gửi tin nhắn dạng MEDIA (File, Video, Image)
@@ -266,6 +269,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         eventPublisher.publishEvent(messageRecalledEvent);
         // ===================================================================================================
 
+
         return new MessageRecalledResponse(messageId);
     }
 
@@ -314,46 +318,96 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
     /* ========================================================================== */
     @Override
     public HistoryMessageResponse getHistoryMessages(Long roomId, Long beforeId, Integer size) {
+
+        // =========================================================================================
+        // Validate input
+
         if (roomId == null || size == null)
-            throw new IllegalArgumentException("Tham số không hợp lệ");
+            throw new IllegalArgumentException("Invalid parameters");
 
         var currentUser = currentUserProvider.get();
         var memberId = new RoomMemberId(roomId, currentUser.getId());
 
         if (!roomParticipantRepository.existsById(memberId))
-            throw new RuntimeException("Không phải thành viên");
+            throw new RuntimeException("Not a room member");
 
         int fixed = Math.max(1, Math.min(size, 20));
 
-        /* ========= CASE 1: load initial (beforeId == null) → newest messages ========= */
-        if (beforeId == null) {
-            var cached = messageRedisService.getLatestMessages(roomId, fixed);
-            if (!cached.isEmpty())
-                return new HistoryMessageResponse(cached, (long) cached.size());
+        // =========================================================================================
+        // Flow lấy lịch sử tin nhắn (3 bước):
+        // 1) beforeId == null → lấy newest messages (ưu tiên cache, fallback DB)
+        // 2) beforeId != null → cố lấy từ cache (older messages)
+        // 3) Nếu cache rỗng → load thêm từ DB, rồi append vào cache
+        // =========================================================================================
 
-            return loadFromDb(roomId, null, fixed);
+
+        // ----------------------------------------
+        // Case 1: Lấy batch mới nhất (beforeId == null)
+        // Ưu tiên đọc cache; nếu cache trống → đọc DB và cache lại.
+        // ----------------------------------------
+        if (beforeId == null) {
+            var cached = messageRedisService.getMessages(roomId, null, fixed);
+
+            if (!cached.isEmpty()) {
+                Long nextBeforeId = cached.get(cached.size() - 1).getId();
+                return new HistoryMessageResponse(cached, true, nextBeforeId);
+            }
+
+            var db = loadFromDbCursor(roomId, null, fixed);
+
+            if (!db.getMessageResponses().isEmpty()) {
+                messageRedisService.cacheMessages(roomId, db.getMessageResponses());
+            }
+
+            return db;
         }
 
-        /* ========= CASE 2: load older (scroll) from Redis ========= */
-        var older = messageRedisService.getOlderFromCache(roomId, beforeId, fixed);
-        if (!older.isEmpty())
-            return new HistoryMessageResponse(older, (long) older.size());
 
-        /* ========= CASE 3: fallback DB ========= */
-        return loadFromDb(roomId, beforeId, fixed);
+        // ----------------------------------------
+        // Case 2: beforeId != null → cố lấy older messages từ cache
+        // Nếu cache có → trả luôn, tránh hit DB
+        // ----------------------------------------
+        var older = messageRedisService.getMessages(roomId, beforeId, fixed);
+
+        if (!older.isEmpty()) {
+            Long nextBeforeId = older.get(older.size() - 1).getId();
+            return new HistoryMessageResponse(older, true, nextBeforeId);
+        }
+
+
+        // ----------------------------------------
+        // Case 3: Cache không có → fallback DB
+        // Sau khi load từ DB thì append vào cache
+        // ----------------------------------------
+        var db = loadFromDbCursor(roomId, beforeId, fixed);
+
+        if (!db.getMessageResponses().isEmpty()) {
+            messageRedisService.appendOlderMessages(roomId, db.getMessageResponses());
+        }
+
+        return db;
+        // =========================================================================================
     }
 
-    private HistoryMessageResponse loadFromDb(Long roomId, Long beforeId, int size) {
-        Pageable limit = PageRequest.of(0, size);
+    private HistoryMessageResponse loadFromDbCursor(Long roomId, Long beforeId, int size) {
+        Pageable limit = PageRequest.of(0, size + 1);
+
         List<Message> res = messageRepository.findHistoryMessagesByKeySet(roomId, beforeId, limit);
 
-        List<MessageResponse> list = res
-                .stream()
+        boolean hasMore = res.size() > size;
+
+        List<Message> trimmed = hasMore ? res.subList(0, size) : res;
+
+        List<MessageResponse> responses = trimmed.stream()
                 .map(ChatDtoUtils::toMessageResponseDto)
                 .toList();
 
-        return new HistoryMessageResponse(list, (long) res.size());
+        Long nextBeforeId =
+                responses.isEmpty() ? null : responses.get(responses.size() - 1).getId();
+
+        return new HistoryMessageResponse(responses, hasMore, nextBeforeId);
     }
+
 
     /* ========================================================================== */
     /*                           CÁC HÀM HỖ TRỢ KHÁC                              */
