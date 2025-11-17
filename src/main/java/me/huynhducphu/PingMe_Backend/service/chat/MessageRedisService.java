@@ -13,13 +13,13 @@ public interface MessageRedisService {
 
     void cacheMessages(Long roomId, List<MessageResponse> messages);
 
-    List<MessageResponse> getLatestMessages(Long roomId, int size);
+    List<MessageResponse> getMessages(Long roomId, Long beforeId, int size);
+
+    void appendOlderMessages(Long roomId, List<MessageResponse> messages);
 
     void evictRoom(Long roomId);
 
     void updateMessage(Long roomId, Long messageId, MessageResponse updated);
 
-    void appendOlderMessages(Long roomId, List<MessageResponse> messages);
 
-    List<MessageResponse> getOlderFromCache(Long roomId, Long beforeId, int size);
 }
