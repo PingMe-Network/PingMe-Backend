@@ -14,7 +14,7 @@ import me.huynhducphu.PingMe_Backend.repository.UserRepository;
 import me.huynhducphu.PingMe_Backend.service.authentication.UserAccountService;
 import me.huynhducphu.PingMe_Backend.service.authentication.JwtService;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
-import me.huynhducphu.PingMe_Backend.service.integration.RefreshTokenRedisService;
+import me.huynhducphu.PingMe_Backend.service.authentication.RefreshTokenRedisService;
 import me.huynhducphu.PingMe_Backend.service.integration.S3Service;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;

@@ -20,12 +20,13 @@ import me.huynhducphu.PingMe_Backend.repository.MessageRepository;
 import me.huynhducphu.PingMe_Backend.repository.RoomParticipantRepository;
 import me.huynhducphu.PingMe_Backend.repository.RoomRepository;
 import me.huynhducphu.PingMe_Backend.repository.UserRepository;
+import me.huynhducphu.PingMe_Backend.service.chat.MessageRedisService;
 import me.huynhducphu.PingMe_Backend.service.chat.util.ChatDtoUtils;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import me.huynhducphu.PingMe_Backend.service.integration.S3Service;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -48,17 +49,25 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service.chat.MessageService {
 
-    private static final long MAX_BLOG_IMAGE_SIZE = 10 * 1024 * 1024L;
+    private static final long MAX_IMAGE_SIZE = 10 * 1024 * 1024L;
 
+    @Value("${app.messages.cache.enabled}")
+    private boolean cacheEnabled;
+
+    // SERVICE
     private final S3Service s3Service;
+    private final MessageRedisService messageRedisService;
 
+    // PROVIDER
     private final CurrentUserProvider currentUserProvider;
 
+    // REPOSITORY
     private final RoomRepository roomRepository;
     private final RoomParticipantRepository roomParticipantRepository;
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
 
+    // PUBLISHER
     private final ApplicationEventPublisher eventPublisher;
 
 
@@ -174,8 +183,13 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         eventPublisher.publishEvent(roomUpdatedEvent);
         // ===================================================================================================
 
-        // Trả dữ liệu về cho người gửi tin nhắn
-        return ChatDtoUtils.toMessageResponseDto(message);
+        var dto = ChatDtoUtils.toMessageResponseDto(message);
+
+        // Caching Message
+        if (cacheEnabled)
+            messageRedisService.cacheNewMessage(roomId, dto);
+
+        return dto;
     }
 
     // Hàm xử lý gửi tin nhắn dạng MEDIA (File, Video, Image)
@@ -208,7 +222,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
                     "chats",
                     fileName.toString(),
                     true,
-                    MAX_BLOG_IMAGE_SIZE
+                    MAX_IMAGE_SIZE
             );
             sendMessageRequest.setContent(url);
 
@@ -258,6 +272,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         eventPublisher.publishEvent(messageRecalledEvent);
         // ===================================================================================================
 
+
         return new MessageRecalledResponse(messageId);
     }
 
@@ -305,45 +320,100 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
     /*                  CÁC HÀM XỬ LÝ LẤY LỊCH SỬ TIN NHẮN                        */
     /* ========================================================================== */
     @Override
-    public HistoryMessageResponse getHistoryMessages(
-            Long roomId,
-            Long beforeId,
-            Integer size
-    ) {
-        // Kiểm tra dữ liệu đầu vào
+    public HistoryMessageResponse getHistoryMessages(Long roomId, Long beforeId, Integer size) {
+
+        // =========================================================================================
+        // Validate input
+
         if (roomId == null || size == null)
-            throw new IllegalArgumentException("Mã phòng hoặc số lượng tin nhắn không hợp lệ");
+            throw new IllegalArgumentException("Invalid parameters");
 
-        // Lấy thông tin người dùng hiện tại
         var currentUser = currentUserProvider.get();
-        var userId = currentUser.getId();
+        var memberId = new RoomMemberId(roomId, currentUser.getId());
 
-        // Kiểm tra phòng chat có tồn tại không
-        roomRepository
-                .findById(roomId)
-                .orElseThrow(() -> new EntityNotFoundException("Phòng chat không tồn tại"));
+        if (!roomParticipantRepository.existsById(memberId))
+            throw new RuntimeException("Not a room member");
 
-        // Kiểm tra người dùng có phải thành viên của phòng hay không
-        var roomMemberId = new RoomMemberId(roomId, userId);
-        if (!roomParticipantRepository.existsById(roomMemberId))
-            throw new AccessDeniedException("Bạn không phải thành viên của phòng chat này");
+        int fixed = Math.max(1, Math.min(size, 20));
 
-        // Giới hạn số lượng tin nhắn lấy ra (1 → 20)
-        int fixedSize = Math.max(1, Math.min(size, 20));
-        Pageable limit = PageRequest.of(0, fixedSize);
+        // =========================================================================================
+        // Flow lấy lịch sử tin nhắn (3 bước):
+        // 1) beforeId == null → lấy newest messages (ưu tiên cache, fallback DB)
+        // 2) beforeId != null → cố lấy từ cache (older messages)
+        // 3) Nếu cache rỗng → load thêm từ DB, rồi append vào cache
+        // =========================================================================================
 
-        // Truy vấn tin nhắn từ database, sau đó map sang DTO
-        Page<Message> page = messageRepository.findHistoryMessagesByKeySet(roomId, beforeId, limit);
-        List<MessageResponse> messageResponses = page
-                .getContent()
-                .stream()
+
+        // ----------------------------------------
+        // Case 1: Lấy batch mới nhất (beforeId == null)
+        // Ưu tiên đọc cache; nếu cache trống → đọc DB và cache lại.
+        // ----------------------------------------
+        if (beforeId == null) {
+
+            if (cacheEnabled) {
+                var cached = messageRedisService.getMessages(roomId, null, fixed);
+                if (!cached.isEmpty()) {
+                    Long nextBeforeId = cached.getLast().getId();
+                    return new HistoryMessageResponse(cached, true, nextBeforeId);
+                }
+            }
+
+            var db = loadFromDbCursor(roomId, null, fixed);
+
+            if (!db.getMessageResponses().isEmpty()) {
+                messageRedisService.cacheMessages(roomId, db.getMessageResponses());
+            }
+
+            return db;
+        }
+
+
+        // ----------------------------------------
+        // Case 2: beforeId != null → cố lấy older messages từ cache
+        // Nếu cache có → trả luôn, tránh hit DB
+        // ----------------------------------------
+        if (cacheEnabled) {
+            var older = messageRedisService.getMessages(roomId, beforeId, fixed);
+
+            if (!older.isEmpty()) {
+                Long nextBeforeId = older.getLast().getId();
+                return new HistoryMessageResponse(older, true, nextBeforeId);
+            }
+        }
+
+
+        // ----------------------------------------
+        // Case 3: Cache không có → fallback DB
+        // Sau khi load từ DB thì append vào cache
+        // ----------------------------------------
+        var db = loadFromDbCursor(roomId, beforeId, fixed);
+
+        if (cacheEnabled && !db.getMessageResponses().isEmpty())
+            messageRedisService.appendOlderMessages(roomId, db.getMessageResponses());
+
+        return db;
+        // =========================================================================================
+    }
+
+    private HistoryMessageResponse loadFromDbCursor(Long roomId, Long beforeId, int size) {
+        Pageable limit = PageRequest.of(0, size + 1);
+
+        List<Message> res = messageRepository.findHistoryMessagesByKeySet(roomId, beforeId, limit);
+
+        boolean hasMore = res.size() > size;
+
+        List<Message> trimmed = hasMore ? res.subList(0, size) : res;
+
+        List<MessageResponse> responses = trimmed.stream()
                 .map(ChatDtoUtils::toMessageResponseDto)
                 .toList();
 
-        Long total = page.getTotalElements();
+        Long nextBeforeId =
+                responses.isEmpty() ? null : responses.getLast().getId();
 
-        return new HistoryMessageResponse(messageResponses, total);
+        return new HistoryMessageResponse(responses, hasMore, nextBeforeId);
     }
+
 
     /* ========================================================================== */
     /*                           CÁC HÀM HỖ TRỢ KHÁC                              */

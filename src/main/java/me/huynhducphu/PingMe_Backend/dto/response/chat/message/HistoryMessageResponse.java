@@ -16,6 +16,6 @@ import java.util.List;
 public class HistoryMessageResponse {
 
     private List<MessageResponse> messageResponses;
-    private Long total;
-
+    private Boolean hasMore;
+    private Long nextBeforeId;
 }

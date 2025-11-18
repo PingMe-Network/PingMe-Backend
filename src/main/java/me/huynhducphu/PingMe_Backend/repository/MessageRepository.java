@@ -27,7 +27,7 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
               and (:beforeId is null or m.id < :beforeId)
             order by m.id desc
             """)
-    Page<Message> findHistoryMessagesByKeySet(@Param("roomId") Long roomId,
+    List<Message> findHistoryMessagesByKeySet(@Param("roomId") Long roomId,
                                               @Param("beforeId") Long beforeId,
                                               Pageable pageable);
 }

@@ -40,7 +40,7 @@ public class RedisConfiguration {
     private String redisPassword;
 
     // =====================================================================
-    // 1. Kết nối tới Redis
+    // Kết nối tới Redis
     //    - Định nghĩa RedisConnectionFactory với host, port, password
     //    - Bean này dùng chung cho RedisTemplate & Spring Cache
     // =====================================================================
@@ -58,7 +58,7 @@ public class RedisConfiguration {
 
 
     // =====================================================================
-    // 2. Đăng ký RedisTemplate
+    // Đăng ký Object Mapper
     // =====================================================================
     @Bean
     public ObjectMapper redisObjectMapper() {
@@ -68,6 +68,9 @@ public class RedisConfiguration {
         return om;
     }
 
+    // =========================================================
+    // RedisTemplate cho DeviceMeta (refresh token)
+    // =========================================================
     @Bean
     public RedisTemplate<String, DeviceMeta> redisSessionMetaTemplate(
             RedisConnectionFactory cf,
@@ -85,8 +88,30 @@ public class RedisConfiguration {
         return tpl;
     }
 
+    // =========================================================
+    // 4. RedisTemplate cho message cache
+    //    key:   String  (vd: chat:room:1:messages)
+    //    value: String  (JSON của MessageResponse)
+    // =========================================================
+    @Bean(name = "redisMessageStringTemplate")
+    public RedisTemplate<String, String> redisMessageStringTemplate(
+            RedisConnectionFactory cf
+    ) {
+        RedisTemplate<String, String> tpl = new RedisTemplate<>();
+        tpl.setConnectionFactory(cf);
+
+        var stringSer = new StringRedisSerializer();
+        tpl.setKeySerializer(stringSer);
+        tpl.setHashKeySerializer(stringSer);
+        tpl.setValueSerializer(stringSer);
+        tpl.setHashValueSerializer(stringSer);
+
+        tpl.afterPropertiesSet();
+        return tpl;
+    }
+
     // =====================================================================
-    // 3. Cấu hình Spring Cache với Redis
+    // Cấu hình Spring Cache với Redis
     //    - Thiết lập thời gian sống mặc định cho cache (TTL)
     //    - Chỉ áp dụng cho các cache dùng annotation (@Cacheable, @CacheEvict...)
     // =====================================================================
@@ -108,7 +133,7 @@ public class RedisConfiguration {
     }
 
     // =====================================================================
-    // 4. Khởi tạo CacheManager sử dụng Redis
+    // Khởi tạo CacheManager sử dụng Redis
     //    - Quản lý cache thông qua Spring Cache (annotation)
     //    - Tự động áp dụng các cấu hình phía trên cho toàn bộ cache
     // =====================================================================
