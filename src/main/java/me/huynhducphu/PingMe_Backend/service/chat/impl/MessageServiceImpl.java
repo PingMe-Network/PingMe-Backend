@@ -252,26 +252,32 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         if (hours > 24)
             throw new IllegalArgumentException("Bạn chỉ có thể thu hồi tin nhắn trong vòng 24 giờ");
 
+        // Disable message
         messageToRecall.setActive(false);
 
-        // Nếu khác Text, tất là type Media thì gọi S3 xóa
-        if (!messageToRecall.getType().equals(MessageType.TEXT))
+        // Không phải TEXT -> xóa file
+        if (!messageToRecall.getType().equals(MessageType.TEXT)) {
             s3Service.deleteFileByUrl(messageToRecall.getContent());
+        }
 
-        // Xóa nội dung trong chat
+        // Xóa content
         messageToRecall.setContent("");
 
-        // ===================================================================================================
-        // WEBSOCKET
+        // ---------------------------
+        // UPDATE CACHE
+        // ---------------------------
+        Long roomId = messageToRecall.getRoom().getId();
+        var dto = ChatDtoUtils.toMessageResponseDto(messageToRecall);
 
-        // Sự kiện MESSAGE_CREATED (tạo tin nhắn mới)
-        var roomId = messageToRecall.getRoom().getId();
+        if (cacheEnabled)
+            messageRedisService.updateMessage(roomId, messageId, dto);
+
+
+        // ---------------------------
+        // WEBSOCKET EVENT
+        // ---------------------------
         var messageRecalledEvent = new MessageRecalledEvent(messageId, roomId);
-
-        // Bắn sự kiện Websocket
         eventPublisher.publishEvent(messageRecalledEvent);
-        // ===================================================================================================
-
 
         return new MessageRecalledResponse(messageId);
     }
@@ -350,6 +356,9 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         // ----------------------------------------
         if (beforeId == null) {
 
+            // -----------------------------
+            // 1. Ưu tiên đọc cache
+            // -----------------------------
             if (cacheEnabled) {
                 var cached = messageRedisService.getMessages(roomId, null, fixed);
                 if (!cached.isEmpty()) {
@@ -358,9 +367,15 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
                 }
             }
 
+            // -----------------------------
+            // 2. Fallback DB
+            // -----------------------------
             var db = loadFromDbCursor(roomId, null, fixed);
 
-            if (!db.getMessageResponses().isEmpty()) {
+            // -----------------------------
+            // 3. Cache lại (nếu bật cache)
+            // -----------------------------
+            if (cacheEnabled && !db.getMessageResponses().isEmpty()) {
                 messageRedisService.cacheMessages(roomId, db.getMessageResponses());
             }
 
