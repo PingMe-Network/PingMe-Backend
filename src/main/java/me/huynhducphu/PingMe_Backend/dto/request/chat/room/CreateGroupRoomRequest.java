@@ -1,8 +1,7 @@
-package me.huynhducphu.PingMe_Backend.dto.request.chat.message;
+package me.huynhducphu.PingMe_Backend.dto.request.chat.room;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
