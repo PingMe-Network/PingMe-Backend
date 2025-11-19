@@ -1,9 +1,11 @@
 package me.huynhducphu.PingMe_Backend.service.chat.impl;
 
 import lombok.RequiredArgsConstructor;
-import me.huynhducphu.PingMe_Backend.dto.request.chat.message.CreateGroupRoomRequest;
+import me.huynhducphu.PingMe_Backend.dto.request.chat.room.AddGroupMembersRequest;
+import me.huynhducphu.PingMe_Backend.dto.request.chat.room.CreateGroupRoomRequest;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.room.CreateOrGetDirectRoomRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.room.RoomResponse;
+import me.huynhducphu.PingMe_Backend.dto.ws.chat.event.RoomUpdatedEvent;
 import me.huynhducphu.PingMe_Backend.model.Room;
 import me.huynhducphu.PingMe_Backend.model.RoomParticipant;
 import me.huynhducphu.PingMe_Backend.model.common.RoomMemberId;
@@ -14,6 +16,7 @@ import me.huynhducphu.PingMe_Backend.repository.RoomRepository;
 import me.huynhducphu.PingMe_Backend.repository.UserRepository;
 import me.huynhducphu.PingMe_Backend.service.chat.util.ChatDtoUtils;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -34,11 +37,16 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.chat.RoomService {
 
+    // PROVIDER
     private final CurrentUserProvider currentUserProvider;
 
+    // REPOSITORY
     private final RoomRepository roomRepository;
     private final RoomParticipantRepository roomParticipantRepository;
     private final UserRepository userRepository;
+
+    // PUBLISHER
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public RoomResponse createOrGetDirectRoom(CreateOrGetDirectRoomRequest createOrGetDirectRoomRequest) {
@@ -76,6 +84,12 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
 
             addParticipant(savedRoom, currentUser.getId());
             addParticipant(savedRoom, createOrGetDirectRoomRequest.getTargetUserId());
+
+            // Websocket
+            eventPublisher.publishEvent(
+                    new RoomUpdatedEvent(savedRoom,
+                            roomParticipantRepository.findByRoom_Id(savedRoom.getId()))
+            );
 
             return ChatDtoUtils.toRoomResponseDto(
                     savedRoom,
@@ -129,6 +143,14 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
         // Thêm các thành viên khác
         memberIds.forEach(userId -> addParticipant(savedRoom, userId));
 
+        // Websocket
+        eventPublisher.publishEvent(
+                new RoomUpdatedEvent(
+                        savedRoom,
+                        roomParticipantRepository.findByRoom_Id(savedRoom.getId())
+                )
+        );
+
         return ChatDtoUtils.toRoomResponseDto(
                 savedRoom,
                 roomParticipantRepository.findByRoom_Id(savedRoom.getId()),
@@ -136,6 +158,50 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
         );
     }
 
+    @Override
+    public RoomResponse addGroupMembers(AddGroupMembersRequest request) {
+        var currentUser = currentUserProvider.get();
+
+        var room = roomRepository.findById(request.getRoomId())
+                .orElseThrow(() -> new IllegalArgumentException("Phòng không tồn tại"));
+
+        if (room.getRoomType() != RoomType.GROUP)
+            throw new IllegalArgumentException("Chỉ được thêm thành viên vào phòng nhóm");
+
+        // Người gọi phải là OWNER hoặc ADMIN
+        var pk = new RoomMemberId(room.getId(), currentUser.getId());
+        var participant = roomParticipantRepository.findById(pk)
+                .orElseThrow(() -> new IllegalArgumentException("Bạn không thuộc phòng"));
+
+        if (participant.getRole() == RoomRole.MEMBER)
+            throw new IllegalArgumentException("Bạn không có quyền thêm thành viên");
+
+        // Validate user tồn tại
+        var invalidIds = request.getMemberIds().stream()
+                .filter(id -> !userRepository.existsById(id))
+                .toList();
+
+        if (!invalidIds.isEmpty())
+            throw new IllegalArgumentException("Người dùng không tồn tại: " + invalidIds);
+
+        // Thêm từng user
+        request.getMemberIds().forEach(userId -> addParticipant(room, userId));
+
+        // Websocket
+        eventPublisher.publishEvent(
+                new RoomUpdatedEvent(
+                        room,
+                        roomParticipantRepository.findByRoom_Id(room.getId())
+                )
+        );
+
+        return ChatDtoUtils.toRoomResponseDto(
+                room,
+                roomParticipantRepository.findByRoom_Id(room.getId()),
+                currentUser.getId()
+        );
+    }
+    
     @Override
     public Page<RoomResponse> getCurrentUserRooms(Pageable pageable) {
         var currentUser = currentUserProvider.get();
