@@ -15,8 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @Data
 public class HistoryFriendshipResponse {
-
     private List<UserSummaryResponse> userSummaryResponses;
-    private Long total;
-
+    private Boolean hasMore;
+    private Long nextBeforeId;
 }

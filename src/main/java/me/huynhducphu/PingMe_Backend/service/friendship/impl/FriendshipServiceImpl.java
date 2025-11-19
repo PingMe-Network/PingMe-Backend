@@ -216,21 +216,29 @@ public class FriendshipServiceImpl implements me.huynhducphu.PingMe_Backend.serv
         if (size == null)
             throw new IllegalArgumentException("Số lượng không hợp lệ");
 
-        // Lấy thông tin người dùng hiện tại
         var currentUser = currentUserProvider.get();
 
         int fixedSize = Math.max(1, Math.min(size, 20));
-        Pageable limit = PageRequest.of(0, fixedSize);
+
+        // keyset limit + 1 để detect hasMore
+        Pageable limit = PageRequest.of(0, fixedSize + 1);
 
         Page<Friendship> page = friendshipRepository
                 .findAllByStatusAndUserWithBeforeId(
-                        FriendshipStatus.ACCEPTED, currentUser.getId(),
-                        beforeId, limit
+                        FriendshipStatus.ACCEPTED,
+                        currentUser.getId(),
+                        beforeId,
+                        limit
                 );
 
-        List<UserSummaryResponse> userSummaryResponses = page
-                .getContent()
-                .stream()
+        List<Friendship> content = page.getContent();
+
+        boolean hasMore = content.size() > fixedSize;
+
+        // cắt bớt
+        List<Friendship> trimmed = hasMore ? content.subList(0, fixedSize) : content;
+
+        List<UserSummaryResponse> dto = trimmed.stream()
                 .map(friendship -> {
                     var user = friendship.getUserA().getId().equals(currentUser.getId())
                             ? friendship.getUserB()
@@ -239,7 +247,11 @@ public class FriendshipServiceImpl implements me.huynhducphu.PingMe_Backend.serv
                 })
                 .toList();
 
-        return new HistoryFriendshipResponse(userSummaryResponses, page.getTotalElements());
+        Long nextBeforeId = dto.isEmpty()
+                ? null
+                : trimmed.get(trimmed.size() - 1).getId();
+
+        return new HistoryFriendshipResponse(dto, hasMore, nextBeforeId);
     }
 
     @Override
@@ -250,29 +262,33 @@ public class FriendshipServiceImpl implements me.huynhducphu.PingMe_Backend.serv
         if (size == null)
             throw new IllegalArgumentException("Số lượng không hợp lệ");
 
-        // Lấy thông tin người dùng hiện tại
         var currentUser = currentUserProvider.get();
-
         int fixedSize = Math.max(1, Math.min(size, 20));
-        Pageable limit = PageRequest.of(0, fixedSize);
+        Pageable limit = PageRequest.of(0, fixedSize + 1);
 
         Page<Friendship> page = friendshipRepository
                 .findByStatusAndUserB_IdWithBeforeId(
-                        FriendshipStatus.PENDING, currentUser.getId(),
-                        beforeId, limit
+                        FriendshipStatus.PENDING,
+                        currentUser.getId(),
+                        beforeId,
+                        limit
                 );
 
-        List<UserSummaryResponse> userSummaryResponses = page
-                .getContent()
-                .stream()
-                .map(friendship -> {
-                    var invitee = friendship.getUserA();
-                    return mapToDto(invitee, friendship);
-                })
+        List<Friendship> content = page.getContent();
+        boolean hasMore = content.size() > fixedSize;
+        List<Friendship> trimmed = hasMore ? content.subList(0, fixedSize) : content;
+
+        List<UserSummaryResponse> dto = trimmed.stream()
+                .map(friendship -> mapToDto(friendship.getUserA(), friendship))
                 .toList();
 
-        return new HistoryFriendshipResponse(userSummaryResponses, page.getTotalElements());
+        Long nextBeforeId = dto.isEmpty()
+                ? null
+                : trimmed.get(trimmed.size() - 1).getId();
+
+        return new HistoryFriendshipResponse(dto, hasMore, nextBeforeId);
     }
+
 
     @Override
     public HistoryFriendshipResponse getSentHistoryInvitations(
@@ -282,28 +298,33 @@ public class FriendshipServiceImpl implements me.huynhducphu.PingMe_Backend.serv
         if (size == null)
             throw new IllegalArgumentException("Số lượng không hợp lệ");
 
-        // Lấy thông tin người dùng hiện tại
         var currentUser = currentUserProvider.get();
-
         int fixedSize = Math.max(1, Math.min(size, 20));
-        Pageable limit = PageRequest.of(0, fixedSize);
+        Pageable limit = PageRequest.of(0, fixedSize + 1);
 
         Page<Friendship> page = friendshipRepository
                 .findByStatusAndUserA_IdWithBeforeId(
-                        FriendshipStatus.PENDING, currentUser.getId(),
-                        beforeId, limit
+                        FriendshipStatus.PENDING,
+                        currentUser.getId(),
+                        beforeId,
+                        limit
                 );
-        List<UserSummaryResponse> userSummaryResponses = page
-                .getContent()
-                .stream()
-                .map(friendship -> {
-                    var invitee = friendship.getUserB();
-                    return mapToDto(invitee, friendship);
-                })
+
+        List<Friendship> content = page.getContent();
+        boolean hasMore = content.size() > fixedSize;
+        List<Friendship> trimmed = hasMore ? content.subList(0, fixedSize) : content;
+
+        List<UserSummaryResponse> dto = trimmed.stream()
+                .map(friendship -> mapToDto(friendship.getUserB(), friendship))
                 .toList();
 
-        return new HistoryFriendshipResponse(userSummaryResponses, page.getTotalElements());
+        Long nextBeforeId = dto.isEmpty()
+                ? null
+                : trimmed.get(trimmed.size() - 1).getId();
+
+        return new HistoryFriendshipResponse(dto, hasMore, nextBeforeId);
     }
+
 
     @Override
     public UserFriendshipStatsResponse getUserFrendshipStats() {
@@ -329,7 +350,7 @@ public class FriendshipServiceImpl implements me.huynhducphu.PingMe_Backend.serv
         // Lấy thông tin người dùng hiện tại
         var currentUser = userRepository
                 .getUserByEmail(email)
-                .orElseThrow(()->new EntityNotFoundException("Khong tim thay nguoi dung"));
+                .orElseThrow(() -> new EntityNotFoundException("Khong tim thay nguoi dung"));
 
         return friendshipRepository.findAllByStatusAndUserWithoutBeforeId(
                 FriendshipStatus.ACCEPTED, currentUser.getId()

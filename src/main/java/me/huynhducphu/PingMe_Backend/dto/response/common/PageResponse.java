@@ -21,6 +21,7 @@ public class PageResponse<T> {
     private int size;
     private long totalElements;
     private int totalPages;
+    private boolean hasMore;
 
     public PageResponse(Page<T> page) {
         this.content = page.getContent();
@@ -28,6 +29,7 @@ public class PageResponse<T> {
         this.size = page.getSize();
         this.totalElements = page.getTotalElements();
         this.totalPages = page.getTotalPages();
+        this.hasMore = this.page < this.totalPages;
     }
 }
 
