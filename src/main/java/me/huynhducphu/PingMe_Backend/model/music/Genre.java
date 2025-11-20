@@ -25,14 +25,16 @@ public class Genre extends BaseEntity {
     @EqualsAndHashCode.Include
     private Long id;
 
+    //Tên thể loại
     @Column(columnDefinition = "VARCHAR(100)", nullable = false)
     private String name;
 
+    //Danh sách bài hát thuộc thể loại này
     @ManyToMany(mappedBy = "genres")
     @ToString.Exclude
     private List<Song> songs;
 
-
+    //Danh sách album thuộc thể loại này
     @ManyToMany(mappedBy = "genres")
     @ToString.Exclude
     private List<Album> albums;

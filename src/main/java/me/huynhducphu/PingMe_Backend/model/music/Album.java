@@ -25,13 +25,20 @@ public class Album extends BaseEntity {
     @EqualsAndHashCode.Include
     private Long id;
 
+    //Tên album
     @Column(columnDefinition = "VARCHAR(150)", nullable = false)
     private String title;
 
+    //Chủ sở hữu album (tác giả tạo ra album này)
     @ManyToOne
     @JoinColumn(name = "owner_id", nullable = false)
     private Artist albumOwner;
 
+    //Ảnh bìa album (lấy từ S3 xuống)
+    @Column(nullable = false)
+    private String coverImageUrl;
+
+    //Danh sách thể loại của album
     @ManyToMany
     @JoinTable(
             name = "album_genre",
@@ -41,9 +48,7 @@ public class Album extends BaseEntity {
     @ToString.Exclude
     private Set<Genre> genres;
 
-    @Column(nullable = false)
-    private String coverImageUrl;
-
+    //Danh sách bài hát trong album
     @ManyToMany
     @JoinTable(
             name = "album_song",
@@ -53,6 +58,7 @@ public class Album extends BaseEntity {
     @ToString.Exclude
     private Set<Song> songs;
 
+    //Danh sách nghệ sĩ tham gia trong album
     @ManyToMany
     @JoinTable(
             name = "album_artist",
