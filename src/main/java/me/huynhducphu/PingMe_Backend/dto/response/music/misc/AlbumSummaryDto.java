@@ -1,4 +1,4 @@
-package me.huynhducphu.PingMe_Backend.dto.request.music.misc;
+package me.huynhducphu.PingMe_Backend.dto.response.music.misc;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

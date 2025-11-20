@@ -1,11 +1,11 @@
-package me.huynhducphu.PingMe_Backend.dto.request.music;
+package me.huynhducphu.PingMe_Backend.dto.response.music;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import me.huynhducphu.PingMe_Backend.dto.request.music.misc.AlbumSummaryDto;
-import me.huynhducphu.PingMe_Backend.dto.request.music.misc.ArtistSummaryDto;
-import me.huynhducphu.PingMe_Backend.dto.request.music.misc.GenreDto;
+import me.huynhducphu.PingMe_Backend.dto.response.music.misc.AlbumSummaryDto;
+import me.huynhducphu.PingMe_Backend.dto.response.music.misc.ArtistSummaryDto;
+import me.huynhducphu.PingMe_Backend.dto.response.music.misc.GenreDto;
 
 import java.time.LocalDate;
 import java.util.List;
