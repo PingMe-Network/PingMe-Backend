@@ -26,24 +26,30 @@ public class Artist extends BaseEntity {
     @EqualsAndHashCode.Include
     private Long id;
 
+    // Tên nghệ sĩ
     @Column(columnDefinition = "VARCHAR(150)", nullable = false)
     private String name;
 
+    // Tiểu sử nghệ sĩ
     @Column(columnDefinition = "TEXT")
     private String bio;
 
+    // Ảnh đại diện nghệ sĩ (lấy từ 3S xuống)
+    @Column(nullable = false)
+    private String imgUrl;
+
+    // Các bài hát mà nghệ sĩ này tham gia với vai trò khác nhau
     @OneToMany(mappedBy = "artist")
     @ToString.Exclude
     private List<SongArtistRole> songRoles;
 
+    // Các album mà nghệ sĩ này sở hữu/tạo ra
     @OneToMany(mappedBy = "albumOwner")
     @ToString.Exclude
     private List<Album> ownAlbums;
 
+    // Các album mà nghệ sĩ này được giới thiệu (hoặc được tham gia trong đó)
     @ManyToMany(mappedBy = "featuredArtists")
     @ToString.Exclude
     private Set<Album> albums;
-
-    @Column(nullable = false)
-    private String imgUrl;
 }

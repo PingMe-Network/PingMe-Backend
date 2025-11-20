@@ -27,6 +27,7 @@ public class SongArtistRole extends BaseEntity {
     @EqualsAndHashCode.Include
     private Long id;
 
+    //Bên dưới là bài hát và nghệ sĩ liên kết với vai trò cụ thể
     @ManyToOne
     @JoinColumn(name = "song_id", nullable = false)
     private Song song;
