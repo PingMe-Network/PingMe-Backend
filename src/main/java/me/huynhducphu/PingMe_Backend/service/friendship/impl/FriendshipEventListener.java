@@ -2,8 +2,8 @@ package me.huynhducphu.PingMe_Backend.service.friendship.impl;
 
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummaryResponse;
-import me.huynhducphu.PingMe_Backend.dto.ws.friendship.event.FriendshipEvent;
-import me.huynhducphu.PingMe_Backend.dto.ws.friendship.payload.FriendshipEventPayload;
+import me.huynhducphu.PingMe_Backend.service.friendship.event.FriendshipEvent;
+import me.huynhducphu.PingMe_Backend.dto.ws.friendship.FriendshipEventPayload;
 import me.huynhducphu.PingMe_Backend.model.User;
 import org.modelmapper.ModelMapper;
 import org.springframework.messaging.simp.SimpMessagingTemplate;

@@ -6,6 +6,9 @@ import me.huynhducphu.PingMe_Backend.dto.response.chat.message.HistoryMessageRes
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageRecalledResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.ReadStateResponse;
+import me.huynhducphu.PingMe_Backend.model.Message;
+import me.huynhducphu.PingMe_Backend.model.Room;
+import me.huynhducphu.PingMe_Backend.model.User;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -29,4 +32,6 @@ public interface MessageService {
     HistoryMessageResponse getHistoryMessages(
             Long roomId, Long beforeId, Integer size
     );
+
+    Message createSystemMessage(Room room, String content, User user);
 }

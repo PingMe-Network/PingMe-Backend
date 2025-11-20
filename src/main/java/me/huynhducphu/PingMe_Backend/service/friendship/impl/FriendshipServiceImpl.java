@@ -6,8 +6,8 @@ import me.huynhducphu.PingMe_Backend.dto.request.friendship.FriendInvitationRequ
 import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummaryResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.friendship.HistoryFriendshipResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.friendship.UserFriendshipStatsResponse;
-import me.huynhducphu.PingMe_Backend.dto.ws.friendship.event.FriendshipEvent;
-import me.huynhducphu.PingMe_Backend.dto.ws.friendship.FriendshipEventType;
+import me.huynhducphu.PingMe_Backend.service.friendship.event.FriendshipEvent;
+import me.huynhducphu.PingMe_Backend.dto.ws.friendship.common.FriendshipEventType;
 import me.huynhducphu.PingMe_Backend.model.User;
 import me.huynhducphu.PingMe_Backend.model.constant.FriendshipStatus;
 import me.huynhducphu.PingMe_Backend.model.Friendship;

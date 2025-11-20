@@ -1,9 +1,9 @@
-package me.huynhducphu.PingMe_Backend.dto.ws.friendship.event;
+package me.huynhducphu.PingMe_Backend.service.friendship.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import me.huynhducphu.PingMe_Backend.dto.ws.friendship.FriendshipEventType;
+import me.huynhducphu.PingMe_Backend.dto.ws.friendship.common.FriendshipEventType;
 import me.huynhducphu.PingMe_Backend.model.Friendship;
 
 /**

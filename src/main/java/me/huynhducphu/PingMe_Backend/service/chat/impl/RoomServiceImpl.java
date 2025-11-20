@@ -5,7 +5,10 @@ import me.huynhducphu.PingMe_Backend.dto.request.chat.room.AddGroupMembersReques
 import me.huynhducphu.PingMe_Backend.dto.request.chat.room.CreateGroupRoomRequest;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.room.CreateOrGetDirectRoomRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.room.RoomResponse;
-import me.huynhducphu.PingMe_Backend.dto.ws.chat.event.RoomUpdatedEvent;
+import me.huynhducphu.PingMe_Backend.service.chat.MessageService;
+import me.huynhducphu.PingMe_Backend.service.chat.event.RoomCreatedEvent;
+import me.huynhducphu.PingMe_Backend.service.chat.event.RoomMemberAddedEvent;
+import me.huynhducphu.PingMe_Backend.service.chat.event.RoomMemberRemovedEvent;
 import me.huynhducphu.PingMe_Backend.model.Room;
 import me.huynhducphu.PingMe_Backend.model.RoomParticipant;
 import me.huynhducphu.PingMe_Backend.model.common.RoomMemberId;
@@ -37,6 +40,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.chat.RoomService {
 
+    // SERVICE
+    private final MessageService messageService;
+
     // PROVIDER
     private final CurrentUserProvider currentUserProvider;
 
@@ -48,6 +54,9 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
     // PUBLISHER
     private final ApplicationEventPublisher eventPublisher;
 
+    /* ========================================================================== */
+    /*                         TẠO HOẶC TÌM PHÒNG CHAT 1-1                        */
+    /* ========================================================================== */
     @Override
     public RoomResponse createOrGetDirectRoom(CreateOrGetDirectRoomRequest createOrGetDirectRoomRequest) {
         var currentUser = currentUserProvider.get();
@@ -87,8 +96,10 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
 
             // Websocket
             eventPublisher.publishEvent(
-                    new RoomUpdatedEvent(savedRoom,
-                            roomParticipantRepository.findByRoom_Id(savedRoom.getId()))
+                    new RoomCreatedEvent(
+                            savedRoom,
+                            roomParticipantRepository.findByRoom_Id(savedRoom.getId())
+                    )
             );
 
             return ChatDtoUtils.toRoomResponseDto(
@@ -103,6 +114,9 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
         }
     }
 
+    /* ========================================================================== */
+    /*                         TẠO/QUẢN LÝ PHÒNG CHAT GROUP                        */
+    /* ========================================================================== */
     @Override
     public RoomResponse createGroupRoom(CreateGroupRoomRequest createGroupRoomRequest) {
         var currentUser = currentUserProvider.get();
@@ -145,7 +159,7 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
 
         // Websocket
         eventPublisher.publishEvent(
-                new RoomUpdatedEvent(
+                new RoomCreatedEvent(
                         savedRoom,
                         roomParticipantRepository.findByRoom_Id(savedRoom.getId())
                 )
@@ -168,15 +182,20 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
         if (room.getRoomType() != RoomType.GROUP)
             throw new IllegalArgumentException("Chỉ được thêm thành viên vào phòng nhóm");
 
-        // Người gọi phải là OWNER hoặc ADMIN
-        var pk = new RoomMemberId(room.getId(), currentUser.getId());
-        var participant = roomParticipantRepository.findById(pk)
+        // --------------------------------------------------------------------------------
+        // Phân quyền
+        // OWNER và ADMIN có quyền thêm thành viên mới
+        // MEMBER không có quyền thêm thành viên mới
+        // --------------------------------------------------------------------------------
+        var callerPk = new RoomMemberId(room.getId(), currentUser.getId());
+        var caller = roomParticipantRepository.findById(callerPk)
                 .orElseThrow(() -> new IllegalArgumentException("Bạn không thuộc phòng"));
 
-        if (participant.getRole() == RoomRole.MEMBER)
+        if (caller.getRole() == RoomRole.MEMBER)
             throw new IllegalArgumentException("Bạn không có quyền thêm thành viên");
+        // --------------------------------------------------------------------------------
 
-        // Validate user tồn tại
+        // Lọc thành viên không tồn tại
         var invalidIds = request.getMemberIds().stream()
                 .filter(id -> !userRepository.existsById(id))
                 .toList();
@@ -184,16 +203,34 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
         if (!invalidIds.isEmpty())
             throw new IllegalArgumentException("Người dùng không tồn tại: " + invalidIds);
 
-        // Thêm từng user
-        request.getMemberIds().forEach(userId -> addParticipant(room, userId));
+        // Duyệt qua danh sách thêm thành viên vào Room
+        for (Long targetUserId : request.getMemberIds()) {
 
-        // Websocket
-        eventPublisher.publishEvent(
-                new RoomUpdatedEvent(
-                        room,
-                        roomParticipantRepository.findByRoom_Id(room.getId())
-                )
-        );
+            addParticipant(room, targetUserId);
+
+            var members = roomParticipantRepository.findByRoom_Id(room.getId());
+            var targetUser = userRepository.getReferenceById(targetUserId);
+
+            String content = currentUser.getName() +
+                    " đã thêm " +
+                    targetUser.getName() +
+                    " vào nhóm";
+
+            // --------------------------------------------------------------------------------
+            // Websocket
+            // + Bắn sự kiện tạo SYSTEM MESSAGGE
+            // + Bắn sự kiện cập nhật phòng
+            // --------------------------------------------------------------------------------
+            messageService.createSystemMessage(room, content, currentUser);
+            eventPublisher.publishEvent(
+                    new RoomMemberAddedEvent(
+                            room,
+                            members,
+                            currentUser.getId(),
+                            targetUserId
+                    )
+            );
+        }
 
         return ChatDtoUtils.toRoomResponseDto(
                 room,
@@ -201,7 +238,78 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
                 currentUser.getId()
         );
     }
-    
+
+    @Override
+    public RoomResponse removeGroupMember(Long roomId, Long targetUserId) {
+        var currentUser = currentUserProvider.get();
+
+        var room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("Phòng không tồn tại"));
+
+        if (room.getRoomType() != RoomType.GROUP)
+            throw new IllegalArgumentException("Chỉ phòng nhóm mới được xóa thành viên");
+
+        if (currentUser.getId().equals(targetUserId))
+            throw new IllegalArgumentException("Không thể tự xóa chính mình này");
+
+        var callerPk = new RoomMemberId(roomId, currentUser.getId());
+        var caller = roomParticipantRepository.findById(callerPk)
+                .orElseThrow(() -> new IllegalArgumentException("Bạn không thuộc phòng"));
+
+        var targetPk = new RoomMemberId(roomId, targetUserId);
+        var target = roomParticipantRepository.findById(targetPk)
+                .orElseThrow(() -> new IllegalArgumentException("Người dùng không thuộc phòng"));
+
+        // --------------------------------------------------------------------------------
+        // Phân quyền
+        // OWNER: được remove thành viên có role ADMIN hoặc MEMBER
+        // ADMIN: được remove thành viên có role MEMBER
+        // MEMBER: không remove được ai
+        // --------------------------------------------------------------------------------
+
+        if (caller.getRole() == RoomRole.MEMBER)
+            throw new IllegalArgumentException("Bạn không có quyền xóa thành viên");
+
+        if (caller.getRole() == RoomRole.ADMIN && target.getRole() != RoomRole.MEMBER)
+            throw new IllegalArgumentException("Admin chỉ được xóa Member");
+
+        // --------------------------------------------------------------------------------
+        // Xóa thành viên
+        // --------------------------------------------------------------------------------
+        roomParticipantRepository.delete(target);
+        var members = roomParticipantRepository.findByRoom_Id(room.getId());
+
+        // --------------------------------------------------------------------------------
+        // Websocket
+        // + Bắn sự kiện tạo SYSTEM MESSAGGE
+        // + Bắn sự kiện cập nhật phòng
+        // --------------------------------------------------------------------------------
+        String content = currentUser.getName() +
+                " đã xóa " +
+                target.getUser().getName() +
+                " khỏi nhóm";
+
+        messageService.createSystemMessage(room, content, currentUser);
+        eventPublisher.publishEvent(
+                new RoomMemberRemovedEvent(
+                        room,
+                        members,
+                        currentUser.getId(),
+                        targetUserId
+                )
+        );
+
+        return ChatDtoUtils.toRoomResponseDto(
+                room,
+                members,
+                currentUser.getId()
+        );
+    }
+
+
+    /* ========================================================================== */
+    /*                         LẤY LỊCH SỬ PHÒNG CHAT                             */
+    /* ========================================================================== */
     @Override
     public Page<RoomResponse> getCurrentUserRooms(Pageable pageable) {
         var currentUser = currentUserProvider.get();
@@ -230,9 +338,9 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
         return new PageImpl<>(content, pageable, page.getTotalElements());
     }
 
-    // =====================================
-    // Utilities methods
-    // =====================================
+    /* ========================================================================== */
+    /*                           CÁC HÀM HỖ TRỢ KHÁC                              */
+    /* ========================================================================== */
     private String buildDirectKey(Long a, Long b) {
         long low = Math.min(a, b);
         long high = Math.max(a, b);

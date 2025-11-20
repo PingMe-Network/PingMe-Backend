@@ -1,4 +1,4 @@
-package me.huynhducphu.PingMe_Backend.dto.ws.friendship;
+package me.huynhducphu.PingMe_Backend.dto.ws.friendship.common;
 
 public enum FriendshipEventType {
     INVITED, ACCEPTED, REJECTED, CANCELED, DELETED

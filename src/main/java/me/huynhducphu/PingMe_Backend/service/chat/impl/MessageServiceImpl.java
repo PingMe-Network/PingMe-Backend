@@ -8,9 +8,10 @@ import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageRecalledRe
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.ReadStateResponse;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.message.SendMessageRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageResponse;
-import me.huynhducphu.PingMe_Backend.dto.ws.chat.event.MessageCreatedEvent;
-import me.huynhducphu.PingMe_Backend.dto.ws.chat.event.MessageRecalledEvent;
-import me.huynhducphu.PingMe_Backend.dto.ws.chat.event.RoomUpdatedEvent;
+import me.huynhducphu.PingMe_Backend.model.User;
+import me.huynhducphu.PingMe_Backend.service.chat.event.MessageCreatedEvent;
+import me.huynhducphu.PingMe_Backend.service.chat.event.MessageRecalledEvent;
+import me.huynhducphu.PingMe_Backend.service.chat.event.RoomUpdatedEvent;
 import me.huynhducphu.PingMe_Backend.model.Message;
 import me.huynhducphu.PingMe_Backend.model.Room;
 import me.huynhducphu.PingMe_Backend.model.RoomParticipant;
@@ -166,7 +167,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         roomParticipant.setLastReadMessageId(finalMsg.getId());
         roomParticipant.setLastReadAt(finalMsg.getCreatedAt());
 
-        // ===================================================================================================
+        // --------------------------------------------------------------------------------
         // WEBSOCKET
 
         // Sự kiện MESSAGE_CREATED (tạo tin nhắn mới)
@@ -181,7 +182,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         // Bắn sự kiện Websocket
         eventPublisher.publishEvent(messageCreatedEvent);
         eventPublisher.publishEvent(roomUpdatedEvent);
-        // ===================================================================================================
+        // --------------------------------------------------------------------------------
 
         var dto = ChatDtoUtils.toMessageResponseDto(message);
 
@@ -328,9 +329,9 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
     @Override
     public HistoryMessageResponse getHistoryMessages(Long roomId, Long beforeId, Integer size) {
 
-        // =========================================================================================
+        // --------------------------------------------------------------------------------
         // Validate input
-
+        // --------------------------------------------------------------------------------
         if (roomId == null || size == null)
             throw new IllegalArgumentException("Invalid parameters");
 
@@ -341,6 +342,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
             throw new RuntimeException("Not a room member");
 
         int fixed = Math.max(1, Math.min(size, 20));
+        // --------------------------------------------------------------------------------
 
         // =========================================================================================
         // Flow lấy lịch sử tin nhắn (3 bước):
@@ -407,7 +409,6 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
             messageRedisService.appendOlderMessages(roomId, db.getMessageResponses());
 
         return db;
-        // =========================================================================================
     }
 
     private HistoryMessageResponse loadFromDbCursor(Long roomId, Long beforeId, int size) {
@@ -427,6 +428,32 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
                 responses.isEmpty() ? null : responses.getLast().getId();
 
         return new HistoryMessageResponse(responses, hasMore, nextBeforeId);
+    }
+
+    /* ========================================================================== */
+    /*                  TẠO TIN NHẮN HỆ THỐNG                                     */
+    /* ========================================================================== */
+    @Override
+    public Message createSystemMessage(Room room, String content, User user) {
+        var msg = new Message();
+        msg.setRoom(room);
+        msg.setSender(user);
+        msg.setType(MessageType.SYSTEM);
+        msg.setContent(content);
+        msg.setActive(true);
+        msg.setCreatedAt(LocalDateTime.now());
+        msg.setClientMsgId(UUID.randomUUID());
+
+
+        var saved = messageRepository.save(msg);
+        var dto = ChatDtoUtils.toMessageResponseDto(saved);
+
+        if (cacheEnabled)
+            messageRedisService.cacheNewMessage(room.getId(), dto);
+
+        eventPublisher.publishEvent(new MessageCreatedEvent(saved));
+        
+        return saved;
     }
 
 
