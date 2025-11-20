@@ -19,10 +19,10 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     Optional<Room> findByDirectKey(String directKey);
 
     @Query("""
-              select r from Room r
-              join RoomParticipant rp on rp.room = r
-              where rp.id.userId = :userId
-              order by r.lastMessageAt desc nulls last
+                select r from Room r
+                join RoomParticipant rp on rp.room = r
+                where rp.id.userId = :userId
+                order by r.lastMessageAt desc nulls last, r.id desc
             """)
     Page<Room> findAllByMember(@Param("userId") Long userId, Pageable pageable);
 }

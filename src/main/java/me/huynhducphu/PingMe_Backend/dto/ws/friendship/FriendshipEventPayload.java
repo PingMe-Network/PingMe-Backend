@@ -1,10 +1,10 @@
-package me.huynhducphu.PingMe_Backend.dto.ws.friendship.payload;
+package me.huynhducphu.PingMe_Backend.dto.ws.friendship;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummaryResponse;
-import me.huynhducphu.PingMe_Backend.dto.ws.friendship.FriendshipEventType;
+import me.huynhducphu.PingMe_Backend.dto.ws.friendship.common.FriendshipEventType;
 
 /**
  * Admin 8/30/2025

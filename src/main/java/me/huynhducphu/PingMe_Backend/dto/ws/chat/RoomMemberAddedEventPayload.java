@@ -1,0 +1,30 @@
+package me.huynhducphu.PingMe_Backend.dto.ws.chat;
+
+import lombok.Getter;
+import me.huynhducphu.PingMe_Backend.dto.response.chat.room.RoomResponse;
+import me.huynhducphu.PingMe_Backend.dto.ws.chat.common.BaseChatEventPayload;
+import me.huynhducphu.PingMe_Backend.dto.ws.chat.common.ChatEventType;
+
+/**
+ * Admin 11/20/2025
+ *
+ **/
+@Getter
+public class RoomMemberAddedEventPayload extends BaseChatEventPayload {
+
+    private final RoomResponse roomResponse;
+    private final Long targetUserId;
+    private final Long actorUserId;
+
+    public RoomMemberAddedEventPayload(
+            RoomResponse dto,
+            Long targetUserId,
+            Long actorUserId
+    ) {
+        super(ChatEventType.MEMBER_ADDED);
+        this.roomResponse = dto;
+        this.targetUserId = targetUserId;
+        this.actorUserId = actorUserId;
+    }
+    
+}

@@ -18,5 +18,7 @@ public interface RoomService {
 
     RoomResponse addGroupMembers(AddGroupMembersRequest request);
 
+    RoomResponse removeGroupMember(Long roomId, Long targetUserId);
+
     Page<RoomResponse> getCurrentUserRooms(Pageable pageable);
 }
