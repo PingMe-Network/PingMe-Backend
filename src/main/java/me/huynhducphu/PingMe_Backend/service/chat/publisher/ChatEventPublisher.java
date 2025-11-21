@@ -121,6 +121,7 @@ public class ChatEventPublisher {
         }
     }
 
+
     /* ========================================================================== */
     /*                       ROOM MEMBER  —  REMOVED                              */
     /* ========================================================================== */
@@ -146,4 +147,33 @@ public class ChatEventPublisher {
             );
         }
     }
+
+    /* ========================================================================== */
+    /*                           ROOM MEMBER  —  ROLE CHANGED                     */
+    /* ========================================================================== */
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onMemberRoleChanged(RoomMemberRoleChangedEvent event) {
+        var room = event.getRoom();
+        var participants = event.getParticipants();
+        var sysMsgDto = ChatDtoUtils.toMessageResponseDto(event.getSystemMessage());
+
+        for (Long userId : participants.stream().map(p -> p.getUser().getId()).toList()) {
+            var payload = new RoomMemberRoleChangedEventPayload(
+                    ChatDtoUtils.toRoomResponseDto(room, participants, userId),
+                    event.getTargetUserId(),
+                    event.getOldRole(),
+                    event.getNewRole(),
+                    event.getActorUserId(),
+                    sysMsgDto
+            );
+
+            messagingTemplate.convertAndSendToUser(
+                    userId.toString(),
+                    "/queue/rooms",
+                    payload
+            );
+        }
+    }
+
+
 }

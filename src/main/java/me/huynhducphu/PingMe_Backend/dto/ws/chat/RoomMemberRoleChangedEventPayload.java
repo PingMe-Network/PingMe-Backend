@@ -1,6 +1,7 @@
 package me.huynhducphu.PingMe_Backend.dto.ws.chat;
 
 import lombok.Getter;
+import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.room.RoomResponse;
 import me.huynhducphu.PingMe_Backend.dto.ws.chat.common.BaseChatEventPayload;
 import me.huynhducphu.PingMe_Backend.dto.ws.chat.common.ChatEventType;
@@ -18,13 +19,15 @@ public class RoomMemberRoleChangedEventPayload extends BaseChatEventPayload {
     private final RoomRole oldRole;
     private final RoomRole newRole;
     private final Long actorUserId;
+    private final MessageResponse systemMessage;
 
     public RoomMemberRoleChangedEventPayload(
             RoomResponse dto,
             Long targetUserId,
             RoomRole oldRole,
             RoomRole newRole,
-            Long actorUserId
+            Long actorUserId,
+            MessageResponse systemMessage
     ) {
         super(ChatEventType.MEMBER_ROLE_CHANGED);
         this.roomResponse = dto;
@@ -32,5 +35,6 @@ public class RoomMemberRoleChangedEventPayload extends BaseChatEventPayload {
         this.oldRole = oldRole;
         this.newRole = newRole;
         this.actorUserId = actorUserId;
+        this.systemMessage = systemMessage;
     }
 }

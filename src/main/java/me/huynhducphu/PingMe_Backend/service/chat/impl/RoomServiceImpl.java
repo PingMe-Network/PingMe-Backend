@@ -17,6 +17,7 @@ import me.huynhducphu.PingMe_Backend.model.constant.RoomType;
 import me.huynhducphu.PingMe_Backend.repository.RoomParticipantRepository;
 import me.huynhducphu.PingMe_Backend.repository.RoomRepository;
 import me.huynhducphu.PingMe_Backend.repository.UserRepository;
+import me.huynhducphu.PingMe_Backend.service.chat.event.RoomMemberRoleChangedEvent;
 import me.huynhducphu.PingMe_Backend.service.chat.util.ChatDtoUtils;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import org.springframework.context.ApplicationEventPublisher;
@@ -278,6 +279,10 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
         // --------------------------------------------------------------------------------
         // Xóa thành viên
         // --------------------------------------------------------------------------------
+        int count = roomParticipantRepository.findByRoom_Id(room.getId()).size();
+        if (count <= 3)
+            throw new IllegalArgumentException("Phòng phải có ít nhất 3 thành viên");
+
         roomParticipantRepository.delete(target);
         var members = roomParticipantRepository.findByRoom_Id(room.getId());
 
@@ -309,6 +314,77 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
         );
     }
 
+    @Override
+    public RoomResponse changeMemberRole(Long roomId, Long targetUserId, RoomRole newRole) {
+        var currentUser = currentUserProvider.get();
+
+        var room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("Phòng không tồn tại"));
+
+        if (room.getRoomType() != RoomType.GROUP)
+            throw new IllegalArgumentException("Chỉ phòng nhóm mới đổi quyền");
+
+        // ------------------------------------------------------
+        // Kiểm tra caller
+        // ------------------------------------------------------
+        var callerPk = new RoomMemberId(roomId, currentUser.getId());
+        var caller = roomParticipantRepository.findById(callerPk)
+                .orElseThrow(() -> new IllegalArgumentException("Bạn không thuộc nhóm"));
+
+        if (caller.getRole() == RoomRole.MEMBER)
+            throw new IllegalArgumentException("Bạn không có quyền đổi role");
+
+        // ------------------------------------------------------
+        // Target
+        // ------------------------------------------------------
+        var targetPk = new RoomMemberId(roomId, targetUserId);
+        var target = roomParticipantRepository.findById(targetPk)
+                .orElseThrow(() -> new IllegalArgumentException("Người dùng không thuộc nhóm"));
+
+        var oldRole = target.getRole();
+
+        if (oldRole == newRole)
+            throw new IllegalArgumentException("Người dùng đã có role này");
+
+        // ADMIN không được chỉnh OWNER
+        if (caller.getRole() == RoomRole.ADMIN && oldRole == RoomRole.OWNER)
+            throw new IllegalArgumentException("Admin không thể chỉnh role Owner");
+
+        // ------------------------------------------------------
+        // Update role
+        // ------------------------------------------------------
+        target.setRole(newRole);
+        roomParticipantRepository.save(target);
+
+        var members = roomParticipantRepository.findByRoom_Id(roomId);
+
+        // ------------------------------------------------------
+        // System message: "A đã đổi role của B thành ADMIN"
+        // ------------------------------------------------------
+        String content = currentUser.getName() +
+                " đã đổi quyền của " +
+                target.getUser().getName() +
+                " thành " + newRole.name();
+
+        var sysMsg = messageService.createSystemMessage(room, content, currentUser);
+
+        // ------------------------------------------------------
+        // Publish WS
+        // ------------------------------------------------------
+        eventPublisher.publishEvent(
+                new RoomMemberRoleChangedEvent(
+                        room,
+                        members,
+                        targetUserId,
+                        oldRole,
+                        newRole,
+                        currentUser.getId(),
+                        sysMsg
+                )
+        );
+
+        return ChatDtoUtils.toRoomResponseDto(room, members, currentUser.getId());
+    }
 
     /* ========================================================================== */
     /*                         LẤY LỊCH SỬ PHÒNG CHAT                             */

@@ -10,6 +10,7 @@ import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.common.PageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.room.RoomResponse;
 import me.huynhducphu.PingMe_Backend.model.Room;
+import me.huynhducphu.PingMe_Backend.model.constant.RoomRole;
 import me.huynhducphu.PingMe_Backend.service.chat.RoomService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -62,6 +63,15 @@ public class RoomController {
     ) {
         return ResponseEntity
                 .ok(new ApiResponse<>(roomService.removeGroupMember(roomId, memberId)));
+    }
+
+    @PutMapping("/group/{roomId}/members/{targetUserId}/role")
+    public RoomResponse changeMemberRole(
+            @PathVariable Long roomId,
+            @PathVariable Long targetUserId,
+            @RequestParam RoomRole newRole
+    ) {
+        return roomService.changeMemberRole(roomId, targetUserId, newRole);
     }
 
     @GetMapping

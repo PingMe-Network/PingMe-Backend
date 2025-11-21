@@ -3,6 +3,7 @@ package me.huynhducphu.PingMe_Backend.service.chat.event;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import me.huynhducphu.PingMe_Backend.model.Message;
 import me.huynhducphu.PingMe_Backend.model.Room;
 import me.huynhducphu.PingMe_Backend.model.RoomParticipant;
 import me.huynhducphu.PingMe_Backend.model.constant.RoomRole;
@@ -24,5 +25,6 @@ public class RoomMemberRoleChangedEvent {
     private RoomRole oldRole;
     private RoomRole newRole;
     private Long actorUserId;
+    private Message systemMessage;
 
 }
