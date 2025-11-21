@@ -23,5 +23,7 @@ public interface RoomService {
 
     RoomResponse changeMemberRole(Long roomId, Long targetUserId, RoomRole newRole);
 
+    RoomResponse renameGroup(Long roomId, String newName);
+
     Page<RoomResponse> getCurrentUserRooms(Pageable pageable);
 }

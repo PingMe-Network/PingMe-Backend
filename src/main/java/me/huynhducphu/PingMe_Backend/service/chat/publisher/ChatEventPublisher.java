@@ -35,7 +35,6 @@ public class ChatEventPublisher {
 
         messagingTemplate.convertAndSend(destination, payload);
 
-//        log.info("onMessageCreated → room={}, messageId={}", roomId, event.getMessage().getId());
     }
 
     /* ========================================================================== */
@@ -60,9 +59,13 @@ public class ChatEventPublisher {
         var room = event.getRoom();
         var participants = event.getRoomParticipants();
 
+
         for (Long userId : participants.stream().map(p -> p.getUser().getId()).toList()) {
             var payload = new RoomUpdatedEventPayload(
-                    ChatDtoUtils.toRoomResponseDto(room, participants, userId)
+                    ChatDtoUtils.toRoomResponseDto(room, participants, userId),
+                    event.getSystemMessage() != null
+                            ? ChatDtoUtils.toMessageResponseDto(event.getSystemMessage())
+                            : null
             );
 
             messagingTemplate.convertAndSendToUser(
@@ -120,8 +123,7 @@ public class ChatEventPublisher {
             );
         }
     }
-
-
+    
     /* ========================================================================== */
     /*                       ROOM MEMBER  —  REMOVED                              */
     /* ========================================================================== */

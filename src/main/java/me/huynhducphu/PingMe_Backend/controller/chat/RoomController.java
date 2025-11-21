@@ -74,6 +74,14 @@ public class RoomController {
         return roomService.changeMemberRole(roomId, targetUserId, newRole);
     }
 
+    @PutMapping("/group/{roomId}/name")
+    public RoomResponse renameGroup(
+            @PathVariable Long roomId,
+            @RequestParam String name
+    ) {
+        return roomService.renameGroup(roomId, name);
+    }
+
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<RoomResponse>>> getCurrentUserRooms(
             @PageableDefault Pageable pageable

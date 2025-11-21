@@ -1,6 +1,7 @@
 package me.huynhducphu.PingMe_Backend.service.chat.event;
 
 import lombok.*;
+import me.huynhducphu.PingMe_Backend.model.Message;
 import me.huynhducphu.PingMe_Backend.model.Room;
 import me.huynhducphu.PingMe_Backend.model.RoomParticipant;
 
@@ -17,5 +18,6 @@ public class RoomUpdatedEvent {
 
     private Room room;
     private List<RoomParticipant> roomParticipants;
+    private Message systemMessage;
 
 }

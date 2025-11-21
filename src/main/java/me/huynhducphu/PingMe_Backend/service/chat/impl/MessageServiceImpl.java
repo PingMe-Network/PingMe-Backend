@@ -175,7 +175,8 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         // Sử kiện ROOM_UPDATED (thông báo phòng có tin nhắn mới)
         var roomUpdatedEvent = new RoomUpdatedEvent(
                 room,
-                roomParticipantRepository.findByRoom_Id(room.getId())
+                roomParticipantRepository.findByRoom_Id(room.getId()),
+                null
         );
 
         // Bắn sự kiện Websocket
