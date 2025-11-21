@@ -22,7 +22,6 @@ import me.huynhducphu.PingMe_Backend.repository.RoomParticipantRepository;
 import me.huynhducphu.PingMe_Backend.repository.RoomRepository;
 import me.huynhducphu.PingMe_Backend.repository.UserRepository;
 import me.huynhducphu.PingMe_Backend.service.chat.MessageRedisService;
-import me.huynhducphu.PingMe_Backend.service.chat.publisher.ChatEventImmediatePublisher;
 import me.huynhducphu.PingMe_Backend.service.chat.util.ChatDtoUtils;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import me.huynhducphu.PingMe_Backend.service.integration.S3Service;
@@ -71,8 +70,6 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
 
     // PUBLISHER
     private final ApplicationEventPublisher eventPublisher;
-    private final ChatEventImmediatePublisher chatEventImmediatePublisher;
-
 
     /* ========================================================================== */
     /*                         CÁC HÀM XỬ LÝ GỬI TIN NHẮN                         */
@@ -452,8 +449,6 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
 
         if (cacheEnabled)
             messageRedisService.cacheNewMessage(room.getId(), dto);
-
-        chatEventImmediatePublisher.publishMessageCreated(saved);
 
         return saved;
     }

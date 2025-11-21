@@ -9,6 +9,7 @@ import me.huynhducphu.PingMe_Backend.dto.request.chat.room.CreateOrGetDirectRoom
 import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.common.PageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.room.RoomResponse;
+import me.huynhducphu.PingMe_Backend.model.Room;
 import me.huynhducphu.PingMe_Backend.service.chat.RoomService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -52,6 +53,15 @@ public class RoomController {
     ) {
         return ResponseEntity
                 .ok(new ApiResponse<>(roomService.addGroupMembers(addGroupMembersRequest)));
+    }
+
+    @DeleteMapping("/group/{roomId}/members/{memberId}")
+    public ResponseEntity<ApiResponse<RoomResponse>> removeGroupMember(
+            @PathVariable Long roomId,
+            @PathVariable Long memberId
+    ) {
+        return ResponseEntity
+                .ok(new ApiResponse<>(roomService.removeGroupMember(roomId, memberId)));
     }
 
     @GetMapping

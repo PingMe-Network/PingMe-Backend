@@ -1,7 +1,6 @@
 package me.huynhducphu.PingMe_Backend.service.chat.publisher;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageRecalledResponse;
 import me.huynhducphu.PingMe_Backend.dto.ws.chat.*;
@@ -100,15 +99,18 @@ public class ChatEventPublisher {
     /* ========================================================================== */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onMemberAdded(RoomMemberAddedEvent event) {
+
         var room = event.getRoom();
         var participants = event.getRoomParticipants();
+        var sysMsgDto = ChatDtoUtils.toMessageResponseDto(event.getSystemMessage());
 
         for (Long userId : participants.stream().map(p -> p.getUser().getId()).toList()) {
 
             var payload = new RoomMemberAddedEventPayload(
                     ChatDtoUtils.toRoomResponseDto(room, participants, userId),
                     event.getTargetUserId(),
-                    event.getActorUserId()
+                    event.getActorUserId(),
+                    sysMsgDto
             );
 
             messagingTemplate.convertAndSendToUser(
@@ -126,13 +128,15 @@ public class ChatEventPublisher {
     public void onMemberRemoved(RoomMemberRemovedEvent event) {
         var room = event.getRoom();
         var participants = event.getParticipants();
+        var sysMsgDto = ChatDtoUtils.toMessageResponseDto(event.getSystemMessage());
 
         for (Long userId : participants.stream().map(p -> p.getUser().getId()).toList()) {
 
             var payload = new RoomMemberRemovedEventPayload(
                     ChatDtoUtils.toRoomResponseDto(room, participants, userId),
                     event.getTargetUserId(),
-                    event.getActorUserId()
+                    event.getActorUserId(),
+                    sysMsgDto
             );
 
             messagingTemplate.convertAndSendToUser(

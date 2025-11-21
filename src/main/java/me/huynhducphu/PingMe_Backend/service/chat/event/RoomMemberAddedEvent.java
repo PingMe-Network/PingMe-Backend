@@ -3,6 +3,7 @@ package me.huynhducphu.PingMe_Backend.service.chat.event;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import me.huynhducphu.PingMe_Backend.model.Message;
 import me.huynhducphu.PingMe_Backend.model.Room;
 import me.huynhducphu.PingMe_Backend.model.RoomParticipant;
 
@@ -21,5 +22,7 @@ public class RoomMemberAddedEvent {
     private List<RoomParticipant> roomParticipants;
     private Long targetUserId;
     private Long actorUserId;
+    private Message systemMessage;
+
 
 }

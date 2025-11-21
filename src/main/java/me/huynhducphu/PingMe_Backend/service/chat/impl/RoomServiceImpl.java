@@ -221,13 +221,15 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
             // + Bắn sự kiện tạo SYSTEM MESSAGGE
             // + Bắn sự kiện cập nhật phòng
             // --------------------------------------------------------------------------------
-            messageService.createSystemMessage(room, content, currentUser);
+            var sysMsg = messageService.createSystemMessage(room, content, currentUser);
+
             eventPublisher.publishEvent(
                     new RoomMemberAddedEvent(
                             room,
                             members,
+                            targetUserId,
                             currentUser.getId(),
-                            targetUserId
+                            sysMsg
                     )
             );
         }
@@ -289,13 +291,14 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
                 target.getUser().getName() +
                 " khỏi nhóm";
 
-        messageService.createSystemMessage(room, content, currentUser);
+        var sysMsg = messageService.createSystemMessage(room, content, currentUser);
         eventPublisher.publishEvent(
                 new RoomMemberRemovedEvent(
                         room,
                         members,
+                        targetUserId,
                         currentUser.getId(),
-                        targetUserId
+                        sysMsg
                 )
         );
 
