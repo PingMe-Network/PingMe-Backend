@@ -1,6 +1,6 @@
 package me.huynhducphu.PingMe_Backend.repository;
 
-import me.huynhducphu.PingMe_Backend.model.BlogComment;
+import me.huynhducphu.PingMe_Backend.model.blog.BlogComment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

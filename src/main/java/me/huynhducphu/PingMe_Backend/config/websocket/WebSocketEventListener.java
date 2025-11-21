@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.huynhducphu.PingMe_Backend.config.websocket.auth.UserSocketPrincipal;
 import me.huynhducphu.PingMe_Backend.dto.ws.common.UserOnlineStatusRespone;
-import me.huynhducphu.PingMe_Backend.model.Friendship;
+import me.huynhducphu.PingMe_Backend.model.chat.Friendship;
 import me.huynhducphu.PingMe_Backend.service.authentication.UserAccountService;
 import me.huynhducphu.PingMe_Backend.service.friendship.FriendshipService;
 import org.springframework.context.event.EventListener;
@@ -15,7 +15,6 @@ import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import java.security.Principal;
-import java.util.Map;
 
 /**
  * @author Le Tran Gia Huy

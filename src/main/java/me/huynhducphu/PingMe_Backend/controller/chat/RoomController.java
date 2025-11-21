@@ -9,7 +9,6 @@ import me.huynhducphu.PingMe_Backend.dto.request.chat.room.CreateOrGetDirectRoom
 import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.common.PageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.room.RoomResponse;
-import me.huynhducphu.PingMe_Backend.model.Room;
 import me.huynhducphu.PingMe_Backend.model.constant.RoomRole;
 import me.huynhducphu.PingMe_Backend.service.chat.RoomService;
 import org.springframework.data.domain.Pageable;

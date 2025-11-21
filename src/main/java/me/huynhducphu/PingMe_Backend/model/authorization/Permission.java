@@ -1,4 +1,4 @@
-package me.huynhducphu.PingMe_Backend.model;
+package me.huynhducphu.PingMe_Backend.model.authorization;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -11,12 +11,12 @@ import java.util.List;
  *
  **/
 @Entity
-@Table(name = "roles")
+@Table(name = "permissions")
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
-public class Role extends BaseEntity {
+public class Permission extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
@@ -27,16 +27,7 @@ public class Role extends BaseEntity {
 
     private String description;
 
-    @ManyToMany
-    @JoinTable(
-            name = "role_permissions",
-            joinColumns = @JoinColumn(name = "role_id"),
-            inverseJoinColumns = @JoinColumn(name = "permission_id")
-    )
+    @ManyToMany(mappedBy = "permissions")
     @ToString.Exclude
-    private List<Permission> permissions;
-
-    @OneToMany(mappedBy = "role")
-    private List<User> users;
-
+    private List<Role> roles;
 }

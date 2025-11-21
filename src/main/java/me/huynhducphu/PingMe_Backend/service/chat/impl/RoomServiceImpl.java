@@ -7,8 +7,8 @@ import me.huynhducphu.PingMe_Backend.dto.request.chat.room.CreateOrGetDirectRoom
 import me.huynhducphu.PingMe_Backend.dto.response.chat.room.RoomResponse;
 import me.huynhducphu.PingMe_Backend.service.chat.MessageService;
 import me.huynhducphu.PingMe_Backend.service.chat.event.*;
-import me.huynhducphu.PingMe_Backend.model.Room;
-import me.huynhducphu.PingMe_Backend.model.RoomParticipant;
+import me.huynhducphu.PingMe_Backend.model.chat.Room;
+import me.huynhducphu.PingMe_Backend.model.chat.RoomParticipant;
 import me.huynhducphu.PingMe_Backend.model.common.RoomMemberId;
 import me.huynhducphu.PingMe_Backend.model.constant.RoomRole;
 import me.huynhducphu.PingMe_Backend.model.constant.RoomType;

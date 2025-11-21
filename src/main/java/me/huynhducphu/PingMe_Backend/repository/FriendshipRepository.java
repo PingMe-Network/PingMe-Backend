@@ -2,7 +2,7 @@ package me.huynhducphu.PingMe_Backend.repository;
 
 import me.huynhducphu.PingMe_Backend.dto.response.friendship.UserFriendshipStatsResponse;
 import me.huynhducphu.PingMe_Backend.model.constant.FriendshipStatus;
-import me.huynhducphu.PingMe_Backend.model.Friendship;
+import me.huynhducphu.PingMe_Backend.model.chat.Friendship;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

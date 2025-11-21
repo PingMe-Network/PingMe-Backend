@@ -9,7 +9,7 @@ import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.common.PageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.blog.BlogDetailsResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.blog.BlogReviewResponse;
-import me.huynhducphu.PingMe_Backend.model.Blog;
+import me.huynhducphu.PingMe_Backend.model.blog.Blog;
 import me.huynhducphu.PingMe_Backend.service.blog.BlogService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;

@@ -1,9 +1,9 @@
 package me.huynhducphu.PingMe_Backend.service.chat.event;
 
 import lombok.*;
-import me.huynhducphu.PingMe_Backend.model.Message;
-import me.huynhducphu.PingMe_Backend.model.Room;
-import me.huynhducphu.PingMe_Backend.model.RoomParticipant;
+import me.huynhducphu.PingMe_Backend.model.chat.Message;
+import me.huynhducphu.PingMe_Backend.model.chat.Room;
+import me.huynhducphu.PingMe_Backend.model.chat.RoomParticipant;
 
 import java.util.List;
 

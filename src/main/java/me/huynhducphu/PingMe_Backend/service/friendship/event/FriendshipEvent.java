@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.ws.friendship.common.FriendshipEventType;
-import me.huynhducphu.PingMe_Backend.model.Friendship;
+import me.huynhducphu.PingMe_Backend.model.chat.Friendship;
 
 /**
  * Admin 8/21/2025

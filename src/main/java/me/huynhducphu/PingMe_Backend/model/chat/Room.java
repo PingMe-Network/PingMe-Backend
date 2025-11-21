@@ -1,4 +1,4 @@
-package me.huynhducphu.PingMe_Backend.model;
+package me.huynhducphu.PingMe_Backend.model.chat;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

@@ -5,7 +5,6 @@ import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.room.RoomResponse;
 import me.huynhducphu.PingMe_Backend.dto.ws.chat.common.BaseChatEventPayload;
 import me.huynhducphu.PingMe_Backend.dto.ws.chat.common.ChatEventType;
-import me.huynhducphu.PingMe_Backend.model.Message;
 
 /**
  * Admin 11/20/2025

@@ -1,10 +1,11 @@
-package me.huynhducphu.PingMe_Backend.model;
+package me.huynhducphu.PingMe_Backend.model.blog;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import me.huynhducphu.PingMe_Backend.model.User;
 import me.huynhducphu.PingMe_Backend.model.common.BaseEntity;
 
 /**

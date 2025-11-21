@@ -6,12 +6,10 @@ import me.huynhducphu.PingMe_Backend.dto.response.chat.message.HistoryMessageRes
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageRecalledResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.ReadStateResponse;
-import me.huynhducphu.PingMe_Backend.model.Message;
-import me.huynhducphu.PingMe_Backend.model.Room;
+import me.huynhducphu.PingMe_Backend.model.chat.Message;
+import me.huynhducphu.PingMe_Backend.model.chat.Room;
 import me.huynhducphu.PingMe_Backend.model.User;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
 
 /**
  * Admin 8/26/2025

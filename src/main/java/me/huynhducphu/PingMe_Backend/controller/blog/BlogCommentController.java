@@ -8,7 +8,7 @@ import me.huynhducphu.PingMe_Backend.dto.request.blog.UpsertBlogCommentRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.common.PageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.blog.BlogCommentResponse;
-import me.huynhducphu.PingMe_Backend.model.BlogComment;
+import me.huynhducphu.PingMe_Backend.model.blog.BlogComment;
 import me.huynhducphu.PingMe_Backend.service.blog.BlogCommentService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;

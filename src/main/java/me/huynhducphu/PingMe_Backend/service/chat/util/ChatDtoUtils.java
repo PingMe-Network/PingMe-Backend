@@ -3,9 +3,9 @@ package me.huynhducphu.PingMe_Backend.service.chat.util;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.room.RoomParticipantResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.room.RoomResponse;
-import me.huynhducphu.PingMe_Backend.model.Message;
-import me.huynhducphu.PingMe_Backend.model.Room;
-import me.huynhducphu.PingMe_Backend.model.RoomParticipant;
+import me.huynhducphu.PingMe_Backend.model.chat.Message;
+import me.huynhducphu.PingMe_Backend.model.chat.Room;
+import me.huynhducphu.PingMe_Backend.model.chat.RoomParticipant;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
