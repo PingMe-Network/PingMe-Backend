@@ -4,6 +4,7 @@ import me.huynhducphu.PingMe_Backend.dto.request.chat.room.AddGroupMembersReques
 import me.huynhducphu.PingMe_Backend.dto.request.chat.room.CreateGroupRoomRequest;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.room.CreateOrGetDirectRoomRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.room.RoomResponse;
+import me.huynhducphu.PingMe_Backend.model.constant.RoomRole;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -19,6 +20,10 @@ public interface RoomService {
     RoomResponse addGroupMembers(AddGroupMembersRequest request);
 
     RoomResponse removeGroupMember(Long roomId, Long targetUserId);
+
+    RoomResponse changeMemberRole(Long roomId, Long targetUserId, RoomRole newRole);
+
+    RoomResponse renameGroup(Long roomId, String newName);
 
     Page<RoomResponse> getCurrentUserRooms(Pageable pageable);
 }

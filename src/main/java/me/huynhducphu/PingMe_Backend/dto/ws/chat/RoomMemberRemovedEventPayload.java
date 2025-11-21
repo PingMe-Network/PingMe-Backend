@@ -1,6 +1,7 @@
 package me.huynhducphu.PingMe_Backend.dto.ws.chat;
 
 import lombok.Getter;
+import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.room.RoomResponse;
 import me.huynhducphu.PingMe_Backend.dto.ws.chat.common.BaseChatEventPayload;
 import me.huynhducphu.PingMe_Backend.dto.ws.chat.common.ChatEventType;
@@ -15,15 +16,18 @@ public class RoomMemberRemovedEventPayload extends BaseChatEventPayload {
     private final RoomResponse roomResponse;
     private final Long targetUserId;
     private final Long actorUserId;
+    private MessageResponse systemMessage;
 
     public RoomMemberRemovedEventPayload(
             RoomResponse dto,
             Long targetUserId,
-            Long actorUserId
+            Long actorUserId,
+            MessageResponse systemMessage
     ) {
         super(ChatEventType.MEMBER_REMOVED);
         this.roomResponse = dto;
         this.targetUserId = targetUserId;
         this.actorUserId = actorUserId;
+        this.systemMessage = systemMessage;
     }
 }

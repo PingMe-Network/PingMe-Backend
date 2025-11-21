@@ -9,6 +9,7 @@ import me.huynhducphu.PingMe_Backend.dto.request.chat.room.CreateOrGetDirectRoom
 import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.common.PageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.room.RoomResponse;
+import me.huynhducphu.PingMe_Backend.model.constant.RoomRole;
 import me.huynhducphu.PingMe_Backend.service.chat.RoomService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -52,6 +53,32 @@ public class RoomController {
     ) {
         return ResponseEntity
                 .ok(new ApiResponse<>(roomService.addGroupMembers(addGroupMembersRequest)));
+    }
+
+    @DeleteMapping("/group/{roomId}/members/{memberId}")
+    public ResponseEntity<ApiResponse<RoomResponse>> removeGroupMember(
+            @PathVariable Long roomId,
+            @PathVariable Long memberId
+    ) {
+        return ResponseEntity
+                .ok(new ApiResponse<>(roomService.removeGroupMember(roomId, memberId)));
+    }
+
+    @PutMapping("/group/{roomId}/members/{targetUserId}/role")
+    public RoomResponse changeMemberRole(
+            @PathVariable Long roomId,
+            @PathVariable Long targetUserId,
+            @RequestParam RoomRole newRole
+    ) {
+        return roomService.changeMemberRole(roomId, targetUserId, newRole);
+    }
+
+    @PutMapping("/group/{roomId}/name")
+    public RoomResponse renameGroup(
+            @PathVariable Long roomId,
+            @RequestParam String name
+    ) {
+        return roomService.renameGroup(roomId, name);
     }
 
     @GetMapping

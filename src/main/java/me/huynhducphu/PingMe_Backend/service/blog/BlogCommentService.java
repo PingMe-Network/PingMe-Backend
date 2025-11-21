@@ -2,7 +2,7 @@ package me.huynhducphu.PingMe_Backend.service.blog;
 
 import me.huynhducphu.PingMe_Backend.dto.request.blog.UpsertBlogCommentRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.blog.BlogCommentResponse;
-import me.huynhducphu.PingMe_Backend.model.BlogComment;
+import me.huynhducphu.PingMe_Backend.model.blog.BlogComment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;

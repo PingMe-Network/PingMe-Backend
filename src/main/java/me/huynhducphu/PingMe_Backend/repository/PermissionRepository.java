@@ -1,6 +1,6 @@
 package me.huynhducphu.PingMe_Backend.repository;
 
-import me.huynhducphu.PingMe_Backend.model.Permission;
+import me.huynhducphu.PingMe_Backend.model.authorization.Permission;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

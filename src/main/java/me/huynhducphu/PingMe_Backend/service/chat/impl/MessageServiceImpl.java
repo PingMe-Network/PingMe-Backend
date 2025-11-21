@@ -12,9 +12,9 @@ import me.huynhducphu.PingMe_Backend.model.User;
 import me.huynhducphu.PingMe_Backend.service.chat.event.MessageCreatedEvent;
 import me.huynhducphu.PingMe_Backend.service.chat.event.MessageRecalledEvent;
 import me.huynhducphu.PingMe_Backend.service.chat.event.RoomUpdatedEvent;
-import me.huynhducphu.PingMe_Backend.model.Message;
-import me.huynhducphu.PingMe_Backend.model.Room;
-import me.huynhducphu.PingMe_Backend.model.RoomParticipant;
+import me.huynhducphu.PingMe_Backend.model.chat.Message;
+import me.huynhducphu.PingMe_Backend.model.chat.Room;
+import me.huynhducphu.PingMe_Backend.model.chat.RoomParticipant;
 import me.huynhducphu.PingMe_Backend.model.common.RoomMemberId;
 import me.huynhducphu.PingMe_Backend.model.constant.MessageType;
 import me.huynhducphu.PingMe_Backend.repository.MessageRepository;
@@ -70,7 +70,6 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
 
     // PUBLISHER
     private final ApplicationEventPublisher eventPublisher;
-
 
     /* ========================================================================== */
     /*                         CÁC HÀM XỬ LÝ GỬI TIN NHẮN                         */
@@ -176,7 +175,8 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         // Sử kiện ROOM_UPDATED (thông báo phòng có tin nhắn mới)
         var roomUpdatedEvent = new RoomUpdatedEvent(
                 room,
-                roomParticipantRepository.findByRoom_Id(room.getId())
+                roomParticipantRepository.findByRoom_Id(room.getId()),
+                null
         );
 
         // Bắn sự kiện Websocket
@@ -451,8 +451,6 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         if (cacheEnabled)
             messageRedisService.cacheNewMessage(room.getId(), dto);
 
-        eventPublisher.publishEvent(new MessageCreatedEvent(saved));
-        
         return saved;
     }
 

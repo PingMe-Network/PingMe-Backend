@@ -3,7 +3,7 @@ package me.huynhducphu.PingMe_Backend.service.friendship;
 import me.huynhducphu.PingMe_Backend.dto.request.friendship.FriendInvitationRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.friendship.HistoryFriendshipResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.friendship.UserFriendshipStatsResponse;
-import me.huynhducphu.PingMe_Backend.model.Friendship;
+import me.huynhducphu.PingMe_Backend.model.chat.Friendship;
 
 import java.util.List;
 

@@ -1,7 +1,7 @@
 package me.huynhducphu.PingMe_Backend.service.authorization.impl;
 
 import lombok.RequiredArgsConstructor;
-import me.huynhducphu.PingMe_Backend.model.Permission;
+import me.huynhducphu.PingMe_Backend.model.authorization.Permission;
 import me.huynhducphu.PingMe_Backend.repository.PermissionRepository;
 import me.huynhducphu.PingMe_Backend.service.authorization.PermissionCacheService;
 import org.springframework.cache.annotation.CacheEvict;

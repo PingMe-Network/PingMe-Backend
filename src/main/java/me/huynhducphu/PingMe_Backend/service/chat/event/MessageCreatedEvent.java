@@ -1,7 +1,7 @@
 package me.huynhducphu.PingMe_Backend.service.chat.event;
 
 import lombok.*;
-import me.huynhducphu.PingMe_Backend.model.Message;
+import me.huynhducphu.PingMe_Backend.model.chat.Message;
 
 /**
  * Admin 8/29/2025

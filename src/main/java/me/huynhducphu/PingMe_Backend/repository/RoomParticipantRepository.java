@@ -1,6 +1,6 @@
 package me.huynhducphu.PingMe_Backend.repository;
 
-import me.huynhducphu.PingMe_Backend.model.RoomParticipant;
+import me.huynhducphu.PingMe_Backend.model.chat.RoomParticipant;
 import me.huynhducphu.PingMe_Backend.model.common.RoomMemberId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

@@ -1,7 +1,6 @@
 package me.huynhducphu.PingMe_Backend.repository;
 
-import me.huynhducphu.PingMe_Backend.model.Message;
-import me.huynhducphu.PingMe_Backend.model.Role;
+import me.huynhducphu.PingMe_Backend.model.authorization.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**

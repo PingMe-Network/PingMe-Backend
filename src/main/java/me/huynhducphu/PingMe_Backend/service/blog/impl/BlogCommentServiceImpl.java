@@ -4,7 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.blog.UpsertBlogCommentRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.blog.BlogCommentResponse;
-import me.huynhducphu.PingMe_Backend.model.BlogComment;
+import me.huynhducphu.PingMe_Backend.model.blog.BlogComment;
 import me.huynhducphu.PingMe_Backend.repository.BlogCommentRepository;
 import me.huynhducphu.PingMe_Backend.repository.BlogRepository;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
