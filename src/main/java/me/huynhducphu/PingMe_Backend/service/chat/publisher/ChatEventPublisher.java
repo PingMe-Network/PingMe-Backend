@@ -36,7 +36,7 @@ public class ChatEventPublisher {
 
         messagingTemplate.convertAndSend(destination, payload);
 
-        log.info("onMessageCreated → room={}, messageId={}", roomId, event.getMessage().getId());
+//        log.info("onMessageCreated → room={}, messageId={}", roomId, event.getMessage().getId());
     }
 
     /* ========================================================================== */
