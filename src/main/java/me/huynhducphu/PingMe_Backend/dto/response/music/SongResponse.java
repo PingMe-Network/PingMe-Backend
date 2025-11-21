@@ -39,8 +39,6 @@ public class SongResponse {
     private List<GenreDto> genres; // List: Để FE render ra các thẻ tag click được
 
     private AlbumSummaryDto album; // Object: Để click vào tên album
-
-    private LocalDate releaseDate; // Nên thêm cái này để sort
 }
 
 
