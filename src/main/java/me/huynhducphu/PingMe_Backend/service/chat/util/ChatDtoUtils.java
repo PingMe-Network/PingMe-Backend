@@ -72,6 +72,9 @@ public class ChatDtoUtils {
         res.setName(room.getName());
         res.setLastMessage(lastMessage);
         res.setParticipants(roomParticipantResponses);
+        res.setRoomImgUrl(room.getRoomImgUrl());
+        res.setTheme(room.getTheme());
+        
         return res;
     }
 

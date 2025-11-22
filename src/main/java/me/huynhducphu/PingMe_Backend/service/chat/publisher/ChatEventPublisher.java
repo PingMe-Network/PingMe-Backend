@@ -123,7 +123,7 @@ public class ChatEventPublisher {
             );
         }
     }
-    
+
     /* ========================================================================== */
     /*                       ROOM MEMBER  —  REMOVED                              */
     /* ========================================================================== */
@@ -148,6 +148,18 @@ public class ChatEventPublisher {
                     payload
             );
         }
+
+        messagingTemplate.convertAndSendToUser(
+                event.getTargetUserId().toString(),
+                "/queue/rooms",
+                new RoomMemberRemovedEventPayload(
+                        ChatDtoUtils.toRoomResponseDto(room, participants, event.getTargetUserId()),
+                        event.getTargetUserId(),
+                        event.getActorUserId(),
+                        sysMsgDto
+                )
+        );
+
     }
 
     /* ========================================================================== */

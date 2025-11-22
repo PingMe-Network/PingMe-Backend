@@ -23,6 +23,8 @@ public class RoomResponse {
     private String name;
     private LastMessage lastMessage;
     private List<RoomParticipantResponse> participants;
+    private String roomImgUrl;
+    private String theme;
 
     @AllArgsConstructor
     @NoArgsConstructor

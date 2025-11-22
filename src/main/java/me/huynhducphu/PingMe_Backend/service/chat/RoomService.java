@@ -25,5 +25,10 @@ public interface RoomService {
 
     RoomResponse renameGroup(Long roomId, String newName);
 
+    /* ========================================================================== */
+    /*                         TÙY CHỈNH PHÒNG CHAT                               */
+    /* ========================================================================== */
+    RoomResponse changeTheme(Long roomId, String newTheme);
+
     Page<RoomResponse> getCurrentUserRooms(Pageable pageable);
 }
