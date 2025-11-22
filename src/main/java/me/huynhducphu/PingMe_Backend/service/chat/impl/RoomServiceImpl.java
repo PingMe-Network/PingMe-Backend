@@ -434,6 +434,71 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
     }
 
     /* ========================================================================== */
+    /*                         TÙY CHỈNH PHÒNG CHAT                               */
+    /* ========================================================================== */
+    @Override
+    public RoomResponse changeTheme(Long roomId, String newTheme) {
+        var currentUser = currentUserProvider.get();
+
+        var room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("Phòng không tồn tại"));
+
+        // ------------------------------------------------------
+        // DIRECT ROOM → ai cũng được đổi theme
+        // ------------------------------------------------------
+        if (room.getRoomType() == RoomType.DIRECT) {
+
+            room.setTheme(newTheme);
+            roomRepository.save(room);
+
+            var members = roomParticipantRepository.findByRoom_Id(roomId);
+
+            // DIRECT không tạo system message
+            eventPublisher.publishEvent(
+                    new RoomUpdatedEvent(room, members, null)
+            );
+
+            return ChatDtoUtils.toRoomResponseDto(room, members, currentUser.getId());
+        }
+
+        // ------------------------------------------------------
+        // GROUP ROOM → cần kiểm tra quyền
+        // ------------------------------------------------------
+        var callerPk = new RoomMemberId(roomId, currentUser.getId());
+        var caller = roomParticipantRepository.findById(callerPk)
+                .orElseThrow(() -> new IllegalArgumentException("Bạn không thuộc nhóm"));
+
+        if (caller.getRole() == RoomRole.MEMBER)
+            throw new IllegalArgumentException("Bạn không có quyền đổi theme nhóm");
+
+        // ------------------------------------------------------
+        // Update theme
+        // ------------------------------------------------------
+        room.setTheme(newTheme);
+        roomRepository.save(room);
+
+        var members = roomParticipantRepository.findByRoom_Id(roomId);
+
+        // ------------------------------------------------------
+        // System message cho GROUP
+        // ------------------------------------------------------
+        String content = currentUser.getName() +
+                " đã đổi chủ đề nhóm thành \"" + newTheme + "\"";
+
+        var sysMsg = messageService.createSystemMessage(room, content, currentUser);
+
+        // ------------------------------------------------------
+        // Broadcast WS
+        // ------------------------------------------------------
+        eventPublisher.publishEvent(
+                new RoomUpdatedEvent(room, members, sysMsg)
+        );
+
+        return ChatDtoUtils.toRoomResponseDto(room, members, currentUser.getId());
+    }
+
+
+    /* ========================================================================== */
     /*                         LẤY LỊCH SỬ PHÒNG CHAT                             */
     /* ========================================================================== */
     @Override

@@ -31,6 +31,35 @@ public class RoomController {
 
     private final RoomService roomService;
 
+    /* ========================================================================== */
+    /*                           LẤY LỊCH SỬ PHÒNG THEO USER                        */
+    /* ========================================================================== */
+    @GetMapping
+    public ResponseEntity<ApiResponse<PageResponse<RoomResponse>>> getCurrentUserRooms(
+            @PageableDefault Pageable pageable
+    ) {
+        var page = roomService.getCurrentUserRooms(pageable);
+        var pageResponse = new PageResponse<>(page);
+
+        return ResponseEntity.ok(new ApiResponse<>(pageResponse));
+    }
+
+    /* ========================================================================== */
+    /*                           TÙY CHỈNH PHÒNG                                   */
+    /* ========================================================================== */
+
+    @PutMapping("/{roomId}/theme")
+    public ResponseEntity<ApiResponse<RoomResponse>> changeTheme(
+            @PathVariable Long roomId,
+            @RequestParam String theme
+    ) {
+        return ResponseEntity.ok(new ApiResponse<>(roomService.changeTheme(roomId, theme)));
+    }
+
+    /* ========================================================================== */
+    /*                           TẠO MỚI HOẶC LẤY PHÒNG CHAT 1-1                  */
+    /* ========================================================================== */
+
     @PostMapping("/direct")
     public ResponseEntity<ApiResponse<RoomResponse>> createOrGetDirectRoom(
             @RequestBody @Valid CreateOrGetDirectRoomRequest createOrGetDirectRoomRequest
@@ -38,6 +67,11 @@ public class RoomController {
         return ResponseEntity
                 .ok(new ApiResponse<>(roomService.createOrGetDirectRoom(createOrGetDirectRoomRequest)));
     }
+
+    /* ========================================================================== */
+    /*                           QUẢN LÝ PHÒNG CHAT GROUP                         */
+    /* ========================================================================== */
+
 
     @PostMapping("/group")
     public ResponseEntity<ApiResponse<RoomResponse>> createGroupRoom(
@@ -80,16 +114,5 @@ public class RoomController {
     ) {
         return roomService.renameGroup(roomId, name);
     }
-
-    @GetMapping
-    public ResponseEntity<ApiResponse<PageResponse<RoomResponse>>> getCurrentUserRooms(
-            @PageableDefault Pageable pageable
-    ) {
-        var page = roomService.getCurrentUserRooms(pageable);
-        var pageResponse = new PageResponse<>(page);
-
-        return ResponseEntity.ok(new ApiResponse<>(pageResponse));
-    }
-
 
 }

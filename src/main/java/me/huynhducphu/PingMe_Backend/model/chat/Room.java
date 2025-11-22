@@ -28,15 +28,22 @@ public class Room extends BaseEntity {
 
     @Column(name = "room_type", nullable = false)
     @Enumerated(EnumType.STRING)
-    private RoomType roomType;
     // DIRECT (1-1), GROUP (n-n)
+    private RoomType roomType;
+
 
     @Column(name = "direct_key", unique = true)
-    private String directKey;
     // ROOM KEY (Nếu chat n-n thì null)
+    private String directKey;
 
-    private String name;
     // ROOM NAME (nếu chat 1-1 thì NULL)
+    private String name;
+
+    // ROOM IMAGE URL (nếu chat 1-1 thì NULL)
+    private String roomImgUrl;
+
+    @Column(name = "theme", columnDefinition = "varchar(50) default 'DEFAULT'")
+    private String theme;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "last_message_id")
