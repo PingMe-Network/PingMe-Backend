@@ -10,8 +10,10 @@ import me.huynhducphu.PingMe_Backend.model.music.Album;
 import me.huynhducphu.PingMe_Backend.model.music.Artist;
 import me.huynhducphu.PingMe_Backend.model.music.Song;
 import me.huynhducphu.PingMe_Backend.model.music.SongArtistRole;
-import me.huynhducphu.PingMe_Backend.repository.AlbumRepository;
-import me.huynhducphu.PingMe_Backend.repository.SongRepository;
+import me.huynhducphu.PingMe_Backend.repository.music.AlbumRepository;
+import me.huynhducphu.PingMe_Backend.repository.music.GenreRepository;
+import me.huynhducphu.PingMe_Backend.repository.music.SongRepository;
+import me.huynhducphu.PingMe_Backend.service.music.SongService;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -21,10 +23,11 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class SongServiceImpl implements me.huynhducphu.PingMe_Backend.service.music.SongService {
+public class SongServiceImpl implements SongService {
 
     private final SongRepository songRepository;
     private final AlbumRepository albumRepository;
+    private final GenreRepository genreRepository;
 
     @Override
     public SongResponse getSongById(Long id) {
@@ -38,10 +41,22 @@ public class SongServiceImpl implements me.huynhducphu.PingMe_Backend.service.mu
 
     @Override
     public List<SongResponse> getSongByTitle(String title) {
-        // 1. Lấy danh sách bài hát từ DB theo title (case-insensitive)
+        //Lấy danh sách bài hát từ DB theo title (case-insensitive)
         List<Song> songs = songRepository.findSongsByTitleContainingIgnoreCase(title);
 
-        // 2. Flatten: mỗi song x mỗi album → trả về nhiều SongResponse
+        return flattenSongsWithAlbums(songs);
+    }
+
+    public List<SongResponse> getSongByGenre(GenreDto genreDto) {
+        List<Song> songs = songRepository.findSongsByGenresContainingIgnoreCase(
+                genreRepository.findGenreByName(
+                        genreDto.getName()
+        ));
+
+        return flattenSongsWithAlbums(songs);
+    }
+
+    private List<SongResponse> flattenSongsWithAlbums(List<Song> songs) {
         List<SongResponse> result = new ArrayList<>();
         for (Song song : songs) {
             if (song.getAlbums() != null && !song.getAlbums().isEmpty()) {
@@ -53,7 +68,6 @@ public class SongServiceImpl implements me.huynhducphu.PingMe_Backend.service.mu
                 result.add(mapToSongResponse(song, null));
             }
         }
-
         return result;
     }
 
