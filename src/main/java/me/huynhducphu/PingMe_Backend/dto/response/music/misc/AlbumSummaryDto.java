@@ -2,6 +2,7 @@ package me.huynhducphu.PingMe_Backend.dto.response.music.misc;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @author Le Tran Gia Huy
@@ -11,6 +12,7 @@ import lombok.Data;
  */
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class AlbumSummaryDto {
     private Long id;
     private String title;
