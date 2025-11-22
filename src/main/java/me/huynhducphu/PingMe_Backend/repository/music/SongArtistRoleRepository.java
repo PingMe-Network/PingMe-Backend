@@ -1,4 +1,4 @@
-package me.huynhducphu.PingMe_Backend.repository;
+package me.huynhducphu.PingMe_Backend.repository.music;
 
 import me.huynhducphu.PingMe_Backend.model.music.SongArtistRole;
 import org.springframework.data.jpa.repository.JpaRepository;
