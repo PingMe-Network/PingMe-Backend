@@ -1,5 +1,6 @@
-package me.huynhducphu.PingMe_Backend.repository;
+package me.huynhducphu.PingMe_Backend.repository.music;
 
+import me.huynhducphu.PingMe_Backend.model.music.Genre;
 import me.huynhducphu.PingMe_Backend.model.music.Song;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * @author Le Tran Gia Huy
@@ -28,4 +30,6 @@ public interface SongRepository extends JpaRepository<Song, Integer> {
     Optional<Song> findByIdWithDetails(@Param("id") Long id);
 
     List<Song> findSongsByTitleContainingIgnoreCase(String title);
+
+    List<Song> findSongsByGenresContainingIgnoreCase(Set<Genre> genres);
 }
