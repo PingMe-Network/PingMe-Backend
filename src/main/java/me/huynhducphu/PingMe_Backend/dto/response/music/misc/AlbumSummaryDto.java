@@ -16,4 +16,5 @@ import lombok.NoArgsConstructor;
 public class AlbumSummaryDto {
     private Long id;
     private String title;
+    private Long playCount;
 }
