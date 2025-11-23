@@ -2,6 +2,7 @@ package me.huynhducphu.PingMe_Backend.repository.music;
 
 import me.huynhducphu.PingMe_Backend.model.music.Genre;
 import me.huynhducphu.PingMe_Backend.model.music.Song;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -28,6 +29,10 @@ public interface SongRepository extends JpaRepository<Song, Integer> {
             "LEFT JOIN FETCH s.albums " +
             "WHERE s.id = :id")
     Optional<Song> findByIdWithDetails(@Param("id") Long id);
+
+    // Bỏ tham số int limit, thay bằng Pageable
+    @Query("SELECT s FROM Song s ORDER BY s.playCount DESC")
+    List<Song> findSongsByPlayCount(Pageable pageable);
 
     List<Song> findSongsByTitleContainingIgnoreCase(String title);
 
