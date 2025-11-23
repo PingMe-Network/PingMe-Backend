@@ -1,8 +1,11 @@
 package me.huynhducphu.PingMe_Backend.service.chat.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.message.MarkReadRequest;
+import me.huynhducphu.PingMe_Backend.dto.request.chat.message.SendWeatherMessageRequest;
+import me.huynhducphu.PingMe_Backend.dto.response.weather.WeatherResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.HistoryMessageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageRecalledResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.ReadStateResponse;
@@ -25,6 +28,7 @@ import me.huynhducphu.PingMe_Backend.service.chat.MessageRedisService;
 import me.huynhducphu.PingMe_Backend.service.chat.util.ChatDtoUtils;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import me.huynhducphu.PingMe_Backend.service.integration.S3Service;
+import me.huynhducphu.PingMe_Backend.service.weather.WeatherService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -58,6 +62,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
     // SERVICE
     private final S3Service s3Service;
     private final MessageRedisService messageRedisService;
+    private final WeatherService weatherService;
 
     // PROVIDER
     private final CurrentUserProvider currentUserProvider;
@@ -70,6 +75,9 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
 
     // PUBLISHER
     private final ApplicationEventPublisher eventPublisher;
+
+    // UTILS
+    private final ObjectMapper objectMapper;
 
     /* ========================================================================== */
     /*                         CÁC HÀM XỬ LÝ GỬI TIN NHẮN                         */
@@ -95,10 +103,13 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         var senderId = currentUser.getId();
         var roomId = sendMessageRequest.getRoomId();
 
-        // Nếu không dạng file này một dạng file
-        // có thể chứa link qua từ s3
-        if (sendMessageRequest.getType() != MessageType.TEXT)
+        // Nếu file này một dạng file thì
+        // validate url hợp l
+        if (sendMessageRequest.getType() == MessageType.IMAGE
+                || sendMessageRequest.getType() == MessageType.VIDEO
+                || sendMessageRequest.getType() == MessageType.FILE) {
             validateUrl(sendMessageRequest.getContent());
+        }
 
         // Kiểm tra clientMsgId có hợp lệ không
         // clientMsgId tránh người dùng spam khi
@@ -233,6 +244,46 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
             throw ex;
         }
     }
+
+
+    // Xử lý gửi tin nhắn dạng WEATHER (thời tiết).
+    //
+    // Quy trình thực hiện:
+    // 1. Gọi WeatherService để lấy dữ liệu thời tiết theo tọa độ (lat, lon).
+    // 2. Serialize dữ liệu thời tiết sang JSON và gán vào content của message.
+    // 3. Tạo SendMessageRequest với type = WEATHER và tái sử dụng pipeline sendMessage().
+    @Override
+    public MessageResponse sendWeatherMessage(SendWeatherMessageRequest req) {
+        // ============================
+        // 1) Lấy dữ liệu thời tiết
+        // ============================
+        WeatherResponse weather = weatherService.getWeather(req.getLat(), req.getLon());
+
+        // ============================
+        // 2) Serialize JSON vào content
+        // ============================
+        String contentJson;
+        try {
+            contentJson = objectMapper.writeValueAsString(weather);
+        } catch (Exception ex) {
+            throw new RuntimeException("Không thể serialize dữ liệu thời tiết");
+        }
+
+        // ============================
+        // 3) Tạo SendMessageRequest để tái sử dụng sendMessage()
+        // ============================
+        var sendReq = new SendMessageRequest();
+        sendReq.setRoomId(req.getRoomId());
+        sendReq.setContent(contentJson);
+        sendReq.setType(MessageType.WEATHER);
+        sendReq.setClientMsgId(req.getClientMsgId());
+
+        // ============================
+        // 4) Gọi lại pipeline chuẩn
+        // ============================
+        return sendMessage(sendReq);
+    }
+
 
     /* ========================================================================== */
     /*                         CÁC HÀM XỬ LÝ THU HỒI TIN NHẮN                     */

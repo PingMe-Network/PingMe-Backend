@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.message.MarkReadRequest;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.message.SendMessageRequest;
+import me.huynhducphu.PingMe_Backend.dto.request.chat.message.SendWeatherMessageRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageRecalledResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.HistoryMessageResponse;
@@ -50,6 +51,17 @@ public class MessageController {
                 .body(new ApiResponse<>(messageService.sendFileMessage(
                         sendMessageRequest,
                         file
+                )));
+    }
+
+    @PostMapping("/weather")
+    public ResponseEntity<ApiResponse<MessageResponse>> sendWeatherMessage(
+            @RequestBody @Valid SendWeatherMessageRequest sendWeatherMessageRequest
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(messageService.sendWeatherMessage(
+                        sendWeatherMessageRequest
                 )));
     }
 

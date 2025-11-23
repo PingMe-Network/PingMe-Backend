@@ -2,6 +2,7 @@ package me.huynhducphu.PingMe_Backend.service.chat;
 
 import me.huynhducphu.PingMe_Backend.dto.request.chat.message.MarkReadRequest;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.message.SendMessageRequest;
+import me.huynhducphu.PingMe_Backend.dto.request.chat.message.SendWeatherMessageRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.HistoryMessageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageRecalledResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageResponse;
@@ -22,6 +23,14 @@ public interface MessageService {
             SendMessageRequest sendMessageRequest,
             MultipartFile file
     );
+
+    // Xử lý gửi tin nhắn dạng WEATHER (thời tiết).
+    //
+    // Quy trình thực hiện:
+    // 1. Gọi WeatherService để lấy dữ liệu thời tiết theo tọa độ (lat, lon).
+    // 2. Serialize dữ liệu thời tiết sang JSON và gán vào content của message.
+    // 3. Tạo SendMessageRequest với type = WEATHER và tái sử dụng pipeline sendMessage().
+    MessageResponse sendWeatherMessage(SendWeatherMessageRequest req);
 
     MessageRecalledResponse recallMessage(Long messageId);
 

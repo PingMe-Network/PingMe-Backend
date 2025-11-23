@@ -1,6 +1,7 @@
 package me.huynhducphu.PingMe_Backend.service.weather.impl;
+
 import lombok.RequiredArgsConstructor;
-import me.huynhducphu.PingMe_Backend.dto.request.miniapp.weather.WeatherResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.weather.WeatherResponse;
 import me.huynhducphu.PingMe_Backend.service.weather.WeatherService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

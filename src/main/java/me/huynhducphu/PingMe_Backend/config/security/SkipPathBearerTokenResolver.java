@@ -18,8 +18,7 @@ public class SkipPathBearerTokenResolver implements BearerTokenResolver {
     private final List<String> skipPaths = List.of(
             "/auth/logout",
             "/auth/register",
-            "/actuator/health",
-            "/weather"
+            "/actuator/health"
     );
 
     @Override
