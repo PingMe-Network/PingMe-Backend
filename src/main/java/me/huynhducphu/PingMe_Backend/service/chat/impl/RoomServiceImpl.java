@@ -484,7 +484,7 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
         // UPLOAD ẢNH MỚI – RANDOM FILE NAME Ở ĐÂY
         // ================================================
         String original = file.getOriginalFilename();
-        String ext = "";
+        String ext;
 
         if (original != null && original.contains(".")) {
             ext = original.substring(original.lastIndexOf("."));  // .png, .jpg
@@ -493,7 +493,7 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
         }
 
         // Tên random:
-        String randomFileName = UUID.randomUUID().toString() + ext;
+        String randomFileName = UUID.randomUUID() + ext;
 
         String newUrl = s3Service.uploadFile(
                 file,

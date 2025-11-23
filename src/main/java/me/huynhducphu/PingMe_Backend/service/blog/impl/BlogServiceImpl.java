@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.UUID;
+
 /**
  * Admin 10/13/2025
  *
@@ -60,15 +62,26 @@ public class BlogServiceImpl implements me.huynhducphu.PingMe_Backend.service.bl
         var savedBlog = blogRepository.saveAndFlush(blog);
 
         if (blogImg != null && !blogImg.isEmpty()) {
+            String original = blogImg.getOriginalFilename();
+            String ext;
+
+            if (original != null && original.contains(".")) {
+                ext = original.substring(original.lastIndexOf("."));
+            } else {
+                ext = ".png";
+            }
+
+            String randomFileName = UUID.randomUUID() + ext;
+
             String url = s3Service.uploadFile(
                     blogImg,
                     "blog-images",
-                    savedBlog.getId().toString(),
+                    randomFileName,
                     true,
                     MAX_BLOG_IMAGE_SIZE
             );
 
-            blog.setImgPreviewUrl(url);
+            savedBlog.setImgPreviewUrl(url);
         }
 
         return modelMapper.map(blog, BlogReviewResponse.class);
@@ -103,10 +116,25 @@ public class BlogServiceImpl implements me.huynhducphu.PingMe_Backend.service.bl
         blog.setCategory(dto.getCategory());
 
         if (blogImg != null && !blogImg.isEmpty()) {
+
+            if (blog.getImgPreviewUrl() != null)
+                s3Service.deleteFileByUrl(blog.getImgPreviewUrl());
+
+            String original = blogImg.getOriginalFilename();
+            String ext;
+
+            if (original != null && original.contains(".")) {
+                ext = original.substring(original.lastIndexOf("."));
+            } else {
+                ext = ".png";
+            }
+
+            String randomFileName = UUID.randomUUID() + ext;
+
             String url = s3Service.uploadFile(
                     blogImg,
                     "blog-images",
-                    blog.getId().toString(),
+                    randomFileName,
                     true,
                     MAX_BLOG_IMAGE_SIZE
             );
