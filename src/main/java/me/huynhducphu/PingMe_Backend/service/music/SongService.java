@@ -7,4 +7,6 @@ import java.util.List;
 public interface SongService {
     SongResponse getSongById(Long id);
     List<SongResponse> getSongByTitle(String title);
+
+    List<SongResponse> getTopPlayedSongs(int limit);
 }
