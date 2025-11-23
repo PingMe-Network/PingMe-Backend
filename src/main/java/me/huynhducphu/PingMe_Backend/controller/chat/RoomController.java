@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Admin 8/26/2025
@@ -113,6 +114,15 @@ public class RoomController {
             @RequestParam String name
     ) {
         return roomService.renameGroup(roomId, name);
+    }
+
+    @PutMapping("/group/{roomId}/image")
+    public ResponseEntity<ApiResponse<RoomResponse>> updateGroupImage(
+            @PathVariable Long roomId,
+            @RequestPart(value = "file", required = false) MultipartFile file
+    ) {
+        var result = roomService.updateGroupImage(roomId, file);
+        return ResponseEntity.ok(new ApiResponse<>(result));
     }
 
 }
