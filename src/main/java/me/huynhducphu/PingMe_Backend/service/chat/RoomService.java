@@ -7,6 +7,7 @@ import me.huynhducphu.PingMe_Backend.dto.response.chat.room.RoomResponse;
 import me.huynhducphu.PingMe_Backend.model.constant.RoomRole;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Admin 8/25/2025
@@ -24,6 +25,8 @@ public interface RoomService {
     RoomResponse changeMemberRole(Long roomId, Long targetUserId, RoomRole newRole);
 
     RoomResponse renameGroup(Long roomId, String newName);
+
+    RoomResponse updateGroupImage(Long roomId, MultipartFile file);
 
     /* ========================================================================== */
     /*                         TÙY CHỈNH PHÒNG CHAT                               */

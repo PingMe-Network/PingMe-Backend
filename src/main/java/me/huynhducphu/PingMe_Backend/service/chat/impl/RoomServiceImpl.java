@@ -17,6 +17,7 @@ import me.huynhducphu.PingMe_Backend.repository.RoomRepository;
 import me.huynhducphu.PingMe_Backend.repository.UserRepository;
 import me.huynhducphu.PingMe_Backend.service.chat.util.ChatDtoUtils;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
+import me.huynhducphu.PingMe_Backend.service.integration.S3Service;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -24,9 +25,11 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -40,6 +43,7 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
 
     // SERVICE
     private final MessageService messageService;
+    private final S3Service s3Service;
 
     // PROVIDER
     private final CurrentUserProvider currentUserProvider;
@@ -51,6 +55,8 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
 
     // PUBLISHER
     private final ApplicationEventPublisher eventPublisher;
+
+    private static final long MAX_IMAGE_SIZE = 10 * 1024 * 1024L;
 
     /* ========================================================================== */
     /*                         TẠO HOẶC TÌM PHÒNG CHAT 1-1                        */
@@ -366,7 +372,7 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
         var sysMsg = messageService.createSystemMessage(room, content, currentUser);
 
         // ------------------------------------------------------
-        // Publish WS
+        // WS
         // ------------------------------------------------------
         eventPublisher.publishEvent(
                 new RoomMemberRoleChangedEvent(
@@ -420,7 +426,7 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
         var sysMsg = messageService.createSystemMessage(room, content, currentUser);
 
         // --------------------------
-        // Broadcast WS (RoomUpdatedEvent mới)
+        // WS
         // --------------------------
         eventPublisher.publishEvent(
                 new RoomUpdatedEvent(
@@ -429,6 +435,90 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
                         sysMsg
                 )
         );
+
+        return ChatDtoUtils.toRoomResponseDto(room, members, currentUser.getId());
+    }
+
+    @Override
+    public RoomResponse updateGroupImage(Long roomId, MultipartFile file) {
+        var currentUser = currentUserProvider.get();
+
+        var room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("Phòng không tồn tại"));
+
+        if (room.getRoomType() != RoomType.GROUP)
+            throw new IllegalArgumentException("Chỉ group mới đổi ảnh");
+
+        var callerPk = new RoomMemberId(roomId, currentUser.getId());
+        var caller = roomParticipantRepository.findById(callerPk)
+                .orElseThrow(() -> new IllegalArgumentException("Bạn không thuộc nhóm"));
+
+        if (caller.getRole() == RoomRole.MEMBER)
+            throw new IllegalArgumentException("Bạn không có quyền đổi ảnh nhóm");
+
+        var members = roomParticipantRepository.findByRoom_Id(roomId);
+
+        // ================================================
+        // XÓA ẢNH (file == null)
+        // ================================================
+        if (file == null) {
+            if (room.getRoomImgUrl() != null) {
+                s3Service.deleteFileByUrl(room.getRoomImgUrl());
+            }
+
+            room.setRoomImgUrl(null);
+            roomRepository.save(room);
+
+            var sysMsg = messageService.createSystemMessage(
+                    room,
+                    currentUser.getName() + " đã xoá ảnh nhóm",
+                    currentUser
+            );
+
+            eventPublisher.publishEvent(new RoomUpdatedEvent(room, members, sysMsg));
+
+            return ChatDtoUtils.toRoomResponseDto(room, members, currentUser.getId());
+        }
+
+        // ================================================
+        // UPLOAD ẢNH MỚI – RANDOM FILE NAME Ở ĐÂY
+        // ================================================
+        String original = file.getOriginalFilename();
+        String ext = "";
+
+        if (original != null && original.contains(".")) {
+            ext = original.substring(original.lastIndexOf("."));  // .png, .jpg
+        } else {
+            ext = ".png";  // fallback
+        }
+
+        // Tên random:
+        String randomFileName = UUID.randomUUID().toString() + ext;
+
+        String newUrl = s3Service.uploadFile(
+                file,
+                "group-images",
+                randomFileName,
+                true,
+                MAX_IMAGE_SIZE
+        );
+
+        // Xóa ảnh cũ
+        if (room.getRoomImgUrl() != null) {
+            s3Service.deleteFileByUrl(room.getRoomImgUrl());
+        }
+
+        // Cập nhật DB
+        room.setRoomImgUrl(newUrl);
+        roomRepository.save(room);
+
+        var sysMsg = messageService.createSystemMessage(
+                room,
+                currentUser.getName() + " đã cập nhật ảnh nhóm",
+                currentUser
+        );
+
+        eventPublisher.publishEvent(new RoomUpdatedEvent(room, members, sysMsg));
 
         return ChatDtoUtils.toRoomResponseDto(room, members, currentUser.getId());
     }
