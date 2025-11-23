@@ -1,6 +1,6 @@
 package me.huynhducphu.PingMe_Backend.service.weather;
 
-import me.huynhducphu.PingMe_Backend.dto.request.miniapp.weather.WeatherResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.weather.WeatherResponse;
 
 public interface WeatherService {
     WeatherResponse getWeather(double lat, double lon);

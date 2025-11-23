@@ -5,5 +5,5 @@ package me.huynhducphu.PingMe_Backend.model.constant;
  *
  **/
 public enum MessageType {
-    TEXT, IMAGE, VIDEO, FILE, SYSTEM
+    TEXT, IMAGE, VIDEO, FILE, SYSTEM, WEATHER
 }
