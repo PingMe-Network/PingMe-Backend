@@ -67,4 +67,8 @@ public class Song extends BaseEntity {
     )
     @ToString.Exclude
     private Set<Genre> genres;
+
+    //Số lần bài hát được phát
+    @Column(nullable = false)
+    private Long playCount = 0L;
 }

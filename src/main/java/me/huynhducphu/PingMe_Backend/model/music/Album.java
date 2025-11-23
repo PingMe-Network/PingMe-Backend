@@ -67,4 +67,8 @@ public class Album extends BaseEntity {
     )
     @ToString.Exclude
     private Set<Artist> featuredArtists;
+
+    //Số lần album được phát
+    @Column(nullable = false)
+    private Long playCount = 0L;
 }
