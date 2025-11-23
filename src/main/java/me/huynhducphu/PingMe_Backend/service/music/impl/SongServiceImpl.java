@@ -14,6 +14,8 @@ import me.huynhducphu.PingMe_Backend.repository.music.AlbumRepository;
 import me.huynhducphu.PingMe_Backend.repository.music.GenreRepository;
 import me.huynhducphu.PingMe_Backend.repository.music.SongRepository;
 import me.huynhducphu.PingMe_Backend.service.music.SongService;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -56,6 +58,13 @@ public class SongServiceImpl implements SongService {
         return flattenSongsWithAlbums(songs);
     }
 
+    // Cho phép truyền số lượng bài muốn lấy
+    public List<SongResponse> getTopPlayedSongs(int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        List<Song> topSongs = songRepository.findSongsByPlayCount(pageable);
+        return flattenSongsWithAlbums(topSongs);
+    }
+
     private List<SongResponse> flattenSongsWithAlbums(List<Song> songs) {
         List<SongResponse> result = new ArrayList<>();
         for (Song song : songs) {
@@ -78,6 +87,7 @@ public class SongServiceImpl implements SongService {
         response.setId(song.getId());
         response.setTitle(song.getTitle());
         response.setDuration(song.getDuration());
+        response.setPlayCount(song.getPlayCount());
         response.setSongUrl(song.getSongUrl());
         response.setCoverImageUrl(song.getImgUrl());
 
@@ -111,7 +121,7 @@ public class SongServiceImpl implements SongService {
 
         // --- Xử lý Album ---
         if (album != null) {
-            response.setAlbum(new AlbumSummaryDto(album.getId(), album.getTitle()));
+            response.setAlbum(new AlbumSummaryDto(album.getId(), album.getTitle(), album.getPlayCount()));
         }
 
         return response;

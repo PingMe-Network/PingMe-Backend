@@ -27,6 +27,8 @@ public class SongResponse {
 
     private int duration;// tính bằng giây
 
+    private Long playCount;
+
     private String songUrl;
 
     private String coverImageUrl;
