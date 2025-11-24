@@ -10,13 +10,13 @@ import me.huynhducphu.PingMe_Backend.model.music.Album;
 import me.huynhducphu.PingMe_Backend.model.music.Artist;
 import me.huynhducphu.PingMe_Backend.model.music.Song;
 import me.huynhducphu.PingMe_Backend.model.music.SongArtistRole;
-import me.huynhducphu.PingMe_Backend.repository.music.AlbumRepository;
 import me.huynhducphu.PingMe_Backend.repository.music.GenreRepository;
 import me.huynhducphu.PingMe_Backend.repository.music.SongRepository;
 import me.huynhducphu.PingMe_Backend.service.music.SongService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 public class SongServiceImpl implements SongService {
 
     private final SongRepository songRepository;
-    private final AlbumRepository albumRepository;
     private final GenreRepository genreRepository;
 
     @Override
@@ -80,6 +79,11 @@ public class SongServiceImpl implements SongService {
         return result;
     }
 
+    @Transactional
+    @Override
+    public void increasePlayCount(Long songId) {
+        songRepository.incrementPlayCount(songId);
+    }
     private SongResponse mapToSongResponse(Song song, Album album) {
         SongResponse response = new SongResponse();
 
