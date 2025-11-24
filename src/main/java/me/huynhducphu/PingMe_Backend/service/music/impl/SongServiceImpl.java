@@ -6,18 +6,19 @@ import me.huynhducphu.PingMe_Backend.dto.response.music.misc.AlbumSummaryDto;
 import me.huynhducphu.PingMe_Backend.dto.response.music.misc.ArtistSummaryDto;
 import me.huynhducphu.PingMe_Backend.dto.response.music.misc.GenreDto;
 import me.huynhducphu.PingMe_Backend.model.constant.ArtistRole;
-import me.huynhducphu.PingMe_Backend.model.music.Album;
-import me.huynhducphu.PingMe_Backend.model.music.Artist;
-import me.huynhducphu.PingMe_Backend.model.music.Song;
-import me.huynhducphu.PingMe_Backend.model.music.SongArtistRole;
+import me.huynhducphu.PingMe_Backend.model.music.*;
 import me.huynhducphu.PingMe_Backend.repository.music.GenreRepository;
+import me.huynhducphu.PingMe_Backend.repository.music.SongPlayHistoryRepository;
 import me.huynhducphu.PingMe_Backend.repository.music.SongRepository;
 import me.huynhducphu.PingMe_Backend.service.music.SongService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -29,6 +30,8 @@ public class SongServiceImpl implements SongService {
 
     private final SongRepository songRepository;
     private final GenreRepository genreRepository;
+    private final SongPlayHistoryRepository songPlayHistoryRepository;
+    private final RedisTemplate<String, String> redis;
 
     @Override
     public SongResponse getSongById(Long id) {
@@ -81,8 +84,30 @@ public class SongServiceImpl implements SongService {
 
     @Transactional
     @Override
-    public void increasePlayCount(Long songId) {
+    public void increasePlayCount(Long songId, Long userId) {
+        String redisKey = "play:" + userId + ":" + songId;
+
+        // Nếu tồn tại trong Redis → trong 10s đã nghe → không tăng tiếp
+        Boolean alreadyPlayed = redis.hasKey(redisKey);
+        if (Boolean.TRUE.equals(alreadyPlayed)) return;
+
+        // Tăng playCount
         songRepository.incrementPlayCount(songId);
+
+        // Log lịch sử
+        Song song = songRepository.findById(songId)
+                .orElseThrow(() -> new IllegalArgumentException("Song not found"));
+
+        songPlayHistoryRepository.save(
+                SongPlayHistory.builder()
+                        .song(song)
+                        .userId(userId)
+                        .playedAt(LocalDateTime.now())
+                        .build()
+        );
+
+        // Set key Redis sống 10s → debounce
+        redis.opsForValue().set(redisKey, "1", Duration.ofSeconds(10));
     }
     private SongResponse mapToSongResponse(Song song, Album album) {
         SongResponse response = new SongResponse();

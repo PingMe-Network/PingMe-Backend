@@ -11,6 +11,8 @@ public interface SongService {
 
     List<SongResponse> getTopPlayedSongs(int limit);
 
+
+
     @Transactional
-    void increasePlayCount(Long songId);
+    void increasePlayCount(Long songId, Long userId);
 }
