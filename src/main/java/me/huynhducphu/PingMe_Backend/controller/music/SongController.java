@@ -33,4 +33,11 @@ public class SongController {
         return ResponseEntity.ok(songResponses);
     }
 
+    @PostMapping("/{id}/play")
+    public ResponseEntity<Void> increasePlayCount(@PathVariable Long id) {
+        songService.increasePlayCount(id);
+        return ResponseEntity.ok().build();
+    }
+
+
 }
