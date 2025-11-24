@@ -110,6 +110,24 @@ public class RedisConfiguration {
         return tpl;
     }
 
+    @Bean(name = "redisDtoTemplate")
+    public RedisTemplate<String, Object> redisDtoTemplate(RedisConnectionFactory cf, ObjectMapper om) {
+        RedisTemplate<String, Object> tpl = new RedisTemplate<>();
+        tpl.setConnectionFactory(cf);
+
+        var keySer = new StringRedisSerializer();
+        var valSer = new GenericJackson2JsonRedisSerializer(om);
+
+        tpl.setKeySerializer(keySer);
+        tpl.setHashKeySerializer(keySer);
+        tpl.setValueSerializer(valSer);
+        tpl.setHashValueSerializer(valSer);
+
+        tpl.afterPropertiesSet();
+        return tpl;
+    }
+
+
     // =====================================================================
     // Cấu hình Spring Cache với Redis
     //    - Thiết lập thời gian sống mặc định cho cache (TTL)
