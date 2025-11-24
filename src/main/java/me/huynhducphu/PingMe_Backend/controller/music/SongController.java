@@ -2,10 +2,11 @@ package me.huynhducphu.PingMe_Backend.controller.music;
 
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.response.music.SongResponse;
+import me.huynhducphu.PingMe_Backend.model.User;
 import me.huynhducphu.PingMe_Backend.service.music.SongService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -34,10 +35,14 @@ public class SongController {
     }
 
     @PostMapping("/{id}/play")
-    public ResponseEntity<Void> increasePlayCount(@PathVariable Long id) {
-        songService.increasePlayCount(id);
+    public ResponseEntity<Void> increasePlayCount(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User user
+    ) {
+        songService.increasePlayCount(id, user.getId());
         return ResponseEntity.ok().build();
     }
+
 
 
 }
