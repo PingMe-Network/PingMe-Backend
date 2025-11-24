@@ -1,11 +1,10 @@
 package me.huynhducphu.PingMe_Backend.repository;
 
-import me.huynhducphu.PingMe_Backend.model.ExpenseTransaction;
+import me.huynhducphu.PingMe_Backend.model.miniapp.ExpenseTransaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository

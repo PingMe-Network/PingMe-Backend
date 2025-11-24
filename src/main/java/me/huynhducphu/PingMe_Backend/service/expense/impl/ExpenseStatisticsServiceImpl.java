@@ -2,7 +2,7 @@ package me.huynhducphu.PingMe_Backend.service.expense.impl;
 
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.response.miniapp.expense.*;
-import me.huynhducphu.PingMe_Backend.model.ExpenseTransaction;
+import me.huynhducphu.PingMe_Backend.model.miniapp.ExpenseTransaction;
 import me.huynhducphu.PingMe_Backend.model.constant.TransactionType;
 import me.huynhducphu.PingMe_Backend.model.constant.TrendStatus;
 import me.huynhducphu.PingMe_Backend.repository.ExpenseTransactionRepository;

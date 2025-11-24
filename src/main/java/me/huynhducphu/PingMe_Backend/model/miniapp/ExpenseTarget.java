@@ -1,7 +1,8 @@
-package me.huynhducphu.PingMe_Backend.model;
+package me.huynhducphu.PingMe_Backend.model.miniapp;
 
 import jakarta.persistence.*;
 import lombok.*;
+import me.huynhducphu.PingMe_Backend.model.User;
 import me.huynhducphu.PingMe_Backend.model.common.BaseEntity;
 
 @Entity
