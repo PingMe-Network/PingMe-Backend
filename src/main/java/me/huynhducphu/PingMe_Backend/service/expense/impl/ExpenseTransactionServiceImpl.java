@@ -1,5 +1,6 @@
 package me.huynhducphu.PingMe_Backend.service.expense.impl;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.miniapp.expense.CreateTransactionRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.miniapp.expense.TransactionResponse;
@@ -52,5 +53,20 @@ public class ExpenseTransactionServiceImpl implements me.huynhducphu.PingMe_Back
                 .stream()
                 .map(tx -> modelMapper.map(tx, TransactionResponse.class))
                 .toList();
+    }
+
+    @Override
+    public Long deleteTransaction(Long id) {
+        User user = currentUserProvider.get();
+
+        ExpenseTransaction tx = txRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy giao dịch"));
+
+        if (!tx.getUser().getId().equals(user.getId())) {
+            throw new EntityNotFoundException("Không tìm thấy giao dịch");
+        }
+
+        txRepo.deleteById(id);
+        return id;
     }
 }

@@ -9,4 +9,6 @@ public interface ExpenseTransactionService {
     TransactionResponse createTransaction(CreateTransactionRequest request);
 
     List<TransactionResponse> getTransactionsInMonth(int month, int year);
+
+    Long deleteTransaction(Long id);
 }
