@@ -3,6 +3,7 @@ package me.huynhducphu.PingMe_Backend.service.expense.impl;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.miniapp.expense.CreateTransactionRequest;
+import me.huynhducphu.PingMe_Backend.dto.request.miniapp.expense.UpdateTransactionRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.miniapp.expense.TransactionResponse;
 import me.huynhducphu.PingMe_Backend.model.miniapp.ExpenseTransaction;
 import me.huynhducphu.PingMe_Backend.model.User;
@@ -80,6 +81,36 @@ public class ExpenseTransactionServiceImpl implements me.huynhducphu.PingMe_Back
             throw new EntityNotFoundException("Không tìm thấy giao dịch");
         }
 
+        return modelMapper.map(tx, TransactionResponse.class);
+    }
+
+    @Override
+    public TransactionResponse updateTransaction(Long id, UpdateTransactionRequest request) {
+        User user = currentUserProvider.get();
+
+        ExpenseTransaction tx = txRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy giao dịch"));
+
+        if (!tx.getUser().getId().equals(user.getId())) {
+            throw new EntityNotFoundException("Không tìm thấy giao dịch");
+        }
+
+        if (request.getAmount() != null) {
+            tx.setAmount(request.getAmount());
+        }
+        if (request.getType() != null) {
+            tx.setType(request.getType());
+        }
+        if (request.getCategory() != null) {
+            tx.setCategory(request.getCategory());
+        }
+        if (request.getNote() != null) {
+            tx.setNote(request.getNote());
+        }
+        if (request.getDate() != null) {
+            tx.setDate(request.getDate());
+        }
+        txRepo.save(tx);
         return modelMapper.map(tx, TransactionResponse.class);
     }
 }

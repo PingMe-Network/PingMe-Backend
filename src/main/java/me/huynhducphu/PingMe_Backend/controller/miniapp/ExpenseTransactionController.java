@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.miniapp.expense.CreateTransactionRequest;
+import me.huynhducphu.PingMe_Backend.dto.request.miniapp.expense.UpdateTransactionRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.miniapp.expense.DeleteTransactionResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.miniapp.expense.TransactionResponse;
@@ -49,6 +50,15 @@ public class ExpenseTransactionController {
     public ResponseEntity<ApiResponse<TransactionResponse>> detail(@PathVariable Long id) {
         return ResponseEntity.ok(
                 new ApiResponse<>(service.getTransactionDetail(id))
+        );
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<TransactionResponse>> update(
+            @PathVariable Long id,
+            @RequestBody @Valid UpdateTransactionRequest req
+    ) {
+        return ResponseEntity.ok(
+                new ApiResponse<>(service.updateTransaction(id, req))
         );
     }
 }
