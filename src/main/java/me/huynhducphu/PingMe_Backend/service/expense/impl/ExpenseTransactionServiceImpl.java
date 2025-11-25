@@ -95,21 +95,11 @@ public class ExpenseTransactionServiceImpl implements me.huynhducphu.PingMe_Back
             throw new EntityNotFoundException("Không tìm thấy giao dịch");
         }
 
-        if (request.getAmount() != null) {
-            tx.setAmount(request.getAmount());
-        }
-        if (request.getType() != null) {
-            tx.setType(request.getType());
-        }
-        if (request.getCategory() != null) {
-            tx.setCategory(request.getCategory());
-        }
-        if (request.getNote() != null) {
-            tx.setNote(request.getNote());
-        }
-        if (request.getDate() != null) {
-            tx.setDate(request.getDate());
-        }
+        tx.setAmount(request.getAmount());
+        tx.setType(request.getType());
+        tx.setCategory(request.getCategory());
+        tx.setNote(request.getNote());
+        tx.setDate(request.getDate());
         txRepo.save(tx);
         return modelMapper.map(tx, TransactionResponse.class);
     }
