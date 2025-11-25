@@ -45,4 +45,10 @@ public class ExpenseTransactionController {
                 new ApiResponse<>(new DeleteTransactionResponse(deletedId))
         );
     }
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<TransactionResponse>> detail(@PathVariable Long id) {
+        return ResponseEntity.ok(
+                new ApiResponse<>(service.getTransactionDetail(id))
+        );
+    }
 }

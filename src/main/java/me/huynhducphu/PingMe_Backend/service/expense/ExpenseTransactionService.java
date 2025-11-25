@@ -11,4 +11,6 @@ public interface ExpenseTransactionService {
     List<TransactionResponse> getTransactionsInMonth(int month, int year);
 
     Long deleteTransaction(Long id);
+
+    TransactionResponse getTransactionDetail(Long id);
 }

@@ -69,4 +69,17 @@ public class ExpenseTransactionServiceImpl implements me.huynhducphu.PingMe_Back
         txRepo.deleteById(id);
         return id;
     }
+    @Override
+    public TransactionResponse getTransactionDetail(Long id) {
+        User user = currentUserProvider.get();
+
+        ExpenseTransaction tx = txRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy giao dịch"));
+
+        if (!tx.getUser().getId().equals(user.getId())) {
+            throw new EntityNotFoundException("Không tìm thấy giao dịch");
+        }
+
+        return modelMapper.map(tx, TransactionResponse.class);
+    }
 }
