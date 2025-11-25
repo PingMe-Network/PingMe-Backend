@@ -15,14 +15,14 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class UpdateTransactionRequest {
     @Positive(message = "Số tiền phải > 0")
-    @NotNull
+    @NotNull(message = "Số tiền không được để trống")
     private Double amount;
-    @NotNull
+    @NotNull(message = "Loại giao dịch không được để trống")
     private TransactionType type;
-    @NotNull
+    @NotNull(message = "Danh mục không được để trống")
     private CategoryType category;
-    @NotNull
+    @NotNull(message = "Ghi chú không được để trống")
     private String note;
-    @NotNull
+    @NotNull(message = "Ngày giao dịch không được để trống")
     private LocalDate date;
 }
