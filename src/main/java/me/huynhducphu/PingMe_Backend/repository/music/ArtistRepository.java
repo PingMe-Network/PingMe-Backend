@@ -2,7 +2,11 @@ package me.huynhducphu.PingMe_Backend.repository.music;
 
 import me.huynhducphu.PingMe_Backend.model.music.Artist;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 /**
  * @author Le Tran Gia Huy
@@ -12,6 +16,23 @@ import org.springframework.stereotype.Repository;
  */
 
 @Repository
-public interface ArtistRepository extends JpaRepository<Artist, Integer> {
+public interface ArtistRepository extends JpaRepository<Artist, Long> {
 
+    List<Artist> findByNameContainingIgnoreCase(String name);
+
+    @Query("SELECT COUNT(a) > 0 FROM Album a WHERE a.albumOwner.id = :artistId")
+    boolean hasOwnedAlbums(@Param("artistId") Long artistId);
+
+    @Query("SELECT COUNT(r) > 0 FROM SongArtistRole r WHERE r.artist.id = :artistId")
+    boolean hasSongRoles(@Param("artistId") Long artistId);
+
+    // --- THÊM MỚI ---
+
+    // Tìm nghệ sĩ đang nằm trong thùng rác (để Restore)
+    @Query(value = "SELECT * FROM artists WHERE id = :id AND is_deleted = true", nativeQuery = true)
+    java.util.Optional<Artist> findSoftDeletedArtist(@Param("id") Long id);
+
+    // Tìm nghệ sĩ bất kể trạng thái (để Hard Delete)
+    @Query(value = "SELECT * FROM artists WHERE id = :id", nativeQuery = true)
+    java.util.Optional<Artist> findByIdIgnoringDeleted(@Param("id") Long id);
 }
