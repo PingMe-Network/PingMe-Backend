@@ -375,10 +375,10 @@ public class SongServiceImpl implements SongService {
                     album.getGenres().addAll(song.getGenres());
                 }
                 if (!allArtists.isEmpty()) {
-                    if(album.getFeaturedArtists() == null) album.setFeaturedArtists(new HashSet<>());
+                    if (album.getFeaturedArtists() == null) album.setFeaturedArtists(new HashSet<>());
                     album.getFeaturedArtists().addAll(allArtists);
                     // Remove owner khỏi featured
-                    if(album.getAlbumOwner() != null) album.getFeaturedArtists().remove(album.getAlbumOwner());
+                    if (album.getAlbumOwner() != null) album.getFeaturedArtists().remove(album.getAlbumOwner());
                 }
                 albumRepository.save(album);
             }
@@ -395,7 +395,7 @@ public class SongServiceImpl implements SongService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void softDelete(Long id){
+    public void softDelete(Long id) {
         Song song = songRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bài hát với ID: " + id));
 

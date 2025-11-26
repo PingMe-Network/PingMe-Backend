@@ -286,6 +286,8 @@ UPDATE rooms
 SET last_message_id = 34
 WHERE id = 11;
 -- ===========================================================================================================
+-- Tạo Blog
+-- ===========================================================================================================
 
 INSERT INTO `blogs` (`id`, `active`, `created_at`, `created_by`, `updated_at`, `updated_by`, `category`, `content`,
                      `description`, `img_preview_url`, `is_approved`, `title`, `user_id`)
@@ -301,3 +303,80 @@ VALUES (1, 1, '2025-11-23 18:50:27.291443', 'huynhducphu2502@gmail.com', '2025-1
         'Đơn giản nhưng cực hiệu quả nếu áp dụng đúng cách.',
         'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/blog-images/1afd53fe-f324-46f4-ae88-89d0f2aa391e.jpg', b'1',
         '4 kỹ thuật học tập hiện đại giúp bạn ghi nhớ nhanh và sâu hơn', 11);
+
+-- ===========================================================================================================
+-- Music
+-- ===========================================================================================================
+
+-- 1. Thêm dữ liệu Thể loại (Genres) trước
+INSERT INTO genres (id, name, created_at, updated_at)
+VALUES (1, 'Pop', NOW(), NOW()),
+       (2, 'Indie Pop', NOW(), NOW()),
+       (3, 'Acoustic', NOW(), NOW()),
+       (4, 'Alternative', NOW(), NOW());
+
+-- 2. Thêm dữ liệu Nghệ sĩ (Artists)
+INSERT INTO artists (id, name, bio, img_url, created_at, updated_at)
+VALUES (1, 'Gracie Abrams',
+        'Gracie Madigan Abrams is an American singer-songwriter. Her music is often described as "bedroom pop" and "indie pop".',
+        'https://my-music-app-media-bucket-2025.s3.ap-southeast-2.amazonaws.com/artists/gracie_abrams.jpg', NOW(),
+        NOW()),
+       (2, 'Taylor Swift', 'American singer-songwriter. A global superstar known for her narrative songwriting.',
+        'https://my-music-app-media-bucket-2025.s3.ap-southeast-2.amazonaws.com/artists/taylor_swift.jpg', NOW(),
+        NOW());
+
+-- 3. Thêm dữ liệu Album (Cần ID của Artist chủ sở hữu)
+INSERT INTO albums (id, title, owner_id, cover_image_url, created_at, updated_at, play_count)
+VALUES (1, 'The Secret of Us', 1,
+        'https://my-music-app-media-bucket-2025.s3.ap-southeast-2.amazonaws.com/images/that_so_true.jpg', NOW(), NOW(),
+        2100000);
+
+-- 4. Thêm dữ liệu Bài hát (Songs)
+
+INSERT INTO songs (id, title, duration, song_url, img_url, created_at, updated_at, play_count)
+VALUES (1, 'Risk', 190, 'https://my-music-app-media-bucket-2025.s3.ap-southeast-2.amazonaws.com/media/Risk.mp3',
+        'https://my-music-app-media-bucket-2025.s3.ap-southeast-2.amazonaws.com/images/risk.jpg', NOW(), NOW(),
+        1000000),
+       (2, 'Close To You', 215,
+        'https://my-music-app-media-bucket-2025.s3.ap-southeast-2.amazonaws.com/media/Close+To+You.mp3',
+        'https://my-music-app-media-bucket-2025.s3.ap-southeast-2.amazonaws.com/images/risk.jpg', NOW(), NOW(), 534002),
+       (3, 'us.', 242, 'https://my-music-app-media-bucket-2025.s3.ap-southeast-2.amazonaws.com/media/Us..mp3',
+        'https://my-music-app-media-bucket-2025.s3.ap-southeast-2.amazonaws.com/images/risk.jpg', NOW(), NOW(), 234032);
+
+-- ========================================================
+-- CÁC BẢNG LIÊN KẾT (Chạy sau khi đã INSERT bảng chính)
+-- ========================================================
+
+-- 5. Liên kết Album với Thể loại
+-- Album "The Secret of Us" (ID=1) thuộc Pop (ID=1) và Indie Pop (ID=2)
+INSERT INTO album_genre (album_id, genre_id)
+VALUES (1, 1),
+       (1, 2);
+
+-- 6. Liên kết Album với Bài hát
+-- Album (ID=1) chứa các bài hát ID 1, 2, 3
+INSERT INTO album_song (album_id, song_id)
+VALUES (1, 1),
+       (1, 2),
+       (1, 3);
+
+-- 7. Liên kết Bài hát với Thể loại
+INSERT INTO song_genre (song_id, genre_id)
+VALUES (1, 2), -- Risk là Indie Pop
+       (2, 1), -- Close To You là Pop
+       (3, 3);
+-- us. là Acoustic
+
+-- 8. Xác định vai trò Nghệ sĩ (QUAN TRỌNG)
+INSERT INTO song_artist_role (song_id, artist_id, role, created_at, updated_at)
+VALUES (1, 1, 'MAIN_ARTIST', NOW(), NOW()), -- Risk: Gracie hát chính
+       (2, 1, 'MAIN_ARTIST', NOW(), NOW()), -- Close To You: Gracie hát chính
+       (3, 1, 'MAIN_ARTIST', NOW(), NOW()), -- us.: Gracie hát chính
+       (3, 2, 'FEATURED_ARTIST', NOW(), NOW());
+-- us.: Taylor Swift feat
+
+-- 9. Liên kết Nghệ sĩ khách mời vào Album
+-- Taylor Swift (ID=2) là khách mời trong Album (ID=1)
+INSERT INTO album_artist (album_id, artist_id)
+VALUES (1, 2);
+-- ===========================================================================================================
