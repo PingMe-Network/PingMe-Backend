@@ -1,8 +1,11 @@
 package me.huynhducphu.PingMe_Backend.service.music;
 
+import me.huynhducphu.PingMe_Backend.dto.request.music.GenreRequest;
+import me.huynhducphu.PingMe_Backend.dto.response.music.GenreResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.music.misc.GenreDto;
 import me.huynhducphu.PingMe_Backend.model.music.Genre;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -12,9 +15,17 @@ import java.util.Set;
  * @package me.huynhducphu.PingMe_Backend.service.music
  */
 public interface GenreService {
-    GenreDto getGenreById(Long id);
+    GenreResponse getGenreById(Long id);
 
-    Set<GenreDto> getAllGenres();
+    List<GenreResponse> getAllGenres();
 
-    GenreDto mapToDto(Genre genre);
+    GenreResponse createGenre(GenreRequest request);
+
+    GenreResponse updateGenre(Long id, GenreRequest request);
+
+    void softDeleteGenre(Long id);
+
+    void restoreGenre(Long id);
+
+    void hardDeleteGenre(Long id);
 }
