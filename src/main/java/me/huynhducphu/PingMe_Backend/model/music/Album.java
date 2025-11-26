@@ -3,7 +3,9 @@ package me.huynhducphu.PingMe_Backend.model.music;
 import jakarta.persistence.*;
 import lombok.*;
 import me.huynhducphu.PingMe_Backend.model.common.BaseEntity;
+import org.hibernate.annotations.SQLRestriction;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -19,6 +21,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
+@SQLRestriction("is_deleted = false")
 public class Album extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,7 +49,7 @@ public class Album extends BaseEntity {
             inverseJoinColumns = @JoinColumn(name = "genre_id")
     )
     @ToString.Exclude
-    private Set<Genre> genres;
+    private Set<Genre> genres = new HashSet<>();
 
     //Danh sách bài hát trong album
     @ManyToMany
@@ -56,7 +59,7 @@ public class Album extends BaseEntity {
             inverseJoinColumns = @JoinColumn(name = "song_id")
     )
     @ToString.Exclude
-    private Set<Song> songs;
+    private Set<Song> songs = new HashSet<>();
 
     //Danh sách nghệ sĩ tham gia trong album
     @ManyToMany
@@ -66,9 +69,12 @@ public class Album extends BaseEntity {
             inverseJoinColumns = @JoinColumn(name = "artist_id")
     )
     @ToString.Exclude
-    private Set<Artist> featuredArtists;
+    private Set<Artist> featuredArtists = new HashSet<>();
 
     //Số lần album được phát
     @Column(nullable = false)
     private Long playCount = 0L;
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE", name = "is_deleted")
+    private boolean isDeleted = false;
 }

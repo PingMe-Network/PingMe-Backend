@@ -3,8 +3,10 @@ package me.huynhducphu.PingMe_Backend.model.music;
 import jakarta.persistence.*;
 import lombok.*;
 import me.huynhducphu.PingMe_Backend.model.common.BaseEntity;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Le Tran Gia Huy
@@ -19,6 +21,7 @@ import java.util.List;
 @NoArgsConstructor
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
+@SQLRestriction("is_deleted = false")
 public class Genre extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,10 +35,13 @@ public class Genre extends BaseEntity {
     //Danh sách bài hát thuộc thể loại này
     @ManyToMany(mappedBy = "genres")
     @ToString.Exclude
-    private List<Song> songs;
+    private Set<Song> songs;
 
     //Danh sách album thuộc thể loại này
     @ManyToMany(mappedBy = "genres")
     @ToString.Exclude
-    private List<Album> albums;
+    private Set<Album> albums;
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE", name = "is_deleted")
+    private boolean isDeleted = false;
 }

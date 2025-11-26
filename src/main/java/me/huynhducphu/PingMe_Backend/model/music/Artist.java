@@ -3,6 +3,7 @@ package me.huynhducphu.PingMe_Backend.model.music;
 import jakarta.persistence.*;
 import lombok.*;
 import me.huynhducphu.PingMe_Backend.model.common.BaseEntity;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.util.List;
 import java.util.Set;
@@ -20,6 +21,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
+@SQLRestriction("is_deleted = false")
 public class Artist extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -52,4 +54,7 @@ public class Artist extends BaseEntity {
     @ManyToMany(mappedBy = "featuredArtists")
     @ToString.Exclude
     private Set<Album> albums;
+
+    @Column(name = "is_deleted", columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean isDeleted = false;
 }

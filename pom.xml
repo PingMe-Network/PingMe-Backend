@@ -154,10 +154,19 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/net.jthink/jaudiotagger -->
+        <!-- Dependency dành cho tính toán độ dài thời gian của 1 bản nhạc -->
+        <dependency>
+            <groupId>net.jthink</groupId>
+            <artifactId>jaudiotagger</artifactId>
+            <version>3.0.1</version>
+          
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
             <version>1.0.0-M6</version>
+
         </dependency>
     </dependencies>
     <build>

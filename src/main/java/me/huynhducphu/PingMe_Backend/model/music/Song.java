@@ -3,6 +3,7 @@ package me.huynhducphu.PingMe_Backend.model.music;
 import jakarta.persistence.*;
 import lombok.*;
 import me.huynhducphu.PingMe_Backend.model.common.BaseEntity;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.util.List;
 import java.util.Set;
@@ -20,6 +21,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
+@SQLRestriction("is_deleted = false")
 public class Song extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -71,4 +73,7 @@ public class Song extends BaseEntity {
     //Số lần bài hát được phát
     @Column(nullable = false)
     private Long playCount = 0L;
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE", name = "is_deleted")
+    private boolean isDeleted = false;
 }

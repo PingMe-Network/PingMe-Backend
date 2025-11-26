@@ -43,5 +43,12 @@ public interface SongRepository extends JpaRepository<Song, Long> {
 
     List<Song> findSongsByTitleContainingIgnoreCase(String title);
 
-    List<Song> findSongsByGenresContainingIgnoreCase(Set<Genre> genres);
+    @Query("SELECT s FROM Song s JOIN s.genres g WHERE g.id = :genreId")
+    List<Song> findSongsByGenreId(@Param("genreId") Long genreId);
+
+    @Query(value = "SELECT * FROM songs WHERE id = :id AND is_deleted = true", nativeQuery = true)
+    Optional<Song> findSoftDeletedSong(Long id);
+
+    @Query(value = "SELECT * FROM songs WHERE id = :id", nativeQuery = true)
+    Optional<Song> findByIdIgnoringDeleted(@Param("id") Long id);
 }
