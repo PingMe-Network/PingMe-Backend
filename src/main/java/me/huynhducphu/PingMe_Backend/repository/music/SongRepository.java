@@ -20,7 +20,7 @@ import java.util.Set;
  */
 
 @Repository
-public interface SongRepository extends JpaRepository<Song, Integer> {
+public interface SongRepository extends JpaRepository<Song, Long> {
     // Load Song cùng lúc với ArtistRoles, Artist, Genres và Albums để tránh lỗi LazyLoading hoặc N+1 query
     @Query("SELECT s FROM Song s " +
             "LEFT JOIN FETCH s.artistRoles ar " +
@@ -36,5 +36,12 @@ public interface SongRepository extends JpaRepository<Song, Integer> {
 
     List<Song> findSongsByTitleContainingIgnoreCase(String title);
 
-    List<Song> findSongsByGenresContainingIgnoreCase(Set<Genre> genres);
+    @Query("SELECT s FROM Song s JOIN s.genres g WHERE g.id = :genreId")
+    List<Song> findSongsByGenreId(@Param("genreId") Long genreId);
+
+    @Query(value = "SELECT * FROM songs WHERE id = :id AND is_deleted = true", nativeQuery = true)
+    Optional<Song> findSoftDeletedSong(Long id);
+
+    @Query(value = "SELECT * FROM songs WHERE id = :id", nativeQuery = true)
+    Optional<Song> findByIdIgnoringDeleted(@Param("id") Long id);
 }
