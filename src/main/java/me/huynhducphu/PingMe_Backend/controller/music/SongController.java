@@ -93,6 +93,7 @@ public class SongController {
     @PutMapping("/restore/{id}")
     public ResponseEntity<Void> restore(@PathVariable Long id) {
         songService.restore(id);
+        return ResponseEntity.ok().build();
     }
   
     @PostMapping("/{id}/play")
