@@ -7,20 +7,19 @@ import me.huynhducphu.PingMe_Backend.dto.response.music.misc.AlbumSummaryDto;
 import me.huynhducphu.PingMe_Backend.dto.response.music.misc.ArtistSummaryDto;
 import me.huynhducphu.PingMe_Backend.dto.response.music.misc.GenreDto;
 
-import java.time.LocalDate;
 import java.util.List;
 
 /**
  * @author Le Tran Gia Huy
- * @created 20/11/2025 - 9:31 PM
+ * @created 26/11/2025 - 4:15 PM
  * @project DHKTPM18ATT_Nhom10_PingMe_Backend
- * @package me.huynhducphu.PingMe_Backend.dto.request.music
+ * @package me.huynhducphu.PingMe_Backend.dto.response.music.misc
  */
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SongResponse {
+public class SongResponseWithAllAlbum {
     private Long id;
 
     private String title;
@@ -39,7 +38,5 @@ public class SongResponse {
 
     private List<GenreDto> genres; // List: Để FE render ra các thẻ tag click được
 
-    private AlbumSummaryDto album; // Object: Để click vào tên album
+    private List<AlbumSummaryDto> albums; // Object: Để click vào tên album
 }
-
-
