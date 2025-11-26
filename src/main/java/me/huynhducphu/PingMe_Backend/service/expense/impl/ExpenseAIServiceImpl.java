@@ -108,6 +108,7 @@ public class ExpenseAIServiceImpl implements ExpenseAIService {
         - Nếu người dùng chỉ hỏi tư vấn/thống kê, KHÔNG gọi tool, chỉ trả lời.
 
         QUY TẮC QUAN TRỌNG:
+        - Kể cả khi người dùng lặp lại đúng câu lệnh thêm/sửa/xóa trước đó, hãy coi đó là yêu cầu MỚI và vẫn phải gọi tool tương ứng (trừ khi họ nói rõ ‘không cần thêm nữa
         - Tuyệt đối KHÔNG tự tạo ngày yyyy-MM-dd nếu người dùng không nói rõ ngày cụ thể.
         - Nếu người dùng nói ngày tương đối như "hôm nay/tối nay/sáng nay/chiều nay/hôm qua" hoặc không nói ngày
           => date đã được backend suy ra bên dưới và bạn PHẢI dùng đúng date đó khi gọi tool, KHÔNG hỏi lại.
@@ -208,17 +209,13 @@ public class ExpenseAIServiceImpl implements ExpenseAIService {
         ) {
             User user = currentUserProvider.get();
 
-            System.out.println("[AI addTransaction] amount=" + amount
-                    + ", category=" + category + ", type=" + type
-                    + ", note=" + note + ", date=" + date);
-
             if (amount == null || amount <= 0) {
                 return "Tôi chưa thấy số tiền hợp lệ. Bạn nhập lại giúp tôi.";
             }
 
             CategoryType cat = mapCategory(category);
             if (cat == null) {
-                return "Tôi chưa rõ danh mục. Bạn nói rõ hơn: ăn uống, coffee, đi lại, mua sắm...";
+                cat = CategoryType.OTHER;
             }
 
             TransactionType txType;
@@ -292,7 +289,9 @@ public class ExpenseAIServiceImpl implements ExpenseAIService {
             }
 
             final CategoryType cat =
-                    (category != null && !category.isBlank()) ? mapCategory(category) : null;
+                    (category != null && !category.isBlank())
+                            ? Optional.ofNullable(mapCategory(category)).orElse(CategoryType.OTHER)
+                            : null;
 
             LocalDate dTmp = null;
             if (date != null && !date.isBlank()) {
@@ -457,62 +456,63 @@ public class ExpenseAIServiceImpl implements ExpenseAIService {
             if (raw == null) return null;
             String s = normalize(raw);
 
-            if (containsAny(s, "an uong", "an toi", "an sang", "an trua", "com", "bun", "pho", "lau",
+            if (containsAnyWord(s, "an uong", "an toi", "an sang", "an trua", "com", "bun", "pho", "lau",
                     "do an", "an vat", "mon an", "nha hang", "quan an", "food", "drink", "beverage"))
                 return CategoryType.FOOD_AND_BEVERAGE;
 
-            if (containsAny(s, "coffee", "ca phe", "cafe", "tra sua", "milktea", "tra", "tea"))
+            if (containsAnyWord(s, "coffee", "ca phe", "cafe", "tra sua", "milktea", "tra", "tea"))
                 return CategoryType.COFFEE;
 
-            if (containsAny(s, "di lai", "xe bus", "bus", "metro", "taxi", "grab", "gojek", "be",
+            if (containsAnyWord(s, "di lai", "xe bus", "bus", "metro", "taxi", "grab", "gojek", "be",
                     "xe om", "ship", "van chuyen", "transport", "tien xe"))
                 return CategoryType.TRANSPORTATION;
 
-            if (containsAny(s, "xang", "do xang", "xang xe", "gas", "fuel", "dau"))
+            if (containsAnyWord(s, "xang", "do xang", "xang xe", "gas", "fuel", "dau"))
                 return CategoryType.GAS;
 
-            if (containsAny(s, "mua sam", "shopping", "ao quan", "quan ao", "giay dep", "my pham",
+            if (containsAnyWord(s, "mua sam", "shopping", "ao quan", "quan ao", "giay dep", "my pham",
                     "do dung", "mall", "sieu thi", "shopee", "lazada", "tiki"))
                 return CategoryType.SHOPPING;
 
-            if (containsAny(s, "do gia dung", "gia dung", "noi that", "household", "do nha",
+            if (containsAnyWord(s, "do gia dung", "gia dung", "noi that", "household", "do nha",
                     "sua nha", "ve sinh nha", "lau don"))
                 return CategoryType.HOUSEHOLD;
 
-            if (containsAny(s, "tien dien", "dien", "electric", "electricity"))
+            if (containsAnyWord(s, "tien dien", "dien", "electric", "electricity"))
                 return CategoryType.ELECTRICITY;
 
-            if (containsAny(s, "tien nuoc", "nuoc", "water bill"))
+            if (containsAnyWord(s, "tien nuoc", "nuoc", "water bill"))
                 return CategoryType.WATER;
 
-            if (containsAny(s, "internet", "wifi", "cap quang", "mang"))
+            if (containsAnyWord(s, "internet", "wifi", "cap quang", "mang"))
                 return CategoryType.INTERNET;
 
-            if (containsAny(s, "dien thoai", "phone", "nap the", "cuoc goi", "4g", "5g", "sim"))
+            if (containsAnyWord(s, "dien thoai", "phone", "nap the", "cuoc goi", "4g", "5g", "sim"))
                 return CategoryType.PHONE;
 
-            if (containsAny(s, "giai tri", "xem phim", "rap", "netflix", "spotify", "game", "karaoke",
+            if (containsAnyWord(s, "giai tri", "xem phim", "rap", "netflix", "spotify", "game", "karaoke",
                     "entertainment"))
                 return CategoryType.ENTERTAINMENT;
 
-            if (containsAny(s, "y te", "kham benh", "thuoc", "benh vien", "nha thuoc",
+            if (containsAnyWord(s, "y te", "kham benh", "thuoc", "benh vien", "nha thuoc",
                     "health", "healthcare", "doctor", "hospital"))
                 return CategoryType.HEALTHCARE;
 
-            if (containsAny(s, "thu cung", "pet", "cho", "meo", "cat", "dog", "thuc an cho meo"))
+            if (containsAnyWord(s, "thu cung", "pet", "cho", "meo","cat", "dog", "thuc an cho meo")){
                 return CategoryType.PETS;
+            }
 
-            if (containsAny(s, "qua", "tang qua", "sinh nhat", "gift", "mung", "cuoi hoi"))
+            if (containsAnyWord(s, "qua", "tang qua", "sinh nhat", "gift", "mung", "cuoi hoi"))
                 return CategoryType.GIFTS;
 
-            if (containsAny(s, "hoc phi", "khoa hoc", "lop hoc", "sach", "hoc tap",
+            if (containsAnyWord(s, "hoc phi", "khoa hoc", "lop hoc", "sach", "hoc tap",
                     "education", "course", "school", "university"))
                 return CategoryType.EDUCATION;
 
-            if (containsAny(s, "du lich", "travel", "khach san", "hotel", "ve may bay", "tour"))
+            if (containsAnyWord(s, "du lich", "travel", "khach san", "hotel", "ve may bay", "tour"))
                 return CategoryType.TRAVEL;
 
-            if (containsAny(s, "khac", "other", "linh tinh"))
+            if (containsAnyWord(s, "khac", "other", "linh tinh"))
                 return CategoryType.OTHER;
 
             return null;
@@ -539,6 +539,21 @@ public class ExpenseAIServiceImpl implements ExpenseAIService {
             }
             return false;
         }
+    }
+
+    private static boolean containsAnyWord(String s, String... keys) {
+        String[] tokens = s.split("[^a-z0-9]+");
+        for (String k : keys) {
+            String kk = k.trim();
+            if (kk.contains(" ")) {
+                if (s.contains(kk)) return true;
+            } else {
+                for (String t : tokens) {
+                    if (t.equals(kk)) return true;
+                }
+            }
+        }
+        return false;
     }
 
     private String inferDate(String userPrompt) {
