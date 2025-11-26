@@ -4,10 +4,18 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.music.SongRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.music.SongResponse;
+
 import me.huynhducphu.PingMe_Backend.dto.response.music.SongResponseWithAllAlbum;
+
+import me.huynhducphu.PingMe_Backend.model.User;
+import me.huynhducphu.PingMe_Backend.repository.UserRepository;
+
 import me.huynhducphu.PingMe_Backend.service.music.SongService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -18,6 +26,7 @@ import java.util.List;
 public class SongController {
 
     private final SongService songService;
+    private final UserRepository userRepository;
 
     @GetMapping("/{id}")
     public ResponseEntity<SongResponse> getSongDetail(@PathVariable Long id) {
@@ -84,6 +93,25 @@ public class SongController {
     @PutMapping("/restore/{id}")
     public ResponseEntity<Void> restore(@PathVariable Long id) {
         songService.restore(id);
+    }
+  
+    @PostMapping("/{id}/play")
+    public ResponseEntity<Void> increasePlayCount(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt // inject JWT nguyên
+    ) {
+        if (jwt == null) return ResponseEntity.status(401).build();
+
+        // Lấy email từ "sub"
+        String userSub = jwt.getClaimAsString("sub");
+        if (userSub == null || userSub.isBlank()) return ResponseEntity.status(401).build();
+
+        // Map email → userId
+        User user = userRepository.getUserByEmail(userSub).orElse(null);
+        Long userId = user.getId();
+        if (userId == null) return ResponseEntity.status(401).build();
+
+        songService.increasePlayCount(id, userId);
         return ResponseEntity.ok().build();
     }
 

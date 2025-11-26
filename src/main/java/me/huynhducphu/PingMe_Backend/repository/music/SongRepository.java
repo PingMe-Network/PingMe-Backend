@@ -4,9 +4,11 @@ import me.huynhducphu.PingMe_Backend.model.music.Genre;
 import me.huynhducphu.PingMe_Backend.model.music.Song;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -29,6 +31,11 @@ public interface SongRepository extends JpaRepository<Song, Long> {
             "LEFT JOIN FETCH s.albums " +
             "WHERE s.id = :id")
     Optional<Song> findByIdWithDetails(@Param("id") Long id);
+    
+    @Modifying
+    @Transactional
+    @Query("UPDATE Song s SET s.playCount = s.playCount + 1 WHERE s.id = :id")
+    void incrementPlayCount(@Param("id") Long id);
 
     // Bỏ tham số int limit, thay bằng Pageable
     @Query("SELECT s FROM Song s ORDER BY s.playCount DESC")

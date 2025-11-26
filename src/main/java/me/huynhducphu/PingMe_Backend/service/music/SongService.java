@@ -2,9 +2,13 @@ package me.huynhducphu.PingMe_Backend.service.music;
 
 import me.huynhducphu.PingMe_Backend.dto.request.music.SongRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.music.SongResponse;
+
 import me.huynhducphu.PingMe_Backend.dto.response.music.SongResponseWithAllAlbum;
 import me.huynhducphu.PingMe_Backend.dto.response.music.misc.GenreDto;
 import org.springframework.web.multipart.MultipartFile;
+
+import org.springframework.transaction.annotation.Transactional;
+
 
 import java.util.List;
 
@@ -36,4 +40,7 @@ public interface SongService {
     void softDelete(Long id);
 
     void restore(Long id);
+
+    @Transactional
+    void increasePlayCount(Long songId, Long userId);
 }
