@@ -84,7 +84,7 @@ public class ExpenseStatisticsController {
         return ResponseEntity.ok(new ApiResponse<>(service.getTopCategories(month, year)));
     }
 
-    @DeleteMapping
+    @DeleteMapping("/target")
     public ResponseEntity<ApiResponse<Void>> deleteTarget(
             @RequestParam int month,
             @RequestParam int year

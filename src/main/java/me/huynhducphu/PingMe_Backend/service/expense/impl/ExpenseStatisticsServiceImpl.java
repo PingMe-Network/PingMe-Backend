@@ -84,20 +84,21 @@ public class ExpenseStatisticsServiceImpl implements me.huynhducphu.PingMe_Backe
 
         Long userId = currentUserProvider.get().getId();
 
+        LocalDate startCurrent = startOfMonth(month, year);
+        LocalDate endCurrent = endOfMonth(month, year);
+
         double expenseCurrent = txRepo.findByUserIdAndDateBetween(
-                        userId,
-                        startOfMonth(month, year),
-                        endOfMonth(month, year)
+                        userId, startCurrent, endCurrent
                 ).stream()
                 .filter(t -> t.getType() == TransactionType.EXPENSE)
                 .mapToDouble(ExpenseTransaction::getAmount)
                 .sum();
 
-        LocalDate prev = LocalDate.of(year, month, 1).minusMonths(1);
+        LocalDate prevStart = LocalDate.of(year, month, 1).minusMonths(1);
+        LocalDate prevEnd = prevStart.plusMonths(1).minusDays(1);
+
         double expensePrevious = txRepo.findByUserIdAndDateBetween(
-                        userId,
-                        prev,
-                        prev.plusMonths(1).minusDays(1)
+                        userId, prevStart, prevEnd
                 ).stream()
                 .filter(t -> t.getType() == TransactionType.EXPENSE)
                 .mapToDouble(ExpenseTransaction::getAmount)
@@ -110,6 +111,19 @@ public class ExpenseStatisticsServiceImpl implements me.huynhducphu.PingMe_Backe
                 ? TrendStatus.UP
                 : (diff < 0 ? TrendStatus.DOWN : TrendStatus.SAME);
 
+        double incomeCurrent = txRepo.findByUserIdAndDateBetween(
+                        userId, startCurrent, endCurrent
+                ).stream()
+                .filter(t -> t.getType() == TransactionType.INCOME)
+                .mapToDouble(ExpenseTransaction::getAmount)
+                .sum();
+
+        double incomePrevious = txRepo.findByUserIdAndDateBetween(
+                        userId, prevStart, prevEnd
+                ).stream()
+                .filter(t -> t.getType() == TransactionType.INCOME)
+                .mapToDouble(ExpenseTransaction::getAmount)
+                .sum();
 
         MonthComparisonResponse res = new MonthComparisonResponse();
         res.setCurrentMonth(expenseCurrent);
@@ -117,6 +131,9 @@ public class ExpenseStatisticsServiceImpl implements me.huynhducphu.PingMe_Backe
         res.setDiff(diff);
         res.setPercent(percent);
         res.setTrend(trend);
+
+        res.setIncomeCurrentMonth(incomeCurrent);
+        res.setIncomePreviousMonth(incomePrevious);
 
         return res;
     }

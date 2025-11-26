@@ -11,4 +11,6 @@ public class MonthComparisonResponse {
     private Double diff;
     private Double percent;
     private TrendStatus trend;
+    private Double incomeCurrentMonth;
+    private Double incomePreviousMonth;
 }
