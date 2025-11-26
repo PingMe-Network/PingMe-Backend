@@ -44,7 +44,6 @@ public class SongServiceImpl implements SongService {
     private final GenreRepository genreRepository;
     private final SongArtistRoleRepository songArtistRoleRepository;
     private final AudioUtil audioUtil;
-    private final GenreRepository genreRepository;
     private final SongPlayHistoryRepository songPlayHistoryRepository;
     @Autowired
     @Qualifier("redisMessageStringTemplate")
