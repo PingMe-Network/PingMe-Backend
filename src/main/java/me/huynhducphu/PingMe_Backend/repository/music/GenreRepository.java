@@ -3,8 +3,11 @@ package me.huynhducphu.PingMe_Backend.repository.music;
 import me.huynhducphu.PingMe_Backend.dto.response.music.misc.GenreDto;
 import me.huynhducphu.PingMe_Backend.model.music.Genre;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -15,8 +18,25 @@ import java.util.Set;
  */
 
 @Repository
-public interface GenreRepository extends JpaRepository<Genre, Integer> {
-    Set<Genre> findGenreByName(String name);
+public interface GenreRepository extends JpaRepository<Genre, Long> {
 
-    Genre findGenreById(Long id);
+    // 1. Kiểm tra trùng tên (khi tạo mới/update)
+    boolean existsByNameIgnoreCase(String name);
+
+    // 2. Tìm kiếm (Soft Delete)
+    @Query(value = "SELECT * FROM genres WHERE id = :id AND is_deleted = true", nativeQuery = true)
+    Optional<Genre> findSoftDeletedGenre(@Param("id") Long id);
+
+    // 3. Tìm kiếm bất chấp trạng thái (Hard Delete)
+    @Query(value = "SELECT * FROM genres WHERE id = :id", nativeQuery = true)
+    Optional<Genre> findByIdIgnoringDeleted(@Param("id") Long id);
+
+    // 4. Kiểm tra ràng buộc trước khi xóa
+    // Đếm xem có bao nhiêu bài hát đang dùng genre này
+    @Query("SELECT COUNT(s) FROM Song s JOIN s.genres g WHERE g.id = :genreId")
+    long countSongsByGenreId(@Param("genreId") Long genreId);
+
+    // Đếm xem có bao nhiêu album đang dùng genre này
+    @Query("SELECT COUNT(a) FROM Album a JOIN a.genres g WHERE g.id = :genreId")
+    long countAlbumsByGenreId(@Param("genreId") Long genreId);
 }
