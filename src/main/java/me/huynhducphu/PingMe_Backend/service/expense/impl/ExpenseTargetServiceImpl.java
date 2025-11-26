@@ -1,5 +1,6 @@
 package me.huynhducphu.PingMe_Backend.service.expense.impl;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.miniapp.expense.CreateTargetRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.miniapp.expense.TargetResponse;
@@ -82,9 +83,9 @@ public class ExpenseTargetServiceImpl implements me.huynhducphu.PingMe_Backend.s
     }
 
     @Override
+    @Transactional
     public void deleteTarget(int month, int year) {
         User user = currentUserProvider.get();
-
         targetRepo.deleteByUserIdAndMonthAndYear(user.getId(), month, year);
     }
 }
