@@ -35,7 +35,7 @@ public interface SongRepository extends JpaRepository<Song, Long> {
     @Modifying
     @Transactional
     @Query("UPDATE Song s SET s.playCount = s.playCount + 1 WHERE s.id = :id")
-    void incrementPlayCount(@Param("id") Long id);
+    void incrementPlayCount(@Param("id") Long id, Long userId);
 
     // Bỏ tham số int limit, thay bằng Pageable
     @Query("SELECT s FROM Song s ORDER BY s.playCount DESC")
