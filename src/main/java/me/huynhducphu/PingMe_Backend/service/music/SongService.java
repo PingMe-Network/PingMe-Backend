@@ -47,5 +47,5 @@ public interface SongService {
     void restore(Long id);
 
     @Transactional
-    void increasePlayCount(Long songId, Long userId);
+    void increasePlayCount(Long songId);
 }

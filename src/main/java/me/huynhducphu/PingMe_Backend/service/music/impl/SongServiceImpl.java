@@ -11,13 +11,13 @@ import me.huynhducphu.PingMe_Backend.dto.response.music.misc.GenreDto;
 import me.huynhducphu.PingMe_Backend.model.constant.ArtistRole;
 import me.huynhducphu.PingMe_Backend.model.music.*;
 import me.huynhducphu.PingMe_Backend.repository.music.*;
+import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import me.huynhducphu.PingMe_Backend.service.integration.S3Service;
 import me.huynhducphu.PingMe_Backend.service.music.SongService;
 import me.huynhducphu.PingMe_Backend.service.music.util.AudioUtil;
 import me.huynhducphu.PingMe_Backend.repository.music.GenreRepository;
 import me.huynhducphu.PingMe_Backend.repository.music.SongPlayHistoryRepository;
 import me.huynhducphu.PingMe_Backend.repository.music.SongRepository;
-import me.huynhducphu.PingMe_Backend.service.music.SongService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.PageRequest;
@@ -50,6 +50,7 @@ public class SongServiceImpl implements SongService {
     @Qualifier("redisMessageStringTemplate")
     private RedisTemplate<String, String> redis;
     private final S3Service s3Service;
+    private final CurrentUserProvider currentUserProvider;
 
     @Override // Nhớ thêm Override nếu hàm này có trong interface
     public List<SongResponseWithAllAlbum> getAllSongs() {
@@ -356,11 +357,10 @@ public class SongServiceImpl implements SongService {
                 }
 
                 if (!allArtists.isEmpty()) {
-                    if(album.getFeaturedArtists() == null) album.setFeaturedArtists(new HashSet<>());
+                    if (album.getFeaturedArtists() == null) album.setFeaturedArtists(new HashSet<>());
                     album.getFeaturedArtists().addAll(allArtists);
-
-                    // Remove owner khỏi list featured
-                    if(album.getAlbumOwner() != null) album.getFeaturedArtists().remove(album.getAlbumOwner());
+                    // Remove owner khỏi featured
+                    if (album.getAlbumOwner() != null) album.getFeaturedArtists().remove(album.getAlbumOwner());
                 }
                 albumRepository.save(album);
             }
@@ -377,7 +377,7 @@ public class SongServiceImpl implements SongService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void softDelete(Long id){
+    public void softDelete(Long id) {
         Song song = songRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bài hát với ID: " + id));
 
@@ -469,15 +469,16 @@ public class SongServiceImpl implements SongService {
 
     @Transactional
     @Override
-    public void increasePlayCount(Long songId, Long userId) {
+    public void increasePlayCount(Long songId) {
+        var userId = currentUserProvider.get().getId();
         String redisKey = "play:" + userId + ":" + songId;
 
-        // Nếu trong 10s đã nghe → không tăng tiếp
+        // Nếu trong 30s đã nghe → không tăng tiếp
         Boolean alreadyPlayed = redis.hasKey(redisKey);
         if (Boolean.TRUE.equals(alreadyPlayed)) return;
 
         // Tăng playCount
-        songRepository.incrementPlayCount(songId);
+        songRepository.incrementPlayCount(songId, userId);
 
         // Lấy song để log lịch sử
         Song song = songRepository.findById(songId)
@@ -491,9 +492,8 @@ public class SongServiceImpl implements SongService {
                         .playedAt(LocalDateTime.now())
                         .build()
         );
-
-        // Set key Redis sống 10s → debounce
-        redis.opsForValue().set(redisKey, "1", Duration.ofSeconds(10));
+        // Set key Redis sống 30s → debounce
+        redis.opsForValue().set(redisKey, "1", Duration.ofSeconds(30));
     }
 
     private SongResponse mapToSongResponse(Song song, Album album) {
