@@ -1,8 +1,12 @@
 package me.huynhducphu.PingMe_Backend.dto.request.music;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import me.huynhducphu.PingMe_Backend.dto.request.music.misc.SongArtistRequest;
+
+import java.util.List;
 
 /**
  * @author Le Tran Gia Huy
@@ -15,16 +19,20 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SongRequest {
+    @NotNull(message = "Tiêu đề bài hát không được để trống")
     private String title;
 
     private int duration; // tính bằng giây
 
+    @NotNull(message = "ID của nghệ sĩ chính không được để trống")
     private Long mainArtistId; // ID của nghệ sĩ chính
 
-    private Long[] featuredArtistIds; // IDs của các nghệ sĩ phụ
+    @NotNull(message = "ID của các nghệ sĩ phụ không được để trống")
+    private List<SongArtistRequest> otherArtists; // Danh sách của các nghệ sĩ phụ khác
 
+    @NotNull(message = "ID của các thể loại không được để trống")
     private Long[] genreIds; // Tên các thể loại
 
+    @NotNull(message = "ID của các album không được để trống")
     private Long[] albumId; // ID của album (nếu có)
-
 }
