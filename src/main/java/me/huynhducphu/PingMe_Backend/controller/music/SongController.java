@@ -47,8 +47,8 @@ public class SongController {
     }
 
     @GetMapping("/getTopSong/{number}")
-    public ResponseEntity<List<SongResponse>> getAllSongs(@PathVariable int number) {
-        List<SongResponse> songResponses = songService.getTopPlayedSongs(number);
+    public ResponseEntity<List<SongResponseWithAllAlbum>> getAllSongs(@PathVariable int number) {
+        List<SongResponseWithAllAlbum> songResponses = songService.getTopPlayedSongs(number);
         return ResponseEntity.ok(songResponses);
     }
 
