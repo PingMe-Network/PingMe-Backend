@@ -1,5 +1,6 @@
 package me.huynhducphu.PingMe_Backend.dto.request.music;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,7 +15,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AlbumRequest {
+
+    @NotNull(message = "Tiêu đề bài hát không được để trống")
     private String title;
+
+    @NotNull(message = "Id người sở hữu album không được để trống")
     private Long albumOwnerId;
+
     private Long playCount;
 }

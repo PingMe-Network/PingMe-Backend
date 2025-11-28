@@ -25,9 +25,6 @@ public class AlbumServiceImpl implements AlbumService {
     private final ArtistRepository artistRepository;
     private final S3Service s3Service;
 
-    // Lấy hằng số từ Interface (hoặc khai báo lại nếu chưa có)
-    private static final long MAX_COVER_SIZE = 5 * 1024 * 1024;
-
     @Override
     public List<AlbumResponse> getAllAlbums() {
         return albumRepository.findAll()

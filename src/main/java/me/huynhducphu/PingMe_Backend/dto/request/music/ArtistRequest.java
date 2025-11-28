@@ -1,6 +1,7 @@
 package me.huynhducphu.PingMe_Backend.dto.request.music;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,5 +19,7 @@ import lombok.NoArgsConstructor;
 public class ArtistRequest {
     @NotBlank(message = "Tên nghệ sĩ không được để trống")
     private String name;
+
+    @NotNull(message = "Tiều sử nghệ sĩ không được để trống")
     private String bio;
 }

@@ -22,7 +22,7 @@ public interface SongService {
 
     List<SongResponse> getSongByTitle(String title);
 
-    List<SongResponse> getTopPlayedSongs(int limit);
+    List<SongResponseWithAllAlbum> getTopPlayedSongs(int limit);
 
     List<SongResponse> getSongByGenre(Long id);
 
@@ -33,7 +33,12 @@ public interface SongService {
     );
 
     // Trả về List vì 1 bài hát có thể thuộc nhiều album -> flatten ra nhiều dòng
-    List<SongResponse> update(Long id, SongRequest dto, MultipartFile musicFile, MultipartFile imgFile);
+    List<SongResponse> update(
+            Long id,
+            SongRequest dto,
+            MultipartFile musicFile,
+            MultipartFile imgFile
+    );
 
     void hardDelete(Long id);
 
