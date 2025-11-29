@@ -34,5 +34,5 @@ public class SongRequest {
     private Long[] genreIds; // Tên các thể loại
 
     @NotNull(message = "ID của các album không được để trống")
-    private Long[] albumId; // ID của album (nếu có)
+    private Long[] albumIds; // ID của album (nếu có)
 }

@@ -44,7 +44,7 @@ public class GenreController {
 
     @PutMapping("/update/{id}")
     public ResponseEntity<GenreResponse> updateGenre(
-            @PathVariable Long id, GenreRequest request
+            @PathVariable Long id, @Valid @RequestPart("genreRequest") GenreRequest request
     ) {
         return ResponseEntity.ok(genreService.updateGenre(id, request));
     }

@@ -12,6 +12,8 @@ import me.huynhducphu.PingMe_Backend.model.constant.ArtistRole;
 import me.huynhducphu.PingMe_Backend.model.music.*;
 import me.huynhducphu.PingMe_Backend.repository.music.*;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
+import me.huynhducphu.PingMe_Backend.service.integration.constant.MediaType;
+import me.huynhducphu.PingMe_Backend.service.integration.impl.CompressMediaFile;
 import me.huynhducphu.PingMe_Backend.service.integration.S3Service;
 import me.huynhducphu.PingMe_Backend.service.music.SongService;
 import me.huynhducphu.PingMe_Backend.service.music.util.AudioUtil;
@@ -27,12 +29,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,6 +48,7 @@ public class SongServiceImpl implements SongService {
     private final GenreRepository genreRepository;
     private final SongArtistRoleRepository songArtistRoleRepository;
     private final AudioUtil audioUtil;
+    private final CompressMediaFile compressMediaFile;
     private final SongPlayHistoryRepository songPlayHistoryRepository;
     @Autowired
     @Qualifier("redisMessageStringTemplate")
@@ -121,24 +125,42 @@ public class SongServiceImpl implements SongService {
         var song = new Song();
         song.setTitle(dto.getTitle());
 
-        int calculatedDuration = audioUtil.getDurationFromMusicFile(musicFile);
-        if (calculatedDuration <= 0) {
-            throw new RuntimeException("File nhạc lỗi hoặc không xác định được độ dài");
-        }
-        song.setDuration(calculatedDuration);
-
         song.setPlayCount(0L); // Mặc định 0 view
 
         // 3. Upload File Nhạc lên S3
-        String audioFileName = generateFileName(musicFile);
-        String songUrl = s3Service.uploadFile(
-                musicFile,
-                "music/song", // Folder trên S3
-                audioFileName,
-                true, // Lấy URL về
-                MAX_AUDIO_SIZE
-        );
-        song.setSongUrl(songUrl);
+        File compressedFile = null;
+        try {
+            // A. Tính duration (Tính trên file GỐC musicFile cho nhanh, ko cần đợi nén xong)
+            int calculatedDuration = audioUtil.getDurationFromMusicFile(musicFile);
+            if (calculatedDuration <= 0) {
+                throw new RuntimeException("File nhạc lỗi hoặc không xác định được độ dài");
+            }
+            song.setDuration(calculatedDuration);
+
+            // C. Tạo tên file mới (Luôn là .mp3 vì mình nén sang mp3)
+            String audioFileName = UUID.randomUUID().toString() + ".mp3";
+
+            // E. Upload lên S3 (S3Service không biết đây là file fake, nó cứ upload thôi)
+            String songUrl = s3Service.uploadCompressedFile(
+                    musicFile,
+                    "music/song",
+                    audioFileName,
+                    true,
+                    MAX_AUDIO_SIZE,
+                    MediaType.AUDIO
+            );
+            song.setSongUrl(songUrl);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Lỗi khi xử lý/nén file nhạc: " + e.getMessage());
+        } finally {
+            // F. QUAN TRỌNG: Dọn dẹp file nén tạm trên ổ cứng server
+            // Dù upload thành công hay thất bại cũng phải xóa để tránh đầy ổ cứng
+            if (compressedFile != null && compressedFile.exists()) {
+                boolean deleted = compressedFile.delete();
+                if (!deleted) System.err.println("Không xóa được file tạm: " + compressedFile.getAbsolutePath());
+            }
+        }
 
         // 4. Upload File Ảnh lên S3
         String imageFileName = generateFileName(imgFile);
@@ -211,8 +233,8 @@ public class SongServiceImpl implements SongService {
         savedSong.setArtistRoles(artistRoles); // Update lại object để map response
 
         // 8. Xử lý Album (CẬP NHẬT METADATA)
-        if (dto.getAlbumId() != null && dto.getAlbumId().length > 0) {
-            var albumIds = Arrays.asList(dto.getAlbumId());
+        if (dto.getAlbumIds() != null && dto.getAlbumIds().length > 0) {
+            var albumIds = Arrays.asList(dto.getAlbumIds());
             var albums = new HashSet<>(albumRepository.findAllById(albumIds));
 
             // Lấy danh sách Featured Artists của bài hát hiện tại ra trước
@@ -342,8 +364,8 @@ public class SongServiceImpl implements SongService {
         }
 
         // Bước B: Thêm vào album mới
-        if (dto.getAlbumId() != null && dto.getAlbumId().length > 0) {
-            var newAlbumIds = Arrays.asList(dto.getAlbumId());
+        if (dto.getAlbumIds() != null && dto.getAlbumIds().length > 0) {
+            var newAlbumIds = Arrays.asList(dto.getAlbumIds());
             var newAlbums = new HashSet<>(albumRepository.findAllById(newAlbumIds));
 
             // Lấy danh sách tất cả artist (bao gồm cả Composer, Producer...) để add vào Album
@@ -498,11 +520,17 @@ public class SongServiceImpl implements SongService {
 
     private SongResponse mapToSongResponse(Song song, Album album) {
         SongResponse response = new SongResponse();
-        // ... map các trường cơ bản (id, title, url...)
+
+        response.setId(song.getId());
+        response.setTitle(song.getTitle());
+        response.setDuration(song.getDuration());
+        response.setPlayCount(song.getPlayCount());
+        response.setSongUrl(song.getSongUrl());
+        response.setCoverImageUrl(song.getImgUrl());
 
         List<SongArtistRole> roles = song.getArtistRoles();
 
-        // 1. Map Main Artist
+        // Main Artist
         roles.stream()
                 .filter(r -> r.getRole() == ArtistRole.MAIN_ARTIST)
                 .findFirst()
@@ -510,26 +538,33 @@ public class SongServiceImpl implements SongService {
                         new ArtistSummaryDto(
                                 r.getArtist().getId(),
                                 r.getArtist().getName(),
-                                ArtistRole.MAIN_ARTIST, // Set cứng role cho main
+                                ArtistRole.MAIN_ARTIST,
                                 r.getArtist().getImgUrl()
                         )
                 ));
 
-        // 2. Map Other Artists (Sửa đoạn này)
         List<ArtistSummaryDto> otherArtists = roles.stream()
-                .filter(r -> r.getRole() != ArtistRole.MAIN_ARTIST) // Lấy tất cả trừ Main
+                .filter(r -> r.getRole() != ArtistRole.MAIN_ARTIST)
                 .map(r -> new ArtistSummaryDto(
                         r.getArtist().getId(),
                         r.getArtist().getName(),
-                        r.getRole(), // <--- Lấy role động từ DB (Composer, Producer...)
+                        r.getRole(),
                         r.getArtist().getImgUrl()
                 ))
                 .collect(Collectors.toList());
-
-        // Set vào biến mới đổi tên
         response.setOtherArtists(otherArtists);
 
-        // ... map genres, album
+        if (song.getGenres() != null) {
+            List<GenreDto> genreDtos = song.getGenres().stream()
+                    .map(g -> new GenreDto(g.getId(), g.getName()))
+                    .collect(Collectors.toList());
+            response.setGenres(genreDtos);
+        }
+
+        if (album != null) {
+            response.setAlbum(new AlbumSummaryDto(album.getId(), album.getTitle(), album.getPlayCount()));
+        }
+
         return response;
     }
 
@@ -574,7 +609,7 @@ public class SongServiceImpl implements SongService {
                 .collect(Collectors.toList());
 
         // Giả sử DTO của bạn tên field là otherArtists (hoặc featuredArtists tùy bạn đặt)
-        response.setFeaturedArtists(otherArtists);
+        response.setOtherArtists(otherArtists);
 
         // 4. Genres
         List<GenreDto> genreDtos = song.getGenres().stream()
