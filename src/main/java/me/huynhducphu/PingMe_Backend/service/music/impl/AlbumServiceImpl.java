@@ -41,6 +41,14 @@ public class AlbumServiceImpl implements AlbumService {
     }
 
     @Override
+    public List<AlbumResponse> getAlbumByTitleContainIgnoreCase(String title) {
+        List<Album> albums = albumRepository.findAlbumsByTitleContainingIgnoreCase(title);
+        return albums.stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public AlbumResponse save(
             AlbumRequest albumRequestDto,
