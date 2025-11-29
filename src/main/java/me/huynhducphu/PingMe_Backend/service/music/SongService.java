@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
 
 
+import java.io.IOException;
 import java.util.List;
 
 public interface SongService {
@@ -22,9 +23,13 @@ public interface SongService {
 
     List<SongResponse> getSongByTitle(String title);
 
+    List<SongResponseWithAllAlbum> getSongByAlbum(Long id);
+
+    List<SongResponseWithAllAlbum> getSongsByArtist(Long artistId);
+
     List<SongResponseWithAllAlbum> getTopPlayedSongs(int limit);
 
-    List<SongResponse> getSongByGenre(Long id);
+    List<SongResponseWithAllAlbum> getSongByGenre(Long id);
 
     List<SongResponse> save(
             SongRequest dto,
@@ -38,7 +43,7 @@ public interface SongService {
             SongRequest dto,
             MultipartFile musicFile,
             MultipartFile imgFile
-    );
+    ) throws IOException;
 
     void hardDelete(Long id);
 
