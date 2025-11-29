@@ -34,7 +34,7 @@ public class SongResponseWithAllAlbum {
 
     private ArtistSummaryDto mainArtist; // Object: chứa cả ID và Tên
 
-    private List<ArtistSummaryDto> featuredArtists; // List: Để FE render ra từng link riêng biệt
+    private List<ArtistSummaryDto> otherArtists; // List: Để FE render ra từng link riêng biệt
 
     private List<GenreDto> genres; // List: Để FE render ra các thẻ tag click được
 
