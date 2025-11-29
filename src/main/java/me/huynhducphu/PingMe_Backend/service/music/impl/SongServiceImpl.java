@@ -84,7 +84,7 @@ public class SongServiceImpl implements SongService {
     }
 
     @Override
-    public List<SongResponse> getSongByGenre(Long id) { // Hoặc nhận thẳng Long genreId
+    public List<SongResponseWithAllAlbum> getSongByGenre(Long id) { // Hoặc nhận thẳng Long genreId
         if (id == null) {
             throw new RuntimeException("Genre ID không được trống");
         }
@@ -92,7 +92,45 @@ public class SongServiceImpl implements SongService {
         // Gọi hàm vừa viết - Chỉ tốn đúng 1 query
         List<Song> songs = songRepository.findSongsByGenreId(id);
 
-        return flattenSongsWithAlbums(songs);
+        return songs.stream()
+                .map(this::mapToSongResponseWithAllAlbums) // Gọi hàm map ở dưới
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<SongResponseWithAllAlbum> getSongByAlbum(Long id) {
+        if (id == null) {
+            throw new RuntimeException("Album ID không được trống");
+        }
+
+        // Tìm Album theo ID
+        Album album = albumRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy Album với ID: " + id));
+
+        // Lấy danh sách bài hát từ Album
+        Set<Song> songs = album.getSongs();
+
+        return songs.stream()
+                .map(this::mapToSongResponseWithAllAlbums) // Gọi hàm map ở dưới
+                .collect(Collectors.toList());
+
+    }
+
+    @Override
+    public List<SongResponseWithAllAlbum> getSongsByArtist(Long artistId) {
+        if (artistId == null) {
+            throw new RuntimeException("Artist ID không được trống");
+        }
+
+        // Lấy danh sách bài hát từ Artist thông qua SongArtistRole
+        List<SongArtistRole> artistRoles = songArtistRoleRepository.findSongArtistRolesByArtist_Id(artistId);
+        Set<Song> songs = artistRoles.stream()
+                .map(SongArtistRole::getSong)
+                .collect(Collectors.toSet());
+
+        return songs.stream()
+                .map(this::mapToSongResponseWithAllAlbums) // Gọi hàm map ở dưới
+                .collect(Collectors.toList());
     }
 
     // Cho phép truyền số lượng bài muốn lấy
@@ -274,7 +312,7 @@ public class SongServiceImpl implements SongService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public List<SongResponse> update(Long id, SongRequest dto, MultipartFile musicFile, MultipartFile imgFile) {
+    public List<SongResponse> update(Long id, SongRequest dto, MultipartFile musicFile, MultipartFile imgFile) throws IOException {
         // 1. Tìm bài hát
         Song song = songRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bài hát với ID: " + id));
@@ -289,7 +327,7 @@ public class SongServiceImpl implements SongService {
             } catch (Exception e) { /* Log warning */ }
 
             String audioName = generateFileName(musicFile);
-            String newUrl = s3Service.uploadFile(musicFile, "music/song", audioName, true, MAX_AUDIO_SIZE);
+            String newUrl = s3Service.uploadCompressedFile(musicFile, "music/song", audioName, true, MAX_AUDIO_SIZE, MediaType.AUDIO);
             song.setSongUrl(newUrl);
 
             int newDuration = audioUtil.getDurationFromMusicFile(musicFile);

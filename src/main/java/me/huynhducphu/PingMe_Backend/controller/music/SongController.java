@@ -10,6 +10,8 @@ import me.huynhducphu.PingMe_Backend.service.music.SongService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -38,6 +40,18 @@ public class SongController {
         return ResponseEntity.ok(songResponses);
     }
 
+    @GetMapping("/search-by-album")
+    public ResponseEntity<List<SongResponseWithAllAlbum>> getSongByAlbum(@RequestParam("id") Long albumId) {
+        List<SongResponseWithAllAlbum> songResponses = songService.getSongByAlbum(albumId);
+        return ResponseEntity.ok(songResponses);
+    }
+
+    @GetMapping("/search-by-artist")
+    public ResponseEntity<List<SongResponseWithAllAlbum>> getSongsByArtist(@RequestParam("id") Long artistId) {
+        List<SongResponseWithAllAlbum> songResponses = songService.getSongsByArtist(artistId);
+        return ResponseEntity.ok(songResponses);
+    }
+
     @GetMapping("/getTopSong/{number}")
     public ResponseEntity<List<SongResponseWithAllAlbum>> getAllSongs(@PathVariable int number) {
         List<SongResponseWithAllAlbum> songResponses = songService.getTopPlayedSongs(number);
@@ -45,7 +59,7 @@ public class SongController {
     }
 
     @GetMapping("/genre")
-    public ResponseEntity<List<SongResponse>> getByGenre(@RequestParam("id") Long genreId) {
+    public ResponseEntity<List<SongResponseWithAllAlbum>> getByGenre(@RequestParam("id") Long genreId) {
         return ResponseEntity.ok(songService.getSongByGenre(genreId));
     }
 
@@ -65,7 +79,7 @@ public class SongController {
             @Valid @RequestPart("songRequest") SongRequest songRequest,
             @RequestPart(value = "musicFile", required = false) MultipartFile musicFile,
             @RequestPart(value = "imgFile", required = false) MultipartFile imgFile
-    ) {
+    ) throws IOException {
         List<SongResponse> songResponses = songService.update(id, songRequest, musicFile, imgFile);
         return ResponseEntity.ok(songResponses);
     }

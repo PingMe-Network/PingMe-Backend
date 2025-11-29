@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -23,4 +24,6 @@ public interface AlbumRepository extends JpaRepository<Album, Long> {
 
     @Query(value = "SELECT * FROM albums WHERE id = :id", nativeQuery = true)
     Optional<Album> findByIdIgnoringDeleted(@Param("id") Long id);
+    
+    List<Album> findAlbumsByTitleContainingIgnoreCase(String title);
 }
