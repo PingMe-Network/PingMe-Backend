@@ -2,9 +2,8 @@ package me.huynhducphu.PingMe_Backend.controller.reels;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import me.huynhducphu.PingMe_Backend.dto.request.reels.CreateReelRequest;
+import me.huynhducphu.PingMe_Backend.dto.request.reels.ReelRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.common.PageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.reels.ReelResponse;
@@ -30,7 +29,7 @@ public class ReelController {
             @RequestPart("data") String dataJson,
             @RequestPart("video") MultipartFile video
     ) throws Exception {
-        CreateReelRequest data = objectMapper.readValue(dataJson, CreateReelRequest.class);
+        ReelRequest data = objectMapper.readValue(dataJson, ReelRequest.class);
         var res = reelService.createReel(data, video);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(res));
     }
@@ -62,4 +61,18 @@ public class ReelController {
         reelService.deleteReel(reelId);
         return ResponseEntity.ok(new ApiResponse<>(null));
     }
+
+    @PutMapping(value = "/{reelId}", consumes = "multipart/form-data")
+    public ResponseEntity<ApiResponse<ReelResponse>> updateReel(
+            @PathVariable Long reelId,
+            @RequestPart("data") String dataJson,
+            @RequestPart(value = "video", required = false) MultipartFile video
+    ) throws Exception {
+        ReelRequest data =
+                objectMapper.readValue(dataJson, ReelRequest.class);
+
+        var res = reelService.updateReel(reelId, data, video);
+        return ResponseEntity.ok(new ApiResponse<>(res));
+    }
+
 }

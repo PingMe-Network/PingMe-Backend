@@ -2,10 +2,11 @@ package me.huynhducphu.PingMe_Backend.service.reels.impl;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import me.huynhducphu.PingMe_Backend.dto.request.reels.CreateReelRequest;
+import me.huynhducphu.PingMe_Backend.dto.request.reels.ReelRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.reels.ReelResponse;
 import me.huynhducphu.PingMe_Backend.model.reels.Reel;
 import me.huynhducphu.PingMe_Backend.model.reels.ReelLike;
+import me.huynhducphu.PingMe_Backend.repository.reels.ReelCommentReactionRepository;
 import me.huynhducphu.PingMe_Backend.repository.reels.ReelCommentRepository;
 import me.huynhducphu.PingMe_Backend.repository.reels.ReelLikeRepository;
 import me.huynhducphu.PingMe_Backend.repository.reels.ReelRepository;
@@ -42,9 +43,10 @@ public class ReelServiceImpl implements ReelService {
     private final CurrentUserProvider currentUserProvider;
     private final S3Service s3Service;
     private final ModelMapper modelMapper;
+    private final ReelCommentReactionRepository reactionRepository;
 
     @Override
-    public ReelResponse createReel(CreateReelRequest dto, MultipartFile video) {
+    public ReelResponse createReel(ReelRequest dto, MultipartFile video) {
         var user = currentUserProvider.get();
 
         if (video == null || video.isEmpty())
@@ -109,7 +111,6 @@ public class ReelServiceImpl implements ReelService {
             reelLikeRepository.save(new ReelLike(reel, me));
         }
 
-        // trả response sau toggle
         return toReelResponse(reel, me.getId());
     }
 
@@ -120,14 +121,22 @@ public class ReelServiceImpl implements ReelService {
         var reel = reelRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy Reel"));
 
-        if (!reel.getUser().getId().equals(user.getId()))
+        if (!reel.getUser().getId().equals(user.getId())) {
             throw new AccessDeniedException("Bạn không có quyền xóa Reel này");
+        }
 
-        if (reel.getVideoUrl() != null)
+        reactionRepository.deleteAllByCommentReelId(id);
+        reelCommentRepository.deleteAllByReelId(id);
+        reelLikeRepository.deleteAllByReelId(id);
+
+        if (reel.getVideoUrl() != null) {
             s3Service.deleteFileByUrl(reel.getVideoUrl());
+        }
 
+        // 5) xóa reel
         reelRepository.delete(reel);
     }
+
 
     private ReelResponse toReelResponse(Reel reel, Long meId) {
         ReelResponse res = modelMapper.map(reel, ReelResponse.class);
@@ -145,4 +154,54 @@ public class ReelServiceImpl implements ReelService {
         res.setUserAvatarUrl(reel.getUser().getAvatarUrl());
         return res;
     }
+
+    @Override
+    public ReelResponse updateReel(Long reelId, ReelRequest dto, MultipartFile video) {
+        var user = currentUserProvider.get();
+
+        var reel = reelRepository.findById(reelId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy Reel"));
+
+        if (!reel.getUser().getId().equals(user.getId())) {
+            throw new AccessDeniedException("Bạn không có quyền cập nhật Reel này");
+        }
+
+        if (dto.getCaption() != null) {
+            reel.setCaption(dto.getCaption());
+        }
+
+        if (video != null && !video.isEmpty()) {
+            String contentType = video.getContentType();
+            if (contentType == null || !contentType.startsWith("video/")) {
+                throw new IllegalArgumentException("File upload phải là video");
+            }
+
+            // xóa video cũ trước
+            if (reel.getVideoUrl() != null) {
+                s3Service.deleteFileByUrl(reel.getVideoUrl());
+            }
+
+            String original = video.getOriginalFilename();
+            String ext = (original != null && original.contains("."))
+                    ? original.substring(original.lastIndexOf("."))
+                    : ".mp4";
+
+            String randomFileName = UUID.randomUUID() + ext;
+            long maxBytes = maxReelVideoSize.toBytes();
+
+            String url = s3Service.uploadFile(
+                    video,
+                    reelsFolder,
+                    randomFileName,
+                    true,
+                    maxBytes
+            );
+
+            reel.setVideoUrl(url);
+        }
+
+        var saved = reelRepository.save(reel);
+        return toReelResponse(saved, user.getId());
+    }
+
 }

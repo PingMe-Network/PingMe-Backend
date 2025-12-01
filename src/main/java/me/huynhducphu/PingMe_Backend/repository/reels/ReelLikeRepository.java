@@ -7,4 +7,5 @@ public interface ReelLikeRepository extends JpaRepository<ReelLike, Long> {
     boolean existsByReelIdAndUserId(Long reelId, Long userId);
     long countByReelId(Long reelId);
     void deleteByReelIdAndUserId(Long reelId, Long userId);
+    void deleteAllByReelId(Long reelId);
 }

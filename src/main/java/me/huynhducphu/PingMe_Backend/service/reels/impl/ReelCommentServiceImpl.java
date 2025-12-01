@@ -80,11 +80,24 @@ public class ReelCommentServiceImpl implements ReelCommentService {
         var comment = reelCommentRepository.findById(commentId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy bình luận"));
 
-        if (!comment.getUser().getId().equals(user.getId()))
-            throw new AccessDeniedException("Bạn không có quyền xóa bình luận này");
+        boolean isCommentOwner = comment.getUser().getId().equals(user.getId());
+        boolean isReelOwner = comment.getReel().getUser().getId().equals(user.getId());
 
+        if (!isCommentOwner && !isReelOwner) {
+            throw new AccessDeniedException("Bạn không có quyền xóa bình luận này");
+        }
+
+        var replies = reelCommentRepository.findAllByParentId(commentId);
+
+        java.util.List<Long> ids = new java.util.ArrayList<>();
+        ids.add(commentId);
+        ids.addAll(replies.stream().map(ReelComment::getId).toList());
+
+        reactionRepository.deleteAllByCommentIdIn(ids);
+        reelCommentRepository.deleteAllByParentId(commentId);
         reelCommentRepository.delete(comment);
     }
+
 
     private ReelCommentResponse toResponse(ReelComment c) {
         var me = currentUserProvider.get();
@@ -111,6 +124,8 @@ public class ReelCommentServiceImpl implements ReelCommentService {
         var myReact = reactionRepository.findByCommentIdAndUserId(c.getId(), me.getId());
         res.setMyReaction(myReact.map(r -> r.getType().name()).orElse(null));
 
+        boolean isOwner = c.getUser().getId().equals(c.getReel().getUser().getId());
+        res.setIsReelOwner(isOwner);
         return res;
     }
 

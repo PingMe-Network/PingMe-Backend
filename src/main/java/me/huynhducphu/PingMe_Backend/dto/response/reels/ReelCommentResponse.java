@@ -9,6 +9,7 @@ public class ReelCommentResponse {
     private String content;
 
     private Long reelId;
+    private Boolean isReelOwner;
 
     private Long userId;
     private String userName;
