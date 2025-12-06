@@ -94,14 +94,14 @@ public class ReelController {
         return ResponseEntity.ok(new ApiResponse<>(res));
     }
 
-    // like/unlike
+
     @PostMapping("/{reelId}/likes/toggle")
     public ResponseEntity<ApiResponse<ReelResponse>> toggleLike(@PathVariable Long reelId) {
         var res = reelService.toggleLike(reelId);
         return ResponseEntity.ok(new ApiResponse<>(res));
     }
 
-    // save/unsave
+
     @PostMapping("/{reelId}/saves/toggle")
     public ResponseEntity<ApiResponse<ReelResponse>> toggleSave(@PathVariable Long reelId) {
         var res = reelService.toggleSave(reelId);

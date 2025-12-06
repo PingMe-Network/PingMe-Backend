@@ -21,3 +21,4 @@ public interface ReelSearchHistoryRepository extends JpaRepository<ReelSearchHis
     @Query("delete from ReelSearchHistory r where r.user.id = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);
 }
+
