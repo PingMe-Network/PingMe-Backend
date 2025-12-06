@@ -4,6 +4,8 @@ import me.huynhducphu.PingMe_Backend.model.music.SongArtistRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /**
  * @author Le Tran Gia Huy
  * @created 20/11/2025 - 6:23 PM
@@ -13,4 +15,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SongArtistRoleRepository extends JpaRepository<SongArtistRole, Long> {
+    List<SongArtistRole> findSongArtistRolesByArtist_Id(Long artistId);
 }

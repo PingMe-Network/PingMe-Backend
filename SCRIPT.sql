@@ -308,75 +308,278 @@ VALUES (1, 1, '2025-11-23 18:50:27.291443', 'huynhducphu2502@gmail.com', '2025-1
 -- Music
 -- ===========================================================================================================
 
--- 1. Thêm dữ liệu Thể loại (Genres) trước
-INSERT INTO genres (id, name, created_at, updated_at)
-VALUES (1, 'Pop', NOW(), NOW()),
-       (2, 'Indie Pop', NOW(), NOW()),
-       (3, 'Acoustic', NOW(), NOW()),
-       (4, 'Alternative', NOW(), NOW());
+SET FOREIGN_KEY_CHECKS = 0;
 
--- 2. Thêm dữ liệu Nghệ sĩ (Artists)
-INSERT INTO artists (id, name, bio, img_url, created_at, updated_at)
-VALUES (1, 'Gracie Abrams',
-        'Gracie Madigan Abrams is an American singer-songwriter. Her music is often described as "bedroom pop" and "indie pop".',
-        'https://my-music-app-media-bucket-2025.s3.ap-southeast-2.amazonaws.com/artists/gracie_abrams.jpg', NOW(),
-        NOW()),
-       (2, 'Taylor Swift', 'American singer-songwriter. A global superstar known for her narrative songwriting.',
-        'https://my-music-app-media-bucket-2025.s3.ap-southeast-2.amazonaws.com/artists/taylor_swift.jpg', NOW(),
-        NOW());
+TRUNCATE TABLE song_play_history;
+TRUNCATE TABLE song_artist_role;
+TRUNCATE TABLE album_genre;
+TRUNCATE TABLE album_song;
+TRUNCATE TABLE song_genre;
+TRUNCATE TABLE album_artist;
+TRUNCATE TABLE songs;
+TRUNCATE TABLE albums;
+TRUNCATE TABLE artists;
+TRUNCATE TABLE genres;
 
--- 3. Thêm dữ liệu Album (Cần ID của Artist chủ sở hữu)
-INSERT INTO albums (id, title, owner_id, cover_image_url, created_at, updated_at, play_count)
-VALUES (1, 'The Secret of Us', 1,
-        'https://my-music-app-media-bucket-2025.s3.ap-southeast-2.amazonaws.com/images/that_so_true.jpg', NOW(), NOW(),
-        2100000);
+SET FOREIGN_KEY_CHECKS = 1;
+INSERT INTO artists (id, name, bio, img_url) VALUES
+                                                 (1, 'Gracie Abrams', 'Gracie Abrams is an American singer-songwriter known for her emotional indie pop songs.', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/e2ce7e9d-fd1b-4cc2-a154-9cd283cde66a.jpg'),
+                                                 (2, 'Rosé', 'Rosé is a member of the girl group BLACKPINK, recognized for her high vocals and versatile music style.', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/1ee3c71d-b101-42fb-98d1-cad4ab4f228e.jpg'),
+                                                 (3, 'The Weeknd', 'The Weeknd is a Canadian singer, songwriter, and producer, famous for dark R&B and global hits.', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/d4b4a377-a804-4f47-bb5f-70184f521000.jpg'),
+                                                 (4, 'Taylor Swift', 'Taylor Swift is an American singer-songwriter, renowned for her pop and country music and storytelling.', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/f774a90d-6844-453c-a1c1-6eb1b1f4b018.jpg'),
+                                                 (5, 'Ariana Grande', 'Ariana Grande is an American singer and actress, known for her wide vocal range and pop/R&B hits.', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/b55cde1c-6397-4b65-9fac-116839a2d863.jpg'),
+                                                 (6, 'Justin Bieber', 'Justin Bieber is a Canadian pop singer who rose to fame as a teen and has many international hits.', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/5f8f5177-2c69-4600-9ff6-7495d4af8cbc.jpg'),
+                                                 (7, 'Billie Eilish', 'Billie Eilish is an American singer-songwriter, known for her unique alternative pop style and emotive music.', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/8e30bd9a-9c29-4342-8407-8f899bee80be.jpg');
 
--- 4. Thêm dữ liệu Bài hát (Songs)
+INSERT INTO genres (id, name) VALUES
+                                  (1, 'Pop'),
+                                  (2, 'Indie Pop'),
+                                  (3, 'Folk'),
+                                  (4, 'K-Pop'),
+                                  (5, 'R&B'),
+                                  (6, 'Synthwave'),
+                                  (7, 'Alternative'),
+                                  (8, 'Electropop');
 
-INSERT INTO songs (id, title, duration, song_url, img_url, created_at, updated_at, play_count)
-VALUES (1, 'Risk', 190, 'https://my-music-app-media-bucket-2025.s3.ap-southeast-2.amazonaws.com/media/Risk.mp3',
-        'https://my-music-app-media-bucket-2025.s3.ap-southeast-2.amazonaws.com/images/risk.jpg', NOW(), NOW(),
-        1000000),
-       (2, 'Close To You', 215,
-        'https://my-music-app-media-bucket-2025.s3.ap-southeast-2.amazonaws.com/media/Close+To+You.mp3',
-        'https://my-music-app-media-bucket-2025.s3.ap-southeast-2.amazonaws.com/images/risk.jpg', NOW(), NOW(), 534002),
-       (3, 'us.', 242, 'https://my-music-app-media-bucket-2025.s3.ap-southeast-2.amazonaws.com/media/Us..mp3',
-        'https://my-music-app-media-bucket-2025.s3.ap-southeast-2.amazonaws.com/images/risk.jpg', NOW(), NOW(), 234032);
 
--- ========================================================
--- CÁC BẢNG LIÊN KẾT (Chạy sau khi đã INSERT bảng chính)
--- ========================================================
+INSERT INTO albums (id, title, owner_id, cover_image_url, play_count) VALUES
+-- Gracie Abrams
+(1, 'The Secret of Us (Deluxe)', 1, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/e497e934-68d9-4a6f-b1df-8b1a2459088f.jpg', 0),
+(2, 'minor', 1, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/fa1924d8-3c95-45a8-a742-f931830ae09d.jpg', 0),
+(3, 'Good Riddance (Deluxe)', 1, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/7b334f04-b3c9-404c-9817-677a6eb30530.jpg', 0),
 
--- 5. Liên kết Album với Thể loại
--- Album "The Secret of Us" (ID=1) thuộc Pop (ID=1) và Indie Pop (ID=2)
-INSERT INTO album_genre (album_id, genre_id)
-VALUES (1, 1),
-       (1, 2);
+-- Rosé
+(4, 'R', 2, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/4e9d9f4b-5c52-40be-96a4-1f0a9284df85.jpg', 0),
+(5, 'rosie', 2, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/7d151b43-6d2e-485b-a805-0b4d914404f2.jpg', 0),
 
--- 6. Liên kết Album với Bài hát
--- Album (ID=1) chứa các bài hát ID 1, 2, 3
-INSERT INTO album_song (album_id, song_id)
-VALUES (1, 1),
-       (1, 2),
-       (1, 3);
+-- The Weeknd
+(6, 'After Hours', 3, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/a41994a4-0f3b-4510-a600-0a16e1f5971e.jpg', 0),
+(7, 'Dawn FM', 3, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/36b12f6c-faba-4809-afed-a9338e14ecad.jpg', 0),
 
--- 7. Liên kết Bài hát với Thể loại
+-- Taylor Swift
+(8, 'Midnights', 4, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/87e83111-5466-4342-9acf-ecd9380b9c3b.jpg', 0),
+(9, 'Folklore', 4, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/66ab9e40-6ea8-479c-b49d-b70318bf7165.jpg', 0),
+
+-- Ariana Grande
+(10, 'Thank U, Next', 5, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/c9e86af8-a86f-48b3-9e16-3f7500c7a9e7.jpg', 0),
+(11, 'Positions', 5, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/4274a44c-cbe2-473a-b38a-b2ca34006dad.jpg', 0),
+
+-- Justin Bieber
+(12, 'Justice', 6, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/ff2d1745-0c74-4e95-ab4e-4725678e52c6.jpg', 0),
+(13, 'Changes', 6, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/ad429881-97c2-4a3f-bb1a-bdefe70837e5.jpg', 0),
+
+-- Billie Eilish
+(14, 'Happier Than Ever', 7, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/67ec69fe-432b-46b6-b9e8-ccbad103061a.jpg', 0);
+
+INSERT INTO songs (id, title, duration, song_url, img_url, play_count, created_at, updated_at) VALUES
+-- Album 1
+(1, 'Felt Good About You', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/90234c4e-5db2-4d0d-8732-586ec4a869db.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/f696b397-57f4-432a-be02-260ca287946c.jpg', 0, NOW(), NOW()),
+(2, 'Risk', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/e0a502d0-ec78-43bb-b38b-373d15efeee8.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/bef3126c-02e7-4749-a1ba-d783bbe87442.jpg', 0, NOW(), NOW()),
+(3, 'Blowing Smoke', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/d07ea9bd-4e09-4cf3-9494-e50f5d504c17.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/f696b397-57f4-432a-be02-260ca287946c.jpg', 0, NOW(), NOW()),
+(4, 'I Love You Im Sorry', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/c2eead85-7fff-46c9-ad46-42e6c7334518.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/a14cb162-4d16-4bd4-a406-1ca49e8d7372.jpg', 0, NOW(), NOW()),
+(5, 'Us.', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/e396d527-0539-43d9-8476-e1c854f721d7.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/7523cd14-c38a-41c6-b3fb-413a6069ca28.jpg', 0, NOW(), NOW()),
+(6, 'Let It Happen', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/5eade70d-deb4-40d9-80a3-1d09b0e2f6bd.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/6a84c978-9881-4ef0-955a-b984a7f15bcd.jpg', 0, NOW(), NOW()),
+(7, 'Touch Love', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/55187a2b-6517-4f3c-9c4d-eec63648d33e.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/b7a21c78-259e-413b-81c7-b9f0eff1a462.jpg', 0, NOW(), NOW()),
+(8, 'I Knew It Im Know You', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/7595f4e9-48dc-4d69-baec-2c8bb0b87e54.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/352342e3-5832-425f-befc-5e3cddc48bf3.jpg', 0, NOW(), NOW()),
+(9, 'Gave You I Gave You I', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/a96a416a-b986-4822-a87d-a523f7458953.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/5af778e6-9248-4c7e-b64d-43437a1fdf20.jpg', 0, NOW(), NOW()),
+(10, 'Normal Thing', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/dec4ce0e-83c5-4003-b54c-95d3437f78fd.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/13f23ff4-0612-4e66-b514-72ae88c26a95.jpg', 0, NOW(), NOW()),
+(11, 'Good Luck Charlie', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/7086ef60-dbf7-417d-ab1b-e5f403ad4bd0.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/7cb11e87-dfde-4d03-ba80-e6b5552babb1.jpg', 0, NOW(), NOW()),
+(12, 'Free Now', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/960f512a-90e7-47d8-ac90-c70db930a29a.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/40c1e061-8cbb-464c-8366-a73ab58cacc0.jpg', 0, NOW(), NOW()),
+(13, 'Close To You', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/b04ce5d7-2868-4271-aca9-10ebe9694cc6.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/e5cc1e8c-69cb-47f2-b6cc-2e62e26704d9.jpg', 0, NOW(), NOW()),
+(14, 'Cool', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/347e68a2-ad41-4d9e-800f-7ad97e33cead.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/e9b8f85e-b849-4c25-9e4b-6bd0868fc778.jpg', 0, NOW(), NOW()),
+(15, 'That’s So True', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/fa56d49b-ea4b-444b-9d31-ea686434e8ae.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/b335c091-5398-46a5-a817-42a6c4065798.jpg', 0, NOW(), NOW()),
+(16, 'I Told You Things', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/df01f54a-e355-401d-acda-174d4ccb3e8f.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/fb697691-956a-4ef1-bc0d-e0460b38bb14.jpg', 0, NOW(), NOW()),
+(17, 'Packing It Up', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/ec86aef9-8e6b-4e61-a249-812e3c30739c.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/63c2db49-37dd-4b19-8adf-a220e227e00f.jpg', 0, NOW(), NOW()),
+
+-- Album 2
+(18, 'Friend', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/256f61ea-3200-479d-a940-5db77cf63dc2.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/1c8acbfd-72d3-4ea9-b4f5-f1b2026141dd.jpg', 0, NOW(), NOW()),
+(19, '21', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/bce3bf8a-a7f1-4942-b009-e9c0f142fec2.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/3a1b106a-7749-4bd1-a09e-5ad504dab44f.jpg', 0, NOW(), NOW()),
+(20, 'Under / Over', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/c2e3e7a8-5195-43e8-9532-2cbe8591c5d7.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/a9823e68-9f5a-4dbb-aadc-9c59f8bb147d.jpg', 0, NOW(), NOW()),
+(21, 'tehe', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/ecdd24b8-985c-4d83-82ec-29494fe80c81.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/c269bea9-089d-47e2-b2d3-0cfae171665e.jpg', 0, NOW(), NOW()),
+(22, 'I Miss You Im Sorry', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/02e19ff5-bbfd-422b-acfa-acdddc13459a.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/4cbd9872-f152-4617-91a0-4601a8410783.jpg', 0, NOW(), NOW()),
+(23, 'Long Sleeves', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/7c8e354f-6d5b-4f66-bb79-d83b36ddb992.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/e409ed84-05e0-41d7-95bc-b9d82e780af7.jpg', 0, NOW(), NOW()),
+(24, 'minor', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/d04c049b-7ba0-4f63-993c-b8668195d8bb.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/161f2bd2-bb7e-4d54-b45d-ace4eb7e9708.jpg', 0, NOW(), NOW()),
+
+-- Album 3
+(25, 'Best', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/8bb49812-bba1-4a34-a5d6-4f2e29438bd4.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/51ad283a-f972-404c-9ef8-c753d3bdd894.jpg', 0, NOW(), NOW()),
+(26, 'I Know It Won’t Work', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/ec9aa2c2-f9c8-4039-9383-3013f1e7c37a.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/7f53e3aa-a303-4493-b2d8-08b34ce5624e.jpg', 0, NOW(), NOW()),
+(27, 'Full Machine', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/d38368a2-ddbc-46d6-809b-f33724bd6a45.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/b7d87654-349f-4d4a-9ba8-8246246134f6.jpg', 0, NOW(), NOW()),
+(28, 'Where Do We Go Now?', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/ae47e56e-6d10-43db-bbf8-9ae87e4a44a0.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/bfcbe48d-1965-48df-93d8-4dc13b536bd9.jpg', 0, NOW(), NOW()),
+(29, 'I Should Hate You', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/b99df038-db03-49b6-bd51-26b69148b4dc.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/705d298f-3c8e-4743-94b2-a428c149f8ef.jpg', 0, NOW(), NOW()),
+(30, 'Will You Cry?', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/5e61eef9-0867-4cfe-9bc7-6973942a6951.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/47531ddf-a5af-4b2c-b0d5-f4df2b3d3622.jpg', 0, NOW(), NOW()),
+(31, 'Amelie', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/40bd8ade-83c9-4577-a4e7-646175b7197e.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/4da7d351-d5ed-4349-a5a9-f20fd3c58b6e.jpg', 0, NOW(), NOW()),
+(32, 'Difficult', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/193431d2-6c51-44fe-9716-7a7c1c7c9e09.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/e0b53098-11c0-4472-b8c6-a6140c8f2ce6.jpg', 0, NOW(), NOW()),
+(33, 'This Is What The Drugs Are For', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/cfdbb98f-535e-4ca9-ba7c-65bda61b3a02.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/530680d9-dcf1-4fb5-b5f4-e2ea408e4f01.jpg', 0, NOW(), NOW()),
+(34, 'Fault Line', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/eb89d94f-c61a-4d95-9604-26f53e7c2ec5.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/42601b25-d15d-48a1-b8b6-85d45f632b41.jpg', 0, NOW(), NOW()),
+(35, 'The Blue', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/002a30a3-26a9-4efe-a830-88c27dfe6795.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/ba482d4e-b9e1-4532-acca-5772dc986c2d.jpg', 0, NOW(), NOW()),
+(36, 'Right Now', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/97ccaf4a-e747-4f90-b266-7c40ec72dd02.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/bfb87b55-76a7-414c-9e33-dc1f014405d9.jpg', 0, NOW(), NOW()),
+(37, 'Block Me Out', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/ea6ab630-b4da-405a-85ef-63bb2cd6a449.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/56733533-5d29-4add-99fe-b6453f758e3a.jpg', 0, NOW(), NOW()),
+(38, 'Unsteady', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/0961274b-1e6a-4559-8933-b3a19b204c14.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/0d00d645-8953-4bc9-b7cb-fd7e65f25586.jpg', 0, NOW(), NOW()),
+(39, '405', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/05255b29-93d0-4660-8e0d-ea7da4a1762a.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/fb0d1078-52e3-453d-84cf-f5471089afcf.jpg', 0, NOW(), NOW()),
+(40, 'Two People', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/da2e2fff-73e4-4da6-9492-02bedec63802.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/21c1a1ec-5092-4487-a77d-07beeb2339c1.jpg', 0, NOW(), NOW()),
+
+-- Rosé (Album 4)
+(41, 'On The Ground', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/d71a11dd-53e6-4d52-94a2-2205a0f70826.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/a9d224f7-3ad6-4ba9-aa25-49e2b9ea313e.jpg', 0, NOW(), NOW()),
+(42, 'Gone', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/4db97305-3963-4c7d-90d1-c640b117a7a3.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/da859b22-27c2-47c3-b2f0-6c690f566886.jpg', 0, NOW(), NOW()),
+
+-- Rosé (Album 5)
+(43, '3am', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/16bed413-9c6c-47f4-bfdf-af4bc4ec5678.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/3afdf07c-11be-461d-ae77-6f60166dae82.jpg', 0, NOW(), NOW()),
+(44, 'Toxic till the end', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/8338a862-c388-4959-a0d6-42e9f117795b.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/013d2d20-54f2-4c33-8482-e73214903357.jpg', 0, NOW(), NOW()),
+
+-- The Weeknd (Album 6 — After Hours)
+(45, 'Alone Again', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/345381f1-3b92-495b-b953-fbda7d1c904a.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/af04dc64-5168-4c0c-88e3-166e187999f6.jpg', 0, NOW(), NOW()),
+(46, 'Too Late', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/ba6492e4-6346-4640-8532-430f5e18c2b3.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/e1afb051-38c3-40ea-8756-0337a2ef1788.jpg', 0, NOW(), NOW()),
+(47, 'Hardest To Love', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/d38de57f-d51d-4b0d-8c2f-6eb3a3d2c8ac.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/918a2a4f-0ea1-4d1c-92e3-7c3bf15f0d19.jpg', 0, NOW(), NOW()),
+(48, 'Scared To Live', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/266b1831-d4b4-471f-a800-3e80fa2ca57c.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/7dc1dc35-2610-4a84-9611-b864dc1da146.jpg', 0, NOW(), NOW()),
+(49, 'Snowchild', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/33f956bb-d194-429d-90b4-d6f86bec1535.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/f1cde084-3152-45cc-82cb-f77aed08ad73.jpg', 0, NOW(), NOW()),
+(50, 'Escape From LA', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/918de8e7-fdc2-4a3f-9621-df410b7bc722.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/e842680a-f154-4ba0-8f89-05d213760b37.jpg', 0, NOW(), NOW()),
+(51, 'Heartless', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/1d841340-4088-4c60-ac2b-b58be15d56c8.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/4f2a35d4-3133-4c78-942d-0a955aaaa29a.jpg', 0, NOW(), NOW()),
+(52, 'Faith', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/efb521a7-78fe-41e8-b775-16aee45573e5.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/8e9e7481-31c9-4dd6-86b7-73cc0def0fc2.jpg', 0, NOW(), NOW()),
+(53, 'Blinding Lights', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/a6095aa1-1b07-44f5-99aa-1a7845a61e8b.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/2137aee1-4c7b-4ac2-9639-fa70874d4b65.jpg', 0, NOW(), NOW()),
+(54, 'In Your Eyes', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/0cc79736-b796-4d8c-b0b3-72ae42487236.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/4d2bf8fd-6678-49f4-9282-a86822d5b3c4.jpg', 0, NOW(), NOW()),
+(55, 'Save Your Tears', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/cce175ad-9864-4974-9f6f-9f108c157db1.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/c0d30522-1f36-441a-8e5c-c61216358e65.jpg', 0, NOW(), NOW()),
+(56, 'Alone Hours', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/417bb863-615b-457b-afe1-79dc97c4c6d4.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/208fbfb6-eb8e-4242-a972-673fe0495cfb.jpg', 0, NOW(), NOW()),
+
+-- Album 7 — Dawn FM
+(57, 'Starry Eyes', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/d5735a51-7908-439d-ac3f-33dac3dff99e.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/7d7291f0-4d82-495f-a7f6-952f0308d6ad.jpg', 0, NOW(), NOW()),
+(58, 'Gasoline', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/bb8ba5b9-6898-44b4-bc69-5e5de33b00a9.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/302f9d94-ffde-4840-ab3a-5d42600c851f.jpg', 0, NOW(), NOW()),
+(59, 'How Do I Make You Love Me?', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/1fc36e4e-8d7d-470a-a438-c73728017d52.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/68cdedd8-73a4-4c57-8a8b-481c70cf3548.jpg', 0, NOW(), NOW()),
+(60, 'Take My Breath', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/49f10a17-50e0-4ece-9f1f-48dbbb45f5dd.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/a5576e5c-1c94-4e96-8213-460c2840617e.jpg', 0, NOW(), NOW()),
+(61, 'Sacrifice', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/4427ef9e-8d6c-4461-9252-b7f1a660b7ac.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/cc6cdc5b-934b-493f-9151-1f15e8c70ce2.jpg', 0, NOW(), NOW()),
+(62, 'Out of Time', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/00120f8b-624b-47d9-8348-69ede707741e.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/0657be39-7260-4207-836d-c25b387dd98b.jpg', 0, NOW(), NOW()),
+(63, 'Is There Someone Else?', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/7b60de84-5081-4cda-82ae-594db0be88e7.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/201785f3-0bf2-450e-9990-4faea33303a4.jpg', 0, NOW(), NOW()),
+
+-- Taylor Swift – Midnights (Album 8)
+(64, 'Lavender Haze', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/160b7cc0-d54b-4d2f-bb03-83b1a5ae0258.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/eff25f04-cd8c-4748-8f7d-5b41f6f90a6c.jpg', 0, NOW(), NOW()),
+(65, 'Maroon', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/16197451-ea56-4b72-a599-0937f89255ef.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/ad4bdb2b-912d-4f73-bb7b-ac1fdc2293ff.jpg', 0, NOW(), NOW()),
+(66, 'Anti-Hero', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/936070a7-7535-4fa5-a04a-9e12338d0fef.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/5b2e4220-1fa9-413a-8d7f-7ce289914449.jpg', 0, NOW(), NOW()),
+(67, 'Snow On The Beach', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/a043296f-19cc-419f-a585-e05c948a6fba.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/8386f019-9c64-4017-8392-9064a388a1a5.jpg', 0, NOW(), NOW()),
+(68, 'Midnight Rain', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/6a751897-1055-48ff-b3df-3bf3b4ae03dc.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/d2c92c4a-9517-4674-8fb0-005578f924f3.jpg', 0, NOW(), NOW()),
+
+-- Album 9 – Folklore
+(69, 'Cardigan', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/a76dba54-eb0a-48ac-bc56-e407b5e7ce0c.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/f544869d-2643-4747-b978-24b5a95ca208.jpg', 0, NOW(), NOW()),
+(70, 'The 1', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/c50098be-3246-4f1c-8947-e7635a936dc3.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/cc117140-8d6e-4ff4-ac49-fac0889326ab.jpg', 0, NOW(), NOW()),
+(71, 'Exile', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/92be757e-97cb-404c-9106-0f28b427e92a.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/9153a591-1f49-4f9e-b91b-7644ab9589d5.jpg', 0, NOW(), NOW()),
+(72, 'The Last Great American Dynasty', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/12a0686b-f406-4d2f-9964-0ae9efbfc57c.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/9ab74432-100c-49af-a657-5f3cdd83ea1e.jpg', 0, NOW(), NOW()),
+(73, 'August', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/bb5b4cc3-82ca-4eb5-9c52-1e7131b2561a.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/0a95b82f-3801-4594-b1a5-2f3b49e34e0b.jpg', 0, NOW(), NOW()),
+
+-- Ariana – Thank U Next (10)
+(74, 'Thank U, Next', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/9001161c-7bce-4d73-a993-2e6fd264f441.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/52e40011-8053-4e90-8674-0304a5481c20.jpg', 0, NOW(), NOW()),
+(75, '7 Rings', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/eccc5c0c-aa77-45f3-b478-369e0a94af84.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/594383b1-f4dd-41a3-9662-ee8801094f20.jpg', 0, NOW(), NOW()),
+(76, 'Needy', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/b48778f6-4228-4223-b6d3-1a90243733a1.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/cb4e6661-0afe-4cc3-ac5b-ba21ec9133c2.jpg', 0, NOW(), NOW()),
+
+-- Positions (11)
+(77, 'Positions', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/3320a7f9-3405-4931-8fac-b8bbd7403f81.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/5d8ba942-77d0-4adf-bc6a-eba76595945e.jpg', 0, NOW(), NOW()),
+(78, 'POV', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/3f1f3924-e8b4-423c-8607-20e31808cb09.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/cf33d4cc-76e4-4ea6-8ed8-e414b549bdaf.jpg', 0, NOW(), NOW()),
+(79, '34+35', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/06e58d22-9fc1-4e18-8b3f-a362ff6cf37c.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/bb0fe885-d75f-4fbf-94b9-6744bb3d4567.jpg', 0, NOW(), NOW()),
+
+-- Justin – Justice (12)
+(80, 'Peaches', 198, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/e159cbf6-bd71-4fa0-948a-9272448d4e51.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/d2c873f4-78fd-40da-95e6-7c12849252db.jpg', 0, NOW(), NOW()),
+(81, 'Ghost', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/5e03b063-4d2f-47b2-a33b-859b8717d9c8.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/f0a01b44-2177-4aab-9109-bec35d091c4c.jpg', 0, NOW(), NOW()),
+(82, 'Hold On', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/9fd78abe-3738-4270-8515-a8230baca151.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/39375cce-7d63-4fb2-b27a-129263d7252e.jpg', 0, NOW(), NOW()),
+
+-- Changes (13)
+(83, 'Intentions', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/00770038-7e51-4368-96aa-f10b6f105ac1.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/a2d9a83d-bc13-4f80-b836-526192b15abf.jpg', 0, NOW(), NOW()),
+(84, 'Yummy', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/a896d38c-e126-4d0b-b489-a6032980b991.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/9ab08ee3-00a6-46a0-981c-5df19ca7f41b.jpg', 0, NOW(), NOW()),
+(85, 'Come Around Me', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/7e028376-f443-410f-a99c-f42dd0716c68.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/67f89c49-916d-4d1f-8911-cb3590af6bbe.jpg', 0, NOW(), NOW()),
+
+-- Billie – Happier than Ever (14)
+(86, 'NDA', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/29cd988d-a45f-4ed6-b33c-c320bae6c2b5.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/d8a1fce4-6780-4af9-9a3d-26e27c407920.jpg', 0, NOW(), NOW()),
+(87, 'Therefore I Am', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/8e182424-6a87-42a5-b0f3-4507a17af43f.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/1efeec45-1736-425e-805f-130c14436e73.jpg', 0, NOW(), NOW()),
+(88, 'Your Power', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/f318bfa7-8e88-40c0-847d-9ffd226b564f.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/54027565-3fc1-4ae5-8b47-05fa846662f3.jpg', 0, NOW(), NOW()),
+(89, 'Happier Than Ever', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/a26cf14e-5137-46ce-b4f1-4e4a93a577a8.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/6ff1634c-4d6c-4062-bc9a-883857a98a20.jpg', 0, NOW(), NOW()),
+(90, 'Male Fantasy', 180, 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/song/ba267d0c-76ab-4aac-bb5c-720d412353cf.mp3', 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/music/img/d811048a-2c97-43f8-a92b-f27ac21d81e6.jpg', 0, NOW(), NOW());
+
+
+INSERT INTO album_genre (album_id, genre_id) VALUES
+-- Gracie Abrams (Indie Pop, Alternative)
+(1, 2), (1, 7),
+(2, 2), (2, 7),
+(3, 2), (3, 7),
+
+-- Rosé (K-Pop, Pop)
+(4, 4), (4, 1),
+(5, 4), (5, 1),
+
+-- The Weeknd (R&B, Synthwave)
+(6, 5), (6, 6),
+(7, 5), (7, 6),
+
+-- Taylor Swift (Midnights: Pop/Synth, Folklore: Folk/Alt)
+(8, 1), (8, 6),
+(9, 3), (9, 7),
+
+-- Ariana Grande (Pop, R&B)
+(10, 1), (10, 5),
+(11, 1), (11, 5),
+
+-- Justin Bieber (Pop, R&B)
+(12, 1), (12, 5),
+(13, 1), (13, 5),
+
+-- Billie Eilish (Alternative, Electropop)
+(14, 7), (14, 8);
+
+INSERT INTO album_song (album_id, song_id) VALUES
+-- Album 1 (Songs 1-17)
+(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (1, 11), (1, 12), (1, 13), (1, 14), (1, 15), (1, 16), (1, 17),
+-- Album 2 (Songs 18-24)
+(2, 18), (2, 19), (2, 20), (2, 21), (2, 22), (2, 23), (2, 24),
+-- Album 3 (Songs 25-40)
+(3, 25), (3, 26), (3, 27), (3, 28), (3, 29), (3, 30), (3, 31), (3, 32), (3, 33), (3, 34), (3, 35), (3, 36), (3, 37), (3, 38), (3, 39), (3, 40),
+-- Album 4 (Songs 41-42)
+(4, 41), (4, 42),
+-- Album 5 (Songs 43-44)
+(5, 43), (5, 44),
+-- Album 6 (Songs 45-56)
+(6, 45), (6, 46), (6, 47), (6, 48), (6, 49), (6, 50), (6, 51), (6, 52), (6, 53), (6, 54), (6, 55), (6, 56),
+-- Album 7 (Songs 57-63)
+(7, 57), (7, 58), (7, 59), (7, 60), (7, 61), (7, 62), (7, 63),
+-- Album 8 (Songs 64-68)
+(8, 64), (8, 65), (8, 66), (8, 67), (8, 68),
+-- Album 9 (Songs 69-73)
+(9, 69), (9, 70), (9, 71), (9, 72), (9, 73),
+-- Album 10 (Songs 74-76)
+(10, 74), (10, 75), (10, 76),
+-- Album 11 (Songs 77-79)
+(11, 77), (11, 78), (11, 79),
+-- Album 12 (Songs 80-82)
+(12, 80), (12, 81), (12, 82),
+-- Album 13 (Songs 83-85)
+(13, 83), (13, 84), (13, 85),
+-- Album 14 (Songs 86-90)
+(14, 86), (14, 87), (14, 88), (14, 89), (14, 90);
+
 INSERT INTO song_genre (song_id, genre_id)
-VALUES (1, 2), -- Risk là Indie Pop
-       (2, 1), -- Close To You là Pop
-       (3, 3);
--- us. là Acoustic
+SELECT s.id, ag.genre_id
+FROM songs s
+         JOIN album_song as_link ON s.id = as_link.song_id
+         JOIN album_genre ag ON as_link.album_id = ag.album_id;
 
--- 8. Xác định vai trò Nghệ sĩ (QUAN TRỌNG)
-INSERT INTO song_artist_role (song_id, artist_id, role, created_at, updated_at)
-VALUES (1, 1, 'MAIN_ARTIST', NOW(), NOW()), -- Risk: Gracie hát chính
-       (2, 1, 'MAIN_ARTIST', NOW(), NOW()), -- Close To You: Gracie hát chính
-       (3, 1, 'MAIN_ARTIST', NOW(), NOW()), -- us.: Gracie hát chính
-       (3, 2, 'FEATURED_ARTIST', NOW(), NOW());
--- us.: Taylor Swift feat
+INSERT INTO song_artist_role (song_id, artist_id, role)
+SELECT
+    abs.song_id,      -- Lấy song_id từ bảng trung gian album_song
+    a.owner_id,       -- Lấy owner_id (artist) từ bảng albums
+    'MAIN_ARTIST'
+FROM album_song abs   -- Bắt đầu từ bảng trung gian
+         JOIN albums a ON abs.album_id = a.id; -- Join sang albums để biết ai là chủ sở hữu album đó
 
--- 9. Liên kết Nghệ sĩ khách mời vào Album
--- Taylor Swift (ID=2) là khách mời trong Album (ID=1)
-INSERT INTO album_artist (album_id, artist_id)
-VALUES (1, 2);
+-- Ví dụ: The Weeknd feat trong bài "Positions" (id 77) của Ariana
+INSERT INTO song_artist_role (song_id, artist_id, role) VALUES (77, 3, 'FEATURED_ARTIST');
+
+-- Ví dụ: Ariana feat trong bài "Save Your Tears" (id 55) của The Weeknd
+INSERT INTO song_artist_role (song_id, artist_id, role) VALUES (55, 5, 'FEATURED_ARTIST');
+
+-- Dựa trên ví dụ featuring ở trên:
+-- The Weeknd (3) xuất hiện trong Album Positions (11)
+INSERT INTO album_artist (album_id, artist_id) VALUES (11, 3);
+
+-- Ariana (5) xuất hiện trong Album After Hours (6)
+INSERT INTO album_artist (album_id, artist_id) VALUES (6, 5);
+
+INSERT INTO song_play_history (user_id, song_id, played_at) VALUES
+                                                                (1, 1, NOW()),
+                                                                (1, 2, NOW() - INTERVAL 10 MINUTE),
+                                                                (2, 3, NOW() - INTERVAL 30 MINUTE);
+
 -- ===========================================================================================================
