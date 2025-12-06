@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import me.huynhducphu.PingMe_Backend.model.User;
 import me.huynhducphu.PingMe_Backend.model.common.BaseEntity;
+import me.huynhducphu.PingMe_Backend.model.constant.ReelStatus;
 
 @Entity
 @Table(name = "reels")
@@ -34,6 +35,13 @@ public class Reel extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ReelStatus status = ReelStatus.ACTIVE;
+
+    @Column(length = 500)
+    private String adminNote;
 
     public Reel(String videoUrl, String caption) {
         this.videoUrl = videoUrl;

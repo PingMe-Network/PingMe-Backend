@@ -3,6 +3,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.reels.AdminReelFilterRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.reels.AdminReelResponse;
+import me.huynhducphu.PingMe_Backend.model.constant.ReelStatus;
 import me.huynhducphu.PingMe_Backend.model.reels.Reel;
 import me.huynhducphu.PingMe_Backend.repository.reels.*;
 import me.huynhducphu.PingMe_Backend.repository.reels.spec.ReelSpecifications;
@@ -53,8 +54,8 @@ public class AdminReelServiceImpl implements me.huynhducphu.PingMe_Backend.servi
     public AdminReelResponse hideReel(Long reelId, String adminNote) {
         var reel = reelRepository.findById(reelId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy Reel"));
-        // reel.setStatus(ReelStatus.HIDDEN);
-        // reel.setAdminNote(adminNote);
+         reel.setStatus(ReelStatus.HIDDEN);
+         reel.setAdminNote(adminNote);
         var saved = reelRepository.save(reel);
         return toAdminResponse(saved);
     }
