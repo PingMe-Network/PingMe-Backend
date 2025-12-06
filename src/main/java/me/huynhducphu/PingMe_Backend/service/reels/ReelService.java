@@ -32,4 +32,7 @@ public interface ReelService {
 
     // Search reels by title/caption
     Page<ReelResponse> searchByTitle(String query, Pageable pageable);
+
+    // List reels created by the current user
+    Page<ReelResponse> getMyCreatedReels(Pageable pageable);
 }

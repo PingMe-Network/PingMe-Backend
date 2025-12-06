@@ -1,5 +1,6 @@
 package me.huynhducphu.PingMe_Backend.service.reels.impl;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.response.reels.ReelSearchHistoryResponse;
 import me.huynhducphu.PingMe_Backend.model.reels.ReelSearchHistory;
@@ -9,6 +10,7 @@ import me.huynhducphu.PingMe_Backend.service.reels.ReelSearchHistoryService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -56,8 +58,12 @@ public class ReelSearchHistoryServiceImpl implements ReelSearchHistoryService {
     }
 
     @Override
+    @Transactional
     public void deleteAllMyHistory() {
         var user = currentUserProvider.get();
+        if (user == null || user.getId() == null) {
+            throw new EntityNotFoundException("Người dùng không hợp lệ");
+        }
         repo.deleteAllByUserId(user.getId());
     }
 

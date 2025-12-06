@@ -75,7 +75,8 @@ public class ReelServiceImpl implements ReelService {
                 video, reelsFolder, randomFileName, true, maxBytes
         );
 
-        var reel = new Reel(url, dto.getCaption());
+        // normalize hashtags (store as comma-separated, preserve input for now)
+        var reel = new Reel(url, dto.getCaption(), dto.getHashtags());
         reel.setUser(user);
 
         var saved = reelRepository.saveAndFlush(reel);
@@ -96,8 +97,15 @@ public class ReelServiceImpl implements ReelService {
         if (query == null || query.isBlank()) {
             return getFeed(pageable);
         }
-        var page = reelRepository.searchByTitle(query.trim(), pageable)
-                .map(reel -> toReelResponse(reel, me.getId()));
+        // handled below with hashtag-aware search
+        String q = query.trim();
+        Page<Reel> rawPage;
+        if (q.startsWith("#")) {
+            rawPage = reelRepository.searchByHashtag(q, pageable);
+        } else {
+            rawPage = reelRepository.searchByTitle(q, pageable);
+        }
+        var page = rawPage.map(reel -> toReelResponse(reel, me.getId()));
 
         try {
             // record search history asynchronously; here simple call (swallow errors inside service)
@@ -113,6 +121,13 @@ public class ReelServiceImpl implements ReelService {
         var me = currentUserProvider.get();
         return reelLikeRepository.findAllByUserIdOrderByCreatedAtDesc(me.getId(), pageable)
                 .map(ReelLike::getReel)
+                .map(reel -> toReelResponse(reel, me.getId()));
+    }
+
+    @Override
+    public Page<ReelResponse> getMyCreatedReels(Pageable pageable) {
+        var me = currentUserProvider.get();
+        return reelRepository.findAllByUserIdOrderByCreatedAtDesc(me.getId(), pageable)
                 .map(reel -> toReelResponse(reel, me.getId()));
     }
 
@@ -227,11 +242,12 @@ public class ReelServiceImpl implements ReelService {
         res.setUserId(reel.getUser().getId());
         res.setUserName(reel.getUser().getName());
         res.setUserAvatarUrl(reel.getUser().getAvatarUrl());
-        return res;
-    }
+        res.setHashtags(reel.getHashtags());
+         return res;
+     }
 
-    @Override
-    public ReelResponse updateReel(Long reelId, ReelRequest dto, MultipartFile video) {
+     @Override
+     public ReelResponse updateReel(Long reelId, ReelRequest dto, MultipartFile video) {
         var user = currentUserProvider.get();
 
         var reel = reelRepository.findById(reelId)
@@ -243,6 +259,10 @@ public class ReelServiceImpl implements ReelService {
 
         if (dto.getCaption() != null) {
             reel.setCaption(dto.getCaption());
+        }
+
+        if (dto.getHashtags() != null) {
+            reel.setHashtags(dto.getHashtags());
         }
 
         if (video != null && !video.isEmpty()) {
@@ -279,4 +299,4 @@ public class ReelServiceImpl implements ReelService {
         return toReelResponse(saved, user.getId());
     }
 
-}
+ }

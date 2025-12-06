@@ -67,6 +67,14 @@ public class ReelController {
         return ResponseEntity.ok(new ApiResponse<>(new PageResponse<>(page)));
     }
 
+    @GetMapping("/me/created")
+    public ResponseEntity<ApiResponse<PageResponse<me.huynhducphu.PingMe_Backend.dto.response.reels.ReelResponse>>> getMyCreatedReels(
+            @PageableDefault Pageable pageable
+    ) {
+        var page = reelService.getMyCreatedReels(pageable);
+        return ResponseEntity.ok(new ApiResponse<>(new PageResponse<>(page)));
+    }
+
     @DeleteMapping("/me/search-history/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteSearchHistoryById(@PathVariable Long id) {
         reelSearchHistoryService.deleteById(id);
@@ -116,6 +124,17 @@ public class ReelController {
                 objectMapper.readValue(dataJson, ReelRequest.class);
 
         var res = reelService.updateReel(reelId, data, video);
+        return ResponseEntity.ok(new ApiResponse<>(res));
+    }
+
+    // Support JSON-only updates (caption/hashtags) without multipart video upload
+    @PatchMapping(value = "{reelId}", consumes = "application/json")
+    public ResponseEntity<ApiResponse<ReelResponse>> patchReel(
+            @PathVariable Long reelId,
+            @RequestBody ReelRequest data
+    ) {
+        // Reuse existing service update method; pass null for video
+        var res = reelService.updateReel(reelId, data, null);
         return ResponseEntity.ok(new ApiResponse<>(res));
     }
 
