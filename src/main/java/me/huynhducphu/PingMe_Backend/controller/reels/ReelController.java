@@ -7,6 +7,7 @@ import me.huynhducphu.PingMe_Backend.dto.request.reels.ReelRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.common.PageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.reels.ReelResponse;
+import me.huynhducphu.PingMe_Backend.service.reels.ReelSearchHistoryService;
 import me.huynhducphu.PingMe_Backend.service.reels.ReelService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -20,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Tag(name = "Reels", description = "Các endpoints reels")
 @RestController
@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 public class ReelController {
 
     private final ReelService reelService;
+    private final ReelSearchHistoryService reelSearchHistoryService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostMapping(consumes = "multipart/form-data")
@@ -56,6 +57,26 @@ public class ReelController {
     ) {
         var page = reelService.searchByTitle(query, pageable);
         return ResponseEntity.ok(new ApiResponse<>(new PageResponse<>(page)));
+    }
+
+    @GetMapping("/me/search-history")
+    public ResponseEntity<ApiResponse<PageResponse<me.huynhducphu.PingMe_Backend.dto.response.reels.ReelSearchHistoryResponse>>> mySearchHistory(
+            @PageableDefault Pageable pageable
+    ) {
+        var page = reelSearchHistoryService.getMySearchHistory(pageable);
+        return ResponseEntity.ok(new ApiResponse<>(new PageResponse<>(page)));
+    }
+
+    @DeleteMapping("/me/search-history/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteSearchHistoryById(@PathVariable Long id) {
+        reelSearchHistoryService.deleteById(id);
+        return ResponseEntity.ok(new ApiResponse<>(null));
+    }
+
+    @DeleteMapping("/me/search-history")
+    public ResponseEntity<ApiResponse<Void>> deleteAllMySearchHistory() {
+        reelSearchHistoryService.deleteAllMyHistory();
+        return ResponseEntity.ok(new ApiResponse<>(null));
     }
 
     // user xem reel -> +1 view
@@ -142,13 +163,13 @@ public class ReelController {
         Page<ReelResponse> savedPage = reelService.getSavedReels(pageable);
 
         List<ReelResponse> merged = likedPage.getContent().stream()
-                .collect(Collectors.toList());
+                .toList();
 
         Map<Long, ReelResponse> byId = new LinkedHashMap<>();
         for (ReelResponse r : merged) byId.put(r.getId(), r);
         for (ReelResponse r : savedPage.getContent()) byId.putIfAbsent(r.getId(), r);
 
-        List<ReelResponse> finalList = byId.values().stream().collect(Collectors.toList());
+        List<ReelResponse> finalList = new java.util.ArrayList<>(byId.values());
 
         // create a PageImpl with the pageable and combined total (approx) as sum of both distinct sizes
         int start = (int) pageable.getOffset();

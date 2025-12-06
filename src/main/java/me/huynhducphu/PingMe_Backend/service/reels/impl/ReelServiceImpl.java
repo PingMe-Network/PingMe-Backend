@@ -50,6 +50,7 @@ public class ReelServiceImpl implements ReelService {
     private final S3Service s3Service;
     private final ModelMapper modelMapper;
     private final ReelCommentReactionRepository reactionRepository;
+    private final me.huynhducphu.PingMe_Backend.service.reels.ReelSearchHistoryService reelSearchHistoryService;
 
     @Override
     public ReelResponse createReel(ReelRequest dto, MultipartFile video) {
@@ -95,8 +96,16 @@ public class ReelServiceImpl implements ReelService {
         if (query == null || query.isBlank()) {
             return getFeed(pageable);
         }
-        return reelRepository.searchByTitle(query.trim(), pageable)
+        var page = reelRepository.searchByTitle(query.trim(), pageable)
                 .map(reel -> toReelResponse(reel, me.getId()));
+
+        try {
+            // record search history asynchronously; here simple call (swallow errors inside service)
+            reelSearchHistoryService.recordSearch(query.trim(), (int) page.getTotalElements());
+        } catch (Exception ignored) {
+        }
+
+        return page;
     }
 
     @Override
