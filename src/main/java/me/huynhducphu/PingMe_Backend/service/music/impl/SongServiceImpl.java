@@ -2,6 +2,7 @@ package me.huynhducphu.PingMe_Backend.service.music.impl;
 
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.music.SongRequest;
+import me.huynhducphu.PingMe_Backend.dto.request.music.misc.SongArtistRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.music.SongResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.music.SongResponseWithAllAlbum;
 import me.huynhducphu.PingMe_Backend.dto.response.music.misc.AlbumSummaryDto;
@@ -10,13 +11,15 @@ import me.huynhducphu.PingMe_Backend.dto.response.music.misc.GenreDto;
 import me.huynhducphu.PingMe_Backend.model.constant.ArtistRole;
 import me.huynhducphu.PingMe_Backend.model.music.*;
 import me.huynhducphu.PingMe_Backend.repository.music.*;
+import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
+import me.huynhducphu.PingMe_Backend.service.integration.constant.MediaType;
+import me.huynhducphu.PingMe_Backend.service.integration.impl.CompressMediaFile;
 import me.huynhducphu.PingMe_Backend.service.integration.S3Service;
 import me.huynhducphu.PingMe_Backend.service.music.SongService;
 import me.huynhducphu.PingMe_Backend.service.music.util.AudioUtil;
 import me.huynhducphu.PingMe_Backend.repository.music.GenreRepository;
 import me.huynhducphu.PingMe_Backend.repository.music.SongPlayHistoryRepository;
 import me.huynhducphu.PingMe_Backend.repository.music.SongRepository;
-import me.huynhducphu.PingMe_Backend.service.music.SongService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.PageRequest;
@@ -26,12 +29,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,67 +48,20 @@ public class SongServiceImpl implements SongService {
     private final GenreRepository genreRepository;
     private final SongArtistRoleRepository songArtistRoleRepository;
     private final AudioUtil audioUtil;
+    private final CompressMediaFile compressMediaFile;
     private final SongPlayHistoryRepository songPlayHistoryRepository;
     @Autowired
     @Qualifier("redisMessageStringTemplate")
     private RedisTemplate<String, String> redis;
     private final S3Service s3Service;
+    private final CurrentUserProvider currentUserProvider;
 
+    @Override // Nhớ thêm Override nếu hàm này có trong interface
     public List<SongResponseWithAllAlbum> getAllSongs() {
-        List<Song> songs = songRepository.findAll();
-
-        List<SongResponseWithAllAlbum> result = new ArrayList<>();
-        for (Song song : songs) {
-            SongResponseWithAllAlbum response = new SongResponseWithAllAlbum();
-
-            // --- Map các trường cơ bản ---
-            response.setId(song.getId());
-            response.setTitle(song.getTitle());
-            response.setDuration(song.getDuration());
-            response.setPlayCount(song.getPlayCount());
-            response.setSongUrl(song.getSongUrl());
-            response.setCoverImageUrl(song.getImgUrl());
-
-            // --- Xử lý Artist ---
-            List<SongArtistRole> roles = song.getArtistRoles();
-
-            // Main Artist
-            Optional<Artist> mainArtistOpt = roles.stream()
-                    .filter(r -> r.getRole() == ArtistRole.MAIN_ARTIST)
-                    .map(SongArtistRole::getArtist)
-                    .findFirst();
-            mainArtistOpt.ifPresent(a -> response.setMainArtist(
-                    new ArtistSummaryDto(a.getId(), a.getName(), a.getImgUrl())
-            ));
-
-            // Featured Artists
-            List<ArtistSummaryDto> featuredList = roles.stream()
-                    .filter(r -> r.getRole() == ArtistRole.FEATURED_ARTIST)
-                    .map(r -> {
-                        Artist a = r.getArtist();
-                        return new ArtistSummaryDto(a.getId(), a.getName(), a.getImgUrl());
-                    })
-                    .collect(Collectors.toList());
-            response.setFeaturedArtists(featuredList);
-
-            // --- Xử lý Genres ---
-            List<GenreDto> genreDtos = song.getGenres().stream()
-                    .map(g -> new GenreDto(g.getId(), g.getName()))
-                    .collect(Collectors.toList());
-            response.setGenres(genreDtos);
-
-            // --- Xử lý Albums ---
-            if (song.getAlbums() != null && !song.getAlbums().isEmpty()) {
-                List<AlbumSummaryDto> albumSummaries = song.getAlbums().stream()
-                        .map(a -> new AlbumSummaryDto(a.getId(), a.getTitle(), a.getPlayCount()))
-                        .collect(Collectors.toList());
-                response.setAlbums(albumSummaries);
-            }
-
-            result.add(response);
-        }
-
-        return result;
+        // Cách viết hiện đại dùng Stream
+        return songRepository.findAll().stream()
+                .map(this::mapToSongResponseWithAllAlbums) // Gọi hàm map ở dưới
+                .collect(Collectors.toList());
     }
 
 
@@ -127,7 +84,7 @@ public class SongServiceImpl implements SongService {
     }
 
     @Override
-    public List<SongResponse> getSongByGenre(Long id) { // Hoặc nhận thẳng Long genreId
+    public List<SongResponseWithAllAlbum> getSongByGenre(Long id) { // Hoặc nhận thẳng Long genreId
         if (id == null) {
             throw new RuntimeException("Genre ID không được trống");
         }
@@ -135,14 +92,57 @@ public class SongServiceImpl implements SongService {
         // Gọi hàm vừa viết - Chỉ tốn đúng 1 query
         List<Song> songs = songRepository.findSongsByGenreId(id);
 
-        return flattenSongsWithAlbums(songs);
+        return songs.stream()
+                .map(this::mapToSongResponseWithAllAlbums) // Gọi hàm map ở dưới
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<SongResponseWithAllAlbum> getSongByAlbum(Long id) {
+        if (id == null) {
+            throw new RuntimeException("Album ID không được trống");
+        }
+
+        // Tìm Album theo ID
+        Album album = albumRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy Album với ID: " + id));
+
+        // Lấy danh sách bài hát từ Album
+        Set<Song> songs = album.getSongs();
+
+        return songs.stream()
+                .map(this::mapToSongResponseWithAllAlbums) // Gọi hàm map ở dưới
+                .collect(Collectors.toList());
+
+    }
+
+    @Override
+    public List<SongResponseWithAllAlbum> getSongsByArtist(Long artistId) {
+        if (artistId == null) {
+            throw new RuntimeException("Artist ID không được trống");
+        }
+
+        // Lấy danh sách bài hát từ Artist thông qua SongArtistRole
+        List<SongArtistRole> artistRoles = songArtistRoleRepository.findSongArtistRolesByArtist_Id(artistId);
+        Set<Song> songs = artistRoles.stream()
+                .map(SongArtistRole::getSong)
+                .collect(Collectors.toSet());
+
+        return songs.stream()
+                .map(this::mapToSongResponseWithAllAlbums) // Gọi hàm map ở dưới
+                .collect(Collectors.toList());
     }
 
     // Cho phép truyền số lượng bài muốn lấy
-    public List<SongResponse> getTopPlayedSongs(int limit) {
+    public List<SongResponseWithAllAlbum> getTopPlayedSongs(int limit) {
         Pageable pageable = PageRequest.of(0, limit);
         List<Song> topSongs = songRepository.findSongsByPlayCount(pageable);
-        return flattenSongsWithAlbums(topSongs);
+        List<SongResponseWithAllAlbum> songResponsesWithAllAlbum = new ArrayList<>();
+        topSongs.forEach(x->{
+            SongResponseWithAllAlbum songResponseWithAllAlbum = mapToSongResponseWithAllAlbums(x);
+            songResponsesWithAllAlbum.add(songResponseWithAllAlbum);
+        });
+        return songResponsesWithAllAlbum;
     }
 
     @Override
@@ -163,24 +163,42 @@ public class SongServiceImpl implements SongService {
         var song = new Song();
         song.setTitle(dto.getTitle());
 
-        int calculatedDuration = audioUtil.getDurationFromMusicFile(musicFile);
-        if (calculatedDuration <= 0) {
-            throw new RuntimeException("File nhạc lỗi hoặc không xác định được độ dài");
-        }
-        song.setDuration(calculatedDuration);
-
         song.setPlayCount(0L); // Mặc định 0 view
 
         // 3. Upload File Nhạc lên S3
-        String audioFileName = generateFileName(musicFile);
-        String songUrl = s3Service.uploadFile(
-                musicFile,
-                "music/song", // Folder trên S3
-                audioFileName,
-                true, // Lấy URL về
-                MAX_AUDIO_SIZE
-        );
-        song.setSongUrl(songUrl);
+        File compressedFile = null;
+        try {
+            // A. Tính duration (Tính trên file GỐC musicFile cho nhanh, ko cần đợi nén xong)
+            int calculatedDuration = audioUtil.getDurationFromMusicFile(musicFile);
+            if (calculatedDuration <= 0) {
+                throw new RuntimeException("File nhạc lỗi hoặc không xác định được độ dài");
+            }
+            song.setDuration(calculatedDuration);
+
+            // C. Tạo tên file mới (Luôn là .mp3 vì mình nén sang mp3)
+            String audioFileName = UUID.randomUUID().toString() + ".mp3";
+
+            // E. Upload lên S3 (S3Service không biết đây là file fake, nó cứ upload thôi)
+            String songUrl = s3Service.uploadCompressedFile(
+                    musicFile,
+                    "music/song",
+                    audioFileName,
+                    true,
+                    MAX_AUDIO_SIZE,
+                    MediaType.AUDIO
+            );
+            song.setSongUrl(songUrl);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Lỗi khi xử lý/nén file nhạc: " + e.getMessage());
+        } finally {
+            // F. QUAN TRỌNG: Dọn dẹp file nén tạm trên ổ cứng server
+            // Dù upload thành công hay thất bại cũng phải xóa để tránh đầy ổ cứng
+            if (compressedFile != null && compressedFile.exists()) {
+                boolean deleted = compressedFile.delete();
+                if (!deleted) System.err.println("Không xóa được file tạm: " + compressedFile.getAbsolutePath());
+            }
+        }
 
         // 4. Upload File Ảnh lên S3
         String imageFileName = generateFileName(imgFile);
@@ -218,16 +236,33 @@ public class SongServiceImpl implements SongService {
         artistRoles.add(mainRole);
 
         // 7b. Featured Artists
-        if (dto.getFeaturedArtistIds() != null) {
-            for (Long featId : dto.getFeaturedArtistIds()) {
-                var featArtist = artistRepository.findById(featId)
-                        .orElseThrow(() -> new RuntimeException("Không tìm thấy nghệ sĩ phụ ID: " + featId));
+        if (dto.getOtherArtists() != null && !dto.getOtherArtists().isEmpty()) {
+            // Dùng Set để check trùng lặp ID nghệ sĩ trong request (tránh 1 người add 2 lần)
+            Set<Long> processedArtistIds = new HashSet<>();
+            processedArtistIds.add(mainArtist.getId());
 
-                var featRole = new SongArtistRole();
-                featRole.setSong(savedSong);
-                featRole.setArtist(featArtist);
-                featRole.setRole(ArtistRole.FEATURED_ARTIST);
-                artistRoles.add(featRole);
+            for (SongArtistRequest artistReq : dto.getOtherArtists()) {
+                Long artistId = artistReq.getArtistId();
+                ArtistRole role = artistReq.getRole();
+
+                // Validate: Không cho phép add lại Main Artist vào list phụ
+                // Hoặc 1 người không thể xuất hiện 2 lần trong 1 bài hát (tùy nghiệp vụ)
+                if (processedArtistIds.contains(artistId)) {
+                    continue; // Skip nếu trùng
+                }
+
+                var artist = artistRepository.findById(artistId)
+                        .orElseThrow(() -> new RuntimeException("Không tìm thấy nghệ sĩ ID: " + artistId));
+
+                var artistRole = new SongArtistRole();
+                artistRole.setSong(savedSong);
+                artistRole.setArtist(artist);
+
+                // QUAN TRỌNG: Lấy Role từ request thay vì fix cứng FEATURED_ARTIST
+                artistRole.setRole(role);
+
+                artistRoles.add(artistRole);
+                processedArtistIds.add(artistId);
             }
         }
 
@@ -236,8 +271,8 @@ public class SongServiceImpl implements SongService {
         savedSong.setArtistRoles(artistRoles); // Update lại object để map response
 
         // 8. Xử lý Album (CẬP NHẬT METADATA)
-        if (dto.getAlbumId() != null && dto.getAlbumId().length > 0) {
-            var albumIds = Arrays.asList(dto.getAlbumId());
+        if (dto.getAlbumIds() != null && dto.getAlbumIds().length > 0) {
+            var albumIds = Arrays.asList(dto.getAlbumIds());
             var albums = new HashSet<>(albumRepository.findAllById(albumIds));
 
             // Lấy danh sách Featured Artists của bài hát hiện tại ra trước
@@ -277,7 +312,7 @@ public class SongServiceImpl implements SongService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public List<SongResponse> update(Long id, SongRequest dto, MultipartFile musicFile, MultipartFile imgFile) {
+    public List<SongResponse> update(Long id, SongRequest dto, MultipartFile musicFile, MultipartFile imgFile) throws IOException {
         // 1. Tìm bài hát
         Song song = songRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bài hát với ID: " + id));
@@ -285,39 +320,34 @@ public class SongServiceImpl implements SongService {
         // 2. Update Title
         song.setTitle(dto.getTitle());
 
-        // 3. Xử lý Audio File (Nếu có file mới gửi lên)
+        // 3. Xử lý Audio File (Giữ nguyên logic cũ)
         if (musicFile != null && !musicFile.isEmpty()) {
-            // A. Xóa file cũ
             try {
                 if (song.getSongUrl() != null) s3Service.deleteFileByUrl(song.getSongUrl());
             } catch (Exception e) { /* Log warning */ }
 
-            // B. Upload file mới
             String audioName = generateFileName(musicFile);
-            String newUrl = s3Service.uploadFile(musicFile, "music/song", audioName, true, MAX_AUDIO_SIZE);
+            String newUrl = s3Service.uploadCompressedFile(musicFile, "music/song", audioName, true, MAX_AUDIO_SIZE, MediaType.AUDIO);
             song.setSongUrl(newUrl);
 
-            // C. Tính lại duration
             int newDuration = audioUtil.getDurationFromMusicFile(musicFile);
             if (newDuration > 0) song.setDuration(newDuration);
         }
 
-        // 4. Xử lý Image File (Nếu có file mới gửi lên)
+        // 4. Xử lý Image File (Giữ nguyên logic cũ)
         if (imgFile != null && !imgFile.isEmpty()) {
-            // A. Xóa ảnh cũ
             try {
                 if (song.getImgUrl() != null) s3Service.deleteFileByUrl(song.getImgUrl());
             } catch (Exception e) { /* Log warning */ }
 
-            // B. Upload ảnh mới
             String imgName = generateFileName(imgFile);
             String newImgUrl = s3Service.uploadFile(imgFile, "music/img", imgName, true, MAX_COVER_SIZE);
             song.setImgUrl(newImgUrl);
         }
 
-        // 5. Update Genres (Cơ chế: Xóa hết cũ -> Thêm mới)
+        // 5. Update Genres (Giữ nguyên logic cũ)
         if (dto.getGenreIds() != null) {
-            song.getGenres().clear(); // Xóa set hiện tại
+            song.getGenres().clear();
             if (dto.getGenreIds().length > 0) {
                 var genreIds = Arrays.asList(dto.getGenreIds());
                 var newGenres = new HashSet<>(genreRepository.findAllById(genreIds));
@@ -325,31 +355,44 @@ public class SongServiceImpl implements SongService {
             }
         }
 
-        // 6. Update Artist (Cơ chế: Xóa hết Role cũ -> Tạo Role mới)
-        // Lưu ý: Phải xóa thủ công trong DB vì logic update list này khá phức tạp
+        // 6. Update Artist (CẬP NHẬT MỚI: Xử lý theo Role động)
+        // A. Xóa sạch role cũ trong DB
         songArtistRoleRepository.deleteAll(song.getArtistRoles());
         song.getArtistRoles().clear();
 
         List<SongArtistRole> newRoles = new ArrayList<>();
+        Set<Long> processedArtistIds = new HashSet<>(); // Để check trùng
 
-        // 6a. Main Artist
+        // B. Main Artist (Luôn phải có)
         var mainArtist = artistRepository.findById(dto.getMainArtistId())
                 .orElseThrow(() -> new RuntimeException("Main Artist not found"));
-        newRoles.add(new SongArtistRole(null, song, mainArtist, ArtistRole.MAIN_ARTIST));
 
-        // 6b. Featured Artists
-        if (dto.getFeaturedArtistIds() != null) {
-            for (Long featId : dto.getFeaturedArtistIds()) {
-                var featArtist = artistRepository.findById(featId)
-                        .orElseThrow(() -> new RuntimeException("Featured Artist not found"));
-                newRoles.add(new SongArtistRole(null, song, featArtist, ArtistRole.FEATURED_ARTIST));
+        newRoles.add(new SongArtistRole(null, song, mainArtist, ArtistRole.MAIN_ARTIST));
+        processedArtistIds.add(mainArtist.getId());
+
+        // C. Other Artists (Featured, Composer, Producer...)
+        if (dto.getOtherArtists() != null) {
+            for (SongArtistRequest artistReq : dto.getOtherArtists()) {
+                Long artistId = artistReq.getArtistId();
+
+                // Bỏ qua nếu trùng với Main Artist hoặc trùng lặp trong list
+                if (processedArtistIds.contains(artistId)) continue;
+
+                var artist = artistRepository.findById(artistId)
+                        .orElseThrow(() -> new RuntimeException("Artist not found ID: " + artistId));
+
+                // Set role động theo request
+                newRoles.add(new SongArtistRole(null, song, artist, artistReq.getRole()));
+                processedArtistIds.add(artistId);
             }
         }
+
+        // Lưu batch và cập nhật reference
         songArtistRoleRepository.saveAll(newRoles);
         song.setArtistRoles(newRoles);
 
-        // 7. Update Albums (Logic phức tạp nhất)
-        // Bước A: Gỡ bài hát khỏi TẤT CẢ album cũ trước
+        // 7. Update Albums (Logic cũ vẫn hoạt động tốt với danh sách role mới)
+        // Bước A: Gỡ khỏi album cũ
         if (song.getAlbums() != null && !song.getAlbums().isEmpty()) {
             for (Album oldAlbum : song.getAlbums()) {
                 oldAlbum.getSongs().remove(song);
@@ -358,22 +401,21 @@ public class SongServiceImpl implements SongService {
             song.getAlbums().clear();
         }
 
-        // Bước B: Thêm vào các album mới được chọn
-        if (dto.getAlbumId() != null && dto.getAlbumId().length > 0) {
-            var newAlbumIds = Arrays.asList(dto.getAlbumId());
+        // Bước B: Thêm vào album mới
+        if (dto.getAlbumIds() != null && dto.getAlbumIds().length > 0) {
+            var newAlbumIds = Arrays.asList(dto.getAlbumIds());
             var newAlbums = new HashSet<>(albumRepository.findAllById(newAlbumIds));
 
-            // Lấy danh sách Artist để merge vào Album
+            // Lấy danh sách tất cả artist (bao gồm cả Composer, Producer...) để add vào Album
             List<Artist> allArtists = newRoles.stream().map(SongArtistRole::getArtist).toList();
 
             for (Album album : newAlbums) {
-                // Thêm song
                 album.getSongs().add(song);
 
-                // Merge Metadata (Genre + Artist) vào Album
                 if (song.getGenres() != null) {
                     album.getGenres().addAll(song.getGenres());
                 }
+
                 if (!allArtists.isEmpty()) {
                     if (album.getFeaturedArtists() == null) album.setFeaturedArtists(new HashSet<>());
                     album.getFeaturedArtists().addAll(allArtists);
@@ -487,15 +529,16 @@ public class SongServiceImpl implements SongService {
 
     @Transactional
     @Override
-    public void increasePlayCount(Long songId, Long userId) {
+    public void increasePlayCount(Long songId) {
+        var userId = currentUserProvider.get().getId();
         String redisKey = "play:" + userId + ":" + songId;
 
-        // Nếu trong 10s đã nghe → không tăng tiếp
+        // Nếu trong 30s đã nghe → không tăng tiếp
         Boolean alreadyPlayed = redis.hasKey(redisKey);
         if (Boolean.TRUE.equals(alreadyPlayed)) return;
 
         // Tăng playCount
-        songRepository.incrementPlayCount(songId);
+        songRepository.incrementPlayCount(songId, userId);
 
         // Lấy song để log lịch sử
         Song song = songRepository.findById(songId)
@@ -509,15 +552,13 @@ public class SongServiceImpl implements SongService {
                         .playedAt(LocalDateTime.now())
                         .build()
         );
-
-        // Set key Redis sống 10s → debounce
-        redis.opsForValue().set(redisKey, "1", Duration.ofSeconds(10));
+        // Set key Redis sống 30s → debounce
+        redis.opsForValue().set(redisKey, "1", Duration.ofSeconds(30));
     }
 
     private SongResponse mapToSongResponse(Song song, Album album) {
         SongResponse response = new SongResponse();
 
-        // --- Map các trường cơ bản ---
         response.setId(song.getId());
         response.setTitle(song.getTitle());
         response.setDuration(song.getDuration());
@@ -525,37 +566,103 @@ public class SongServiceImpl implements SongService {
         response.setSongUrl(song.getSongUrl());
         response.setCoverImageUrl(song.getImgUrl());
 
-        // --- Xử lý Artist ---
         List<SongArtistRole> roles = song.getArtistRoles();
 
         // Main Artist
-        Optional<Artist> mainArtistOpt = roles.stream()
+        roles.stream()
                 .filter(r -> r.getRole() == ArtistRole.MAIN_ARTIST)
-                .map(SongArtistRole::getArtist)
-                .findFirst();
-        mainArtistOpt.ifPresent(a -> response.setMainArtist(
-                new ArtistSummaryDto(a.getId(), a.getName(), a.getImgUrl())
-        ));
+                .findFirst()
+                .ifPresent(r -> response.setMainArtist(
+                        new ArtistSummaryDto(
+                                r.getArtist().getId(),
+                                r.getArtist().getName(),
+                                ArtistRole.MAIN_ARTIST,
+                                r.getArtist().getImgUrl()
+                        )
+                ));
 
-        // Featured Artists
-        List<ArtistSummaryDto> featuredList = roles.stream()
-                .filter(r -> r.getRole() == ArtistRole.FEATURED_ARTIST)
-                .map(r -> {
-                    Artist a = r.getArtist();
-                    return new ArtistSummaryDto(a.getId(), a.getName(), a.getImgUrl());
-                })
+        List<ArtistSummaryDto> otherArtists = roles.stream()
+                .filter(r -> r.getRole() != ArtistRole.MAIN_ARTIST)
+                .map(r -> new ArtistSummaryDto(
+                        r.getArtist().getId(),
+                        r.getArtist().getName(),
+                        r.getRole(),
+                        r.getArtist().getImgUrl()
+                ))
                 .collect(Collectors.toList());
-        response.setFeaturedArtists(featuredList);
+        response.setOtherArtists(otherArtists);
 
-        // --- Xử lý Genres ---
+        if (song.getGenres() != null) {
+            List<GenreDto> genreDtos = song.getGenres().stream()
+                    .map(g -> new GenreDto(g.getId(), g.getName()))
+                    .collect(Collectors.toList());
+            response.setGenres(genreDtos);
+        }
+
+        if (album != null) {
+            response.setAlbum(new AlbumSummaryDto(album.getId(), album.getTitle(), album.getPlayCount()));
+        }
+
+        return response;
+    }
+
+    private SongResponseWithAllAlbum mapToSongResponseWithAllAlbums(Song song) {
+        SongResponseWithAllAlbum response = new SongResponseWithAllAlbum();
+
+        // 1. Basic Info
+        response.setId(song.getId());
+        response.setTitle(song.getTitle());
+        response.setDuration(song.getDuration());
+        response.setPlayCount(song.getPlayCount());
+        response.setSongUrl(song.getSongUrl());
+        response.setCoverImageUrl(song.getImgUrl());
+
+        List<SongArtistRole> roles = song.getArtistRoles();
+
+        // 2. Main Artist
+        roles.stream()
+                .filter(r -> r.getRole() == ArtistRole.MAIN_ARTIST)
+                .findFirst()
+                .ifPresent(r -> response.setMainArtist(
+                        new ArtistSummaryDto(
+                                r.getArtist().getId(),
+                                r.getArtist().getName(),
+                                ArtistRole.MAIN_ARTIST,
+                                r.getArtist().getImgUrl()
+                                 // Set role cứng hoặc lấy r.getRole()
+                        )
+                ));
+
+        // 3. Other Artists (Featured, Composer, Producer...)
+        // SỬA: Lấy tất cả trừ Main và map Role động vào DTO
+        List<ArtistSummaryDto> otherArtists = roles.stream()
+                .filter(r -> r.getRole() != ArtistRole.MAIN_ARTIST)
+                .map(r -> new ArtistSummaryDto(
+                        r.getArtist().getId(),
+                        r.getArtist().getName(),
+                        r.getRole(),
+                        r.getArtist().getImgUrl()
+                         // <--- QUAN TRỌNG: Lấy role thực tế từ DB
+                ))
+                .collect(Collectors.toList());
+
+        // Giả sử DTO của bạn tên field là otherArtists (hoặc featuredArtists tùy bạn đặt)
+        response.setOtherArtists(otherArtists);
+
+        // 4. Genres
         List<GenreDto> genreDtos = song.getGenres().stream()
                 .map(g -> new GenreDto(g.getId(), g.getName()))
                 .collect(Collectors.toList());
         response.setGenres(genreDtos);
 
-        // --- Xử lý Album ---
-        if (album != null) {
-            response.setAlbum(new AlbumSummaryDto(album.getId(), album.getTitle(), album.getPlayCount()));
+        // 5. Albums (List All)
+        if (song.getAlbums() != null && !song.getAlbums().isEmpty()) {
+            List<AlbumSummaryDto> albumSummaries = song.getAlbums().stream()
+                    .map(a -> new AlbumSummaryDto(a.getId(), a.getTitle(), a.getPlayCount()))
+                    .collect(Collectors.toList());
+            response.setAlbums(albumSummaries);
+        } else {
+            response.setAlbums(new ArrayList<>()); // Trả về list rỗng thay vì null cho an toàn
         }
 
         return response;

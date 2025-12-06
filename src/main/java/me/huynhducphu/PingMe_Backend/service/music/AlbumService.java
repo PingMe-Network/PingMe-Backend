@@ -19,6 +19,8 @@ public interface AlbumService {
 
     AlbumResponse getAlbumById(Long id);
 
+    List<AlbumResponse> getAlbumByTitleContainIgnoreCase(String title);
+
     AlbumResponse save(AlbumRequest albumRequestDto, MultipartFile albumCoverImg);
 
     AlbumResponse update(Long albumId, AlbumRequest albumRequestDto, MultipartFile albumCoverImg);

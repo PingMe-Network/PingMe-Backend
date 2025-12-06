@@ -25,9 +25,6 @@ public class AlbumServiceImpl implements AlbumService {
     private final ArtistRepository artistRepository;
     private final S3Service s3Service;
 
-    // Lấy hằng số từ Interface (hoặc khai báo lại nếu chưa có)
-    private static final long MAX_COVER_SIZE = 5 * 1024 * 1024;
-
     @Override
     public List<AlbumResponse> getAllAlbums() {
         return albumRepository.findAll()
@@ -41,6 +38,14 @@ public class AlbumServiceImpl implements AlbumService {
         Album album = albumRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy Album với ID: " + id));
         return mapToResponse(album);
+    }
+
+    @Override
+    public List<AlbumResponse> getAlbumByTitleContainIgnoreCase(String title) {
+        List<Album> albums = albumRepository.findAlbumsByTitleContainingIgnoreCase(title);
+        return albums.stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
     @Override

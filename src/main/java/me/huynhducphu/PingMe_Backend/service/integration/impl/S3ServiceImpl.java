@@ -2,7 +2,9 @@ package me.huynhducphu.PingMe_Backend.service.integration.impl;
 
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.advice.exception.S3UploadException;
+import me.huynhducphu.PingMe_Backend.service.integration.constant.MediaType;
 import me.huynhducphu.PingMe_Backend.service.integration.S3Service;
+import me.huynhducphu.PingMe_Backend.service.util.CustomMultipartFile;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -10,6 +12,9 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Admin 8/16/2025
@@ -19,6 +24,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 public class S3ServiceImpl implements S3Service {
 
     private final S3Client s3Client;
+    private final CompressMediaFile compressedMediaFile;
 
     private final String awsBucketName;
     private final String awsRegion;
@@ -68,6 +74,25 @@ public class S3ServiceImpl implements S3Service {
     ) {
         String key = String.format("%s/%s", folder, fileName);
         return uploadFile(file, key, getUrl, maxFileSize);
+    }
+
+
+    @Override
+    public String uploadCompressedFile(
+            MultipartFile file, String folder,
+            String fileName, boolean getUrl,
+            long maxFileSize, MediaType mediaType
+    ) throws IOException {
+
+        File compressedFile = compressedMediaFile.compressMedia(file, mediaType);
+        MultipartFile multipartCompressed = new CustomMultipartFile(
+                compressedFile,
+                fileName,
+                "audio/mpeg"
+        );
+
+        String key = String.format("%s/%s", folder, fileName);
+        return uploadFile(multipartCompressed, key, getUrl, maxFileSize);
     }
 
     @Override

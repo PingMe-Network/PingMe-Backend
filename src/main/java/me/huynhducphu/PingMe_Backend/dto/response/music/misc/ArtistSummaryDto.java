@@ -3,6 +3,7 @@ package me.huynhducphu.PingMe_Backend.dto.response.music.misc;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import me.huynhducphu.PingMe_Backend.model.constant.ArtistRole;
 
 /**
  * @author Le Tran Gia Huy
@@ -16,5 +17,6 @@ import lombok.NoArgsConstructor;
 public class ArtistSummaryDto {
     private Long id;
     private String name;
+    private ArtistRole role;
     private String imgUrl; // Nếu cần hiện avatar nhỏ xíu
 }

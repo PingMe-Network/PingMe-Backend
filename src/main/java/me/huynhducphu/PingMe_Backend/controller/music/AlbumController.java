@@ -37,6 +37,12 @@ public class AlbumController {
         return ResponseEntity.ok(albumResponse);
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<AlbumResponse>> searchAlbums(@RequestParam String title){
+        List<AlbumResponse> albumResponses = albumService.getAlbumByTitleContainIgnoreCase(title);
+        return ResponseEntity.ok(albumResponses);
+    }
+
     @PostMapping("/save")
     public ResponseEntity<AlbumResponse> save (
             @Valid @RequestPart("albumRequest") AlbumRequest albumRequest,

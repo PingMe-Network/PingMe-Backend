@@ -4,20 +4,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.music.SongRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.music.SongResponse;
-
 import me.huynhducphu.PingMe_Backend.dto.response.music.SongResponseWithAllAlbum;
-
-import me.huynhducphu.PingMe_Backend.model.User;
 import me.huynhducphu.PingMe_Backend.repository.UserRepository;
-
 import me.huynhducphu.PingMe_Backend.service.music.SongService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
-
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -26,7 +20,7 @@ import java.util.List;
 public class SongController {
 
     private final SongService songService;
-    private final UserRepository userRepository;
+
 
     @GetMapping("/{id}")
     public ResponseEntity<SongResponse> getSongDetail(@PathVariable Long id) {
@@ -46,14 +40,26 @@ public class SongController {
         return ResponseEntity.ok(songResponses);
     }
 
+    @GetMapping("/search-by-album")
+    public ResponseEntity<List<SongResponseWithAllAlbum>> getSongByAlbum(@RequestParam("id") Long albumId) {
+        List<SongResponseWithAllAlbum> songResponses = songService.getSongByAlbum(albumId);
+        return ResponseEntity.ok(songResponses);
+    }
+
+    @GetMapping("/search-by-artist")
+    public ResponseEntity<List<SongResponseWithAllAlbum>> getSongsByArtist(@RequestParam("id") Long artistId) {
+        List<SongResponseWithAllAlbum> songResponses = songService.getSongsByArtist(artistId);
+        return ResponseEntity.ok(songResponses);
+    }
+
     @GetMapping("/getTopSong/{number}")
-    public ResponseEntity<List<SongResponse>> getAllSongs(@PathVariable int number) {
-        List<SongResponse> songResponses = songService.getTopPlayedSongs(number);
+    public ResponseEntity<List<SongResponseWithAllAlbum>> getAllSongs(@PathVariable int number) {
+        List<SongResponseWithAllAlbum> songResponses = songService.getTopPlayedSongs(number);
         return ResponseEntity.ok(songResponses);
     }
 
     @GetMapping("/genre")
-    public ResponseEntity<List<SongResponse>> getByGenre(@RequestParam("id") Long genreId) {
+    public ResponseEntity<List<SongResponseWithAllAlbum>> getByGenre(@RequestParam("id") Long genreId) {
         return ResponseEntity.ok(songService.getSongByGenre(genreId));
     }
 
@@ -73,7 +79,7 @@ public class SongController {
             @Valid @RequestPart("songRequest") SongRequest songRequest,
             @RequestPart(value = "musicFile", required = false) MultipartFile musicFile,
             @RequestPart(value = "imgFile", required = false) MultipartFile imgFile
-    ) {
+    ) throws IOException {
         List<SongResponse> songResponses = songService.update(id, songRequest, musicFile, imgFile);
         return ResponseEntity.ok(songResponses);
     }
@@ -98,21 +104,9 @@ public class SongController {
   
     @PostMapping("/{id}/play")
     public ResponseEntity<Void> increasePlayCount(
-            @PathVariable Long id,
-            @AuthenticationPrincipal Jwt jwt // inject JWT nguyên
+            @PathVariable Long id//
     ) {
-        if (jwt == null) return ResponseEntity.status(401).build();
-
-        // Lấy email từ "sub"
-        String userSub = jwt.getClaimAsString("sub");
-        if (userSub == null || userSub.isBlank()) return ResponseEntity.status(401).build();
-
-        // Map email → userId
-        User user = userRepository.getUserByEmail(userSub).orElse(null);
-        Long userId = user.getId();
-        if (userId == null) return ResponseEntity.status(401).build();
-
-        songService.increasePlayCount(id, userId);
+        songService.increasePlayCount(id);
         return ResponseEntity.ok().build();
     }
 
