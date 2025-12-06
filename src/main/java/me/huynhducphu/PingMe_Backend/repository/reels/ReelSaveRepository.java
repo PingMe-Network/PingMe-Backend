@@ -12,4 +12,6 @@ public interface ReelSaveRepository extends JpaRepository<ReelSave, Long> {
 
     // efficient delete of a user's saved reel
     void deleteByReelIdAndUserId(Long reelId, Long userId);
+
+    long countByReelId(Long id);
 }
