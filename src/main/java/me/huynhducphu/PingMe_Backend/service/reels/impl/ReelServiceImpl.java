@@ -6,10 +6,14 @@ import me.huynhducphu.PingMe_Backend.dto.request.reels.ReelRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.reels.ReelResponse;
 import me.huynhducphu.PingMe_Backend.model.reels.Reel;
 import me.huynhducphu.PingMe_Backend.model.reels.ReelLike;
+import me.huynhducphu.PingMe_Backend.model.reels.ReelSave;
+import me.huynhducphu.PingMe_Backend.model.reels.ReelView;
 import me.huynhducphu.PingMe_Backend.repository.reels.ReelCommentReactionRepository;
 import me.huynhducphu.PingMe_Backend.repository.reels.ReelCommentRepository;
 import me.huynhducphu.PingMe_Backend.repository.reels.ReelLikeRepository;
 import me.huynhducphu.PingMe_Backend.repository.reels.ReelRepository;
+import me.huynhducphu.PingMe_Backend.repository.reels.ReelSaveRepository;
+import me.huynhducphu.PingMe_Backend.repository.reels.ReelViewRepository;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import me.huynhducphu.PingMe_Backend.service.integration.S3Service;
 import me.huynhducphu.PingMe_Backend.service.reels.ReelService;
@@ -38,6 +42,8 @@ public class ReelServiceImpl implements ReelService {
 
     private final ReelRepository reelRepository;
     private final ReelLikeRepository reelLikeRepository;
+    private final ReelSaveRepository reelSaveRepository;
+    private final ReelViewRepository reelViewRepository;
     private final ReelCommentRepository reelCommentRepository;
 
     private final CurrentUserProvider currentUserProvider;
@@ -84,6 +90,40 @@ public class ReelServiceImpl implements ReelService {
     }
 
     @Override
+    public Page<ReelResponse> searchByTitle(String query, Pageable pageable) {
+        var me = currentUserProvider.get();
+        if (query == null || query.isBlank()) {
+            return getFeed(pageable);
+        }
+        return reelRepository.searchByTitle(query.trim(), pageable)
+                .map(reel -> toReelResponse(reel, me.getId()));
+    }
+
+    @Override
+    public Page<ReelResponse> getLikedReels(Pageable pageable) {
+        var me = currentUserProvider.get();
+        return reelLikeRepository.findAllByUserIdOrderByCreatedAtDesc(me.getId(), pageable)
+                .map(ReelLike::getReel)
+                .map(reel -> toReelResponse(reel, me.getId()));
+    }
+
+    @Override
+    public Page<ReelResponse> getSavedReels(Pageable pageable) {
+        var me = currentUserProvider.get();
+        return reelSaveRepository.findAllByUserIdOrderByCreatedAtDesc(me.getId(), pageable)
+                .map(ReelSave::getReel)
+                .map(reel -> toReelResponse(reel, me.getId()));
+    }
+
+    @Override
+    public Page<ReelResponse> getViewedReels(Pageable pageable) {
+        var me = currentUserProvider.get();
+        return reelViewRepository.findAllByUserIdOrderByCreatedAtDesc(me.getId(), pageable)
+                .map(ReelView::getReel)
+                .map(reel -> toReelResponse(reel, me.getId()));
+    }
+
+    @Override
     public ReelResponse incrementView(Long reelId) {
         var me = currentUserProvider.get();
 
@@ -92,6 +132,11 @@ public class ReelServiceImpl implements ReelService {
 
         reel.setViewCount(reel.getViewCount() + 1);
         var saved = reelRepository.save(reel);
+
+        // record view entry if not exists
+        if (!reelViewRepository.existsByReelIdAndUserId(reelId, me.getId())) {
+            reelViewRepository.save(new ReelView(reel, me));
+        }
 
         return toReelResponse(saved, me.getId());
     }
@@ -109,6 +154,25 @@ public class ReelServiceImpl implements ReelService {
             reelLikeRepository.deleteByReelIdAndUserId(reelId, me.getId());
         } else {
             reelLikeRepository.save(new ReelLike(reel, me));
+        }
+
+        return toReelResponse(reel, me.getId());
+    }
+
+    @Override
+    public ReelResponse toggleSave(Long reelId) {
+        var me = currentUserProvider.get();
+
+        var reel = reelRepository.findById(reelId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy Reel"));
+
+        boolean saved = reelSaveRepository.existsByReelIdAndUserId(reelId, me.getId());
+
+        if (saved) {
+            // remove save efficiently
+            reelSaveRepository.deleteByReelIdAndUserId(reelId, me.getId());
+        } else {
+            reelSaveRepository.save(new me.huynhducphu.PingMe_Backend.model.reels.ReelSave(reel, me));
         }
 
         return toReelResponse(reel, me.getId());
@@ -144,10 +208,12 @@ public class ReelServiceImpl implements ReelService {
         long likeCount = reelLikeRepository.countByReelId(reel.getId());
         long commentCount = reelCommentRepository.countByReelId(reel.getId());
         boolean isLikedByMe = reelLikeRepository.existsByReelIdAndUserId(reel.getId(), meId);
+        boolean isSavedByMe = reelSaveRepository.existsByReelIdAndUserId(reel.getId(), meId);
 
         res.setLikeCount(likeCount);
         res.setCommentCount(commentCount);
         res.setIsLikedByMe(isLikedByMe);
+        res.setIsSavedByMe(isSavedByMe);
 
         res.setUserId(reel.getUser().getId());
         res.setUserName(reel.getUser().getName());

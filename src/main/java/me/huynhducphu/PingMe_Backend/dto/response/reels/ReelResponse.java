@@ -13,6 +13,7 @@ public class ReelResponse {
     private Long likeCount;
     private Long commentCount;
     private Boolean isLikedByMe;
+    private Boolean isSavedByMe;
 
     private Long userId;
     private String userName;

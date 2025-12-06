@@ -1,6 +1,8 @@
 package me.huynhducphu.PingMe_Backend.repository.reels;
 
 import me.huynhducphu.PingMe_Backend.model.reels.ReelLike;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ReelLikeRepository extends JpaRepository<ReelLike, Long> {
@@ -8,4 +10,6 @@ public interface ReelLikeRepository extends JpaRepository<ReelLike, Long> {
     long countByReelId(Long reelId);
     void deleteByReelIdAndUserId(Long reelId, Long userId);
     void deleteAllByReelId(Long reelId);
+
+    Page<ReelLike> findAllByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
 }

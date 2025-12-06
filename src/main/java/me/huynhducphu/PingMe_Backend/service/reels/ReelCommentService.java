@@ -24,4 +24,6 @@ public interface ReelCommentService {
     ReelCommentResponse react(Long commentId, ReactionType type);
 
     ReelCommentResponse unreact(Long commentId);
+
+    boolean isCommentOwner(Long commentId);
 }

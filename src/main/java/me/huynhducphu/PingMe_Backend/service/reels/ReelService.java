@@ -15,7 +15,21 @@ public interface ReelService {
 
     ReelResponse toggleLike(Long reelId);
 
+    ReelResponse toggleSave(Long reelId);
+
     void deleteReel(Long id);
 
     ReelResponse updateReel(Long reelId, ReelRequest dto, MultipartFile video);
+
+    // List reels liked by the current user
+    Page<ReelResponse> getLikedReels(Pageable pageable);
+
+    // List reels saved/favorited by the current user
+    Page<ReelResponse> getSavedReels(Pageable pageable);
+
+    // List reels viewed by the current user
+    Page<ReelResponse> getViewedReels(Pageable pageable);
+
+    // Search reels by title/caption
+    Page<ReelResponse> searchByTitle(String query, Pageable pageable);
 }

@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Reel Comments", description = "Endpoints bình luận reels")
@@ -36,6 +37,10 @@ public class ReelCommentController {
             @PathVariable Long commentId,
             @Valid @RequestBody UpsertReelCommentRequest dto
     ) {
+        // Verify the current authenticated user is the owner of the comment
+        if (!reelCommentService.isCommentOwner(commentId)) {
+            throw new AccessDeniedException("Bạn không có quyền sửa bình luận này");
+        }
         var res = reelCommentService.updateComment(commentId, dto);
         return ResponseEntity.ok(new ApiResponse<>(res));
     }

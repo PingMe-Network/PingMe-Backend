@@ -207,5 +207,12 @@ public class ReelCommentServiceImpl implements ReelCommentService {
 
         return toResponse(comment);
     }
+    @Override
+    public boolean isCommentOwner(Long commentId) {
+        var me = currentUserProvider.get();
+        ReelComment comment = reelCommentRepository.findById(commentId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy bình luận"));
+        return comment.getUser() != null && comment.getUser().getId().equals(me.getId());
+    }
 
 }
