@@ -10,7 +10,7 @@ import me.huynhducphu.PingMe_Backend.dto.response.authentication.CurrentUserProf
 import me.huynhducphu.PingMe_Backend.dto.response.authentication.CurrentUserSessionResponse;
 import me.huynhducphu.PingMe_Backend.model.User;
 import me.huynhducphu.PingMe_Backend.model.constant.AuthProvider;
-import me.huynhducphu.PingMe_Backend.repository.UserRepository;
+import me.huynhducphu.PingMe_Backend.repository.auth.UserRepository;
 import me.huynhducphu.PingMe_Backend.service.authentication.UserAccountService;
 import me.huynhducphu.PingMe_Backend.service.authentication.JwtService;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;

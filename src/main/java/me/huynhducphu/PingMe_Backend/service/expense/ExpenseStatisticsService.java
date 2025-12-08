@@ -1,6 +1,6 @@
 package me.huynhducphu.PingMe_Backend.service.expense;
 
-import me.huynhducphu.PingMe_Backend.dto.response.miniapp.expense.*;
+import me.huynhducphu.PingMe_Backend.dto.response.expense.*;
 
 import java.util.List;
 

@@ -11,8 +11,8 @@ import me.huynhducphu.PingMe_Backend.dto.ws.friendship.common.FriendshipEventTyp
 import me.huynhducphu.PingMe_Backend.model.User;
 import me.huynhducphu.PingMe_Backend.model.constant.FriendshipStatus;
 import me.huynhducphu.PingMe_Backend.model.chat.Friendship;
-import me.huynhducphu.PingMe_Backend.repository.FriendshipRepository;
-import me.huynhducphu.PingMe_Backend.repository.UserRepository;
+import me.huynhducphu.PingMe_Backend.repository.chat.FriendshipRepository;
+import me.huynhducphu.PingMe_Backend.repository.auth.UserRepository;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.ApplicationEventPublisher;

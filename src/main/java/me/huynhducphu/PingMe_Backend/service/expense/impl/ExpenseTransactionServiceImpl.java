@@ -4,10 +4,10 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.miniapp.expense.CreateTransactionRequest;
 import me.huynhducphu.PingMe_Backend.dto.request.miniapp.expense.UpdateTransactionRequest;
-import me.huynhducphu.PingMe_Backend.dto.response.miniapp.expense.TransactionResponse;
-import me.huynhducphu.PingMe_Backend.model.miniapp.ExpenseTransaction;
+import me.huynhducphu.PingMe_Backend.dto.response.expense.TransactionResponse;
+import me.huynhducphu.PingMe_Backend.model.expense.ExpenseTransaction;
 import me.huynhducphu.PingMe_Backend.model.User;
-import me.huynhducphu.PingMe_Backend.repository.ExpenseTransactionRepository;
+import me.huynhducphu.PingMe_Backend.repository.expense.ExpenseTransactionRepository;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -70,6 +70,7 @@ public class ExpenseTransactionServiceImpl implements me.huynhducphu.PingMe_Back
         txRepo.deleteById(id);
         return id;
     }
+
     @Override
     public TransactionResponse getTransactionDetail(Long id) {
         User user = currentUserProvider.get();

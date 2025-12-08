@@ -4,7 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.response.reels.ReelSearchHistoryResponse;
 import me.huynhducphu.PingMe_Backend.model.reels.ReelSearchHistory;
-import me.huynhducphu.PingMe_Backend.repository.ReelSearchHistoryRepository;
+import me.huynhducphu.PingMe_Backend.repository.auth.ReelSearchHistoryRepository;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import me.huynhducphu.PingMe_Backend.service.reels.ReelSearchHistoryService;
 import org.springframework.data.domain.Page;

@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.music.SongRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.music.SongResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.music.SongResponseWithAllAlbum;
-import me.huynhducphu.PingMe_Backend.repository.UserRepository;
 import me.huynhducphu.PingMe_Backend.service.music.SongService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -101,7 +100,7 @@ public class SongController {
         songService.restore(id);
         return ResponseEntity.ok().build();
     }
-  
+
     @PostMapping("/{id}/play")
     public ResponseEntity<Void> increasePlayCount(
             @PathVariable Long id//

@@ -1,7 +1,7 @@
 package me.huynhducphu.PingMe_Backend.service.common.impl;
 
 import lombok.RequiredArgsConstructor;
-import me.huynhducphu.PingMe_Backend.repository.UserRepository;
+import me.huynhducphu.PingMe_Backend.repository.auth.UserRepository;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

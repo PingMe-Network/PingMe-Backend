@@ -1,7 +1,7 @@
 package me.huynhducphu.PingMe_Backend.service.expense.impl;
 
 import lombok.RequiredArgsConstructor;
-import me.huynhducphu.PingMe_Backend.dto.response.miniapp.expense.*;
+import me.huynhducphu.PingMe_Backend.dto.response.expense.*;
 import me.huynhducphu.PingMe_Backend.service.expense.ExpenseStatisticsService;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Component;
@@ -15,8 +15,13 @@ public class ExpenseStatisticsToolsServiceImpl implements me.huynhducphu.PingMe_
 
     private final ExpenseStatisticsService statisticsService;
 
-    private int currentMonth() { return LocalDate.now().getMonthValue(); }
-    private int currentYear()  { return LocalDate.now().getYear(); }
+    private int currentMonth() {
+        return LocalDate.now().getMonthValue();
+    }
+
+    private int currentYear() {
+        return LocalDate.now().getYear();
+    }
 
     @Tool(description = """
             Lấy thống kê tháng: tổng thu, tổng chi, net.

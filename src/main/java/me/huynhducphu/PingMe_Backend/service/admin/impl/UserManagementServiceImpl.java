@@ -6,7 +6,7 @@ import me.huynhducphu.PingMe_Backend.dto.admin.request.user.CreateUserRequest;
 import me.huynhducphu.PingMe_Backend.dto.admin.response.user.DefaultUserResponse;
 import me.huynhducphu.PingMe_Backend.model.User;
 import me.huynhducphu.PingMe_Backend.model.constant.AuthProvider;
-import me.huynhducphu.PingMe_Backend.repository.UserRepository;
+import me.huynhducphu.PingMe_Backend.repository.auth.UserRepository;
 import me.huynhducphu.PingMe_Backend.service.admin.UserManagementService;
 import org.modelmapper.ModelMapper;
 import org.springframework.dao.DataIntegrityViolationException;
