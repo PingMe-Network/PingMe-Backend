@@ -2,15 +2,15 @@ package me.huynhducphu.PingMe_Backend.service.expense.impl;
 
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.miniapp.expense.AiChatRequest;
-import me.huynhducphu.PingMe_Backend.dto.response.miniapp.expense.AiChatHistoryResponse;
-import me.huynhducphu.PingMe_Backend.model.miniapp.ExpenseAiChatHistory;
-import me.huynhducphu.PingMe_Backend.model.miniapp.ExpenseTransaction;
+import me.huynhducphu.PingMe_Backend.dto.response.expense.AiChatHistoryResponse;
+import me.huynhducphu.PingMe_Backend.model.expense.ExpenseAiChatHistory;
+import me.huynhducphu.PingMe_Backend.model.expense.ExpenseTransaction;
 import me.huynhducphu.PingMe_Backend.model.User;
 import me.huynhducphu.PingMe_Backend.model.constant.AiChatRole;
 import me.huynhducphu.PingMe_Backend.model.constant.CategoryType;
 import me.huynhducphu.PingMe_Backend.model.constant.TransactionType;
-import me.huynhducphu.PingMe_Backend.repository.ExpenseAiChatHistoryRepository;
-import me.huynhducphu.PingMe_Backend.repository.ExpenseTransactionRepository;
+import me.huynhducphu.PingMe_Backend.repository.expense.ExpenseAiChatHistoryRepository;
+import me.huynhducphu.PingMe_Backend.repository.expense.ExpenseTransactionRepository;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import me.huynhducphu.PingMe_Backend.service.expense.ExpenseAIService;
 import me.huynhducphu.PingMe_Backend.service.expense.ExpenseStatisticsToolsService;
@@ -69,87 +69,87 @@ public class ExpenseAIServiceImpl implements ExpenseAIService {
                 .collect(Collectors.joining("\n"));
 
         String prompt = """
-        Bạn là trợ lý AI quản lý chi tiêu cá nhân cho ứng dụng PingMe.
-
-        LỊCH SỬ TRAO ĐỔI GẦN ĐÂY (để hiểu ngữ cảnh):
-        %s
-
-        ---
-        Bạn có các công cụ:
-        
-        CRUD giao dịch:
-        1) addTransaction(amount, category, type, note, date)
-        2) deleteTransaction(amount, category, note, date)
-        3) updateTransaction(oldAmount, oldCategory, oldNote, oldDate, newAmount, newCategory, newNote, newDate)
-        
-        Thống kê tay (backend cung cấp):
-        4) getMonthStatistics(month, year)
-        5) getCategoryStatistics(month, year)
-        6) getMonthComparison(month, year)
-        7) getDailyBreakdown(month, year)
-        8) getTopCategories(month, year)
-        9) getYearStatistics(year)
-        10) getRangeStatistics(from, to)
-        
-        QUY TẮC:
-        - Nếu user hỏi thống kê/báo cáo/tổng thu-chi/xu hướng/top danh mục
-          => PHẢI gọi tool thống kê tương ứng trước rồi mới trả lời.
-        - Không được nói "tôi không thể thống kê".
-
-        HƯỚNG DẪN DÙNG TOOL:
-        - Khi người dùng muốn thêm chi tiêu/thu nhập (vd: "tôi tiêu 200k ăn tối", "lương tháng 11 8tr"),
-          hãy gọi addTransaction.
-        - Khi người dùng muốn xóa giao dịch:
-            + Nếu KHÔNG nói số tiền (amount) và KHÔNG nói "xóa hết/xóa tất cả/không nhớ số tiền"
-              => HỎI LẠI số tiền để xóa chính xác.
-            + Nếu có nói "xóa hết/xóa tất cả/không nhớ số tiền"
-              => gọi deleteTransaction với amount = null để xóa TẤT CẢ giao dịch phù hợp.
-        - Khi muốn sửa (vd: "sửa ăn tối 50k thành 70k"), hãy gọi updateTransaction.
-        - Nếu người dùng chỉ hỏi tư vấn/thống kê, KHÔNG gọi tool, chỉ trả lời.
-
-        QUY TẮC QUAN TRỌNG:
-        - Kể cả khi người dùng lặp lại đúng câu lệnh thêm/sửa/xóa trước đó, hãy coi đó là yêu cầu MỚI và vẫn phải gọi tool tương ứng (trừ khi họ nói rõ ‘không cần thêm nữa
-        - Tuyệt đối KHÔNG tự tạo ngày yyyy-MM-dd nếu người dùng không nói rõ ngày cụ thể.
-        - Nếu người dùng nói ngày tương đối như "hôm nay/tối nay/sáng nay/chiều nay/hôm qua" hoặc không nói ngày
-          => date đã được backend suy ra bên dưới và bạn PHẢI dùng đúng date đó khi gọi tool, KHÔNG hỏi lại.
-        - Chỉ hỏi lại ngày khi người dùng nói mơ hồ kiểu "hôm trước/bữa kia" mà không rõ thời điểm.
-        - Nếu thiếu amount hoặc category quan trọng thì hỏi lại, không gọi tool sai.
-        - Không bịa dữ liệu.
-        - Trả lời ngắn gọn, rõ ràng tiếng Việt.
-                QUY TẮC XÓA (BẮT BUỘC LÀM THEO):
-                - inferredDate là ngày chắc chắn do backend suy ra.
-                - Nếu inferredDate khác null và người dùng yêu cầu xóa nhưng KHÔNG nói số tiền
-                  => PHẢI gọi deleteTransaction(amount=null, category=..., date=inferredDate) để xóa TẤT CẢ trong ngày đó.
-                  => TUYỆT ĐỐI KHÔNG hỏi lại, KHÔNG xác nhận.
-                - Nếu inferredDate là null và người dùng không nói số tiền
-                  => hỏi lại số tiền.
-                - Không được hỏi kiểu "Bạn có chắc chắn không?" trong mọi trường hợp xóa.
-
-        Danh mục hợp lệ (enum):
-        FOOD_AND_BEVERAGE (ăn uống, ăn tối, ăn sáng, nhà hàng...)
-        COFFEE (cà phê, trà sữa...)
-        TRANSPORTATION (đi lại, grab, taxi...)
-        GAS (đổ xăng...)
-        SHOPPING (mua sắm...)
-        HOUSEHOLD (gia dụng, đồ nhà...)
-        ELECTRICITY (tiền điện...)
-        WATER (tiền nước...)
-        INTERNET (wifi, mạng...)
-        PHONE (điện thoại, sim, 4g/5g...)
-        ENTERTAINMENT (giải trí...)
-        HEALTHCARE (y tế, thuốc...)
-        PETS (thú cưng...)
-        GIFTS (quà tặng...)
-        EDUCATION (học phí, sách vở...)
-        TRAVEL (du lịch...)
-        OTHER (khác...)
-
-        Ngữ cảnh chắc chắn do backend suy ra:
-        - inferredDate = %s
-          (Nếu inferredDate khác null => đó là ngày chính xác phải dùng khi gọi tool.)
-
-        Người dùng: %s
-        """.formatted(
+                Bạn là trợ lý AI quản lý chi tiêu cá nhân cho ứng dụng PingMe.
+                
+                LỊCH SỬ TRAO ĐỔI GẦN ĐÂY (để hiểu ngữ cảnh):
+                %s
+                
+                ---
+                Bạn có các công cụ:
+                
+                CRUD giao dịch:
+                1) addTransaction(amount, category, type, note, date)
+                2) deleteTransaction(amount, category, note, date)
+                3) updateTransaction(oldAmount, oldCategory, oldNote, oldDate, newAmount, newCategory, newNote, newDate)
+                
+                Thống kê tay (backend cung cấp):
+                4) getMonthStatistics(month, year)
+                5) getCategoryStatistics(month, year)
+                6) getMonthComparison(month, year)
+                7) getDailyBreakdown(month, year)
+                8) getTopCategories(month, year)
+                9) getYearStatistics(year)
+                10) getRangeStatistics(from, to)
+                
+                QUY TẮC:
+                - Nếu user hỏi thống kê/báo cáo/tổng thu-chi/xu hướng/top danh mục
+                  => PHẢI gọi tool thống kê tương ứng trước rồi mới trả lời.
+                - Không được nói "tôi không thể thống kê".
+                
+                HƯỚNG DẪN DÙNG TOOL:
+                - Khi người dùng muốn thêm chi tiêu/thu nhập (vd: "tôi tiêu 200k ăn tối", "lương tháng 11 8tr"),
+                  hãy gọi addTransaction.
+                - Khi người dùng muốn xóa giao dịch:
+                    + Nếu KHÔNG nói số tiền (amount) và KHÔNG nói "xóa hết/xóa tất cả/không nhớ số tiền"
+                      => HỎI LẠI số tiền để xóa chính xác.
+                    + Nếu có nói "xóa hết/xóa tất cả/không nhớ số tiền"
+                      => gọi deleteTransaction với amount = null để xóa TẤT CẢ giao dịch phù hợp.
+                - Khi muốn sửa (vd: "sửa ăn tối 50k thành 70k"), hãy gọi updateTransaction.
+                - Nếu người dùng chỉ hỏi tư vấn/thống kê, KHÔNG gọi tool, chỉ trả lời.
+                
+                QUY TẮC QUAN TRỌNG:
+                - Kể cả khi người dùng lặp lại đúng câu lệnh thêm/sửa/xóa trước đó, hãy coi đó là yêu cầu MỚI và vẫn phải gọi tool tương ứng (trừ khi họ nói rõ ‘không cần thêm nữa
+                - Tuyệt đối KHÔNG tự tạo ngày yyyy-MM-dd nếu người dùng không nói rõ ngày cụ thể.
+                - Nếu người dùng nói ngày tương đối như "hôm nay/tối nay/sáng nay/chiều nay/hôm qua" hoặc không nói ngày
+                  => date đã được backend suy ra bên dưới và bạn PHẢI dùng đúng date đó khi gọi tool, KHÔNG hỏi lại.
+                - Chỉ hỏi lại ngày khi người dùng nói mơ hồ kiểu "hôm trước/bữa kia" mà không rõ thời điểm.
+                - Nếu thiếu amount hoặc category quan trọng thì hỏi lại, không gọi tool sai.
+                - Không bịa dữ liệu.
+                - Trả lời ngắn gọn, rõ ràng tiếng Việt.
+                        QUY TẮC XÓA (BẮT BUỘC LÀM THEO):
+                        - inferredDate là ngày chắc chắn do backend suy ra.
+                        - Nếu inferredDate khác null và người dùng yêu cầu xóa nhưng KHÔNG nói số tiền
+                          => PHẢI gọi deleteTransaction(amount=null, category=..., date=inferredDate) để xóa TẤT CẢ trong ngày đó.
+                          => TUYỆT ĐỐI KHÔNG hỏi lại, KHÔNG xác nhận.
+                        - Nếu inferredDate là null và người dùng không nói số tiền
+                          => hỏi lại số tiền.
+                        - Không được hỏi kiểu "Bạn có chắc chắn không?" trong mọi trường hợp xóa.
+                
+                Danh mục hợp lệ (enum):
+                FOOD_AND_BEVERAGE (ăn uống, ăn tối, ăn sáng, nhà hàng...)
+                COFFEE (cà phê, trà sữa...)
+                TRANSPORTATION (đi lại, grab, taxi...)
+                GAS (đổ xăng...)
+                SHOPPING (mua sắm...)
+                HOUSEHOLD (gia dụng, đồ nhà...)
+                ELECTRICITY (tiền điện...)
+                WATER (tiền nước...)
+                INTERNET (wifi, mạng...)
+                PHONE (điện thoại, sim, 4g/5g...)
+                ENTERTAINMENT (giải trí...)
+                HEALTHCARE (y tế, thuốc...)
+                PETS (thú cưng...)
+                GIFTS (quà tặng...)
+                EDUCATION (học phí, sách vở...)
+                TRAVEL (du lịch...)
+                OTHER (khác...)
+                
+                Ngữ cảnh chắc chắn do backend suy ra:
+                - inferredDate = %s
+                  (Nếu inferredDate khác null => đó là ngày chính xác phải dùng khi gọi tool.)
+                
+                Người dùng: %s
+                """.formatted(
                 historyContext.isBlank() ? "(Chưa có lịch sử trước đó)" : historyContext,
                 inferredDate,
                 request.getPrompt()
@@ -253,15 +253,15 @@ public class ExpenseAIServiceImpl implements ExpenseAIService {
         }
 
         @Tool(description = """
-        - Khi người dùng muốn xóa giao dịch:
-            + Nếu người dùng KHÔNG nói số tiền (amount):
-                * Nếu người dùng đã nói rõ ngày cụ thể (ví dụ "ngày 10 tháng 11", "9/11")
-                  => gọi deleteTransaction với amount = null để XÓA TẤT CẢ giao dịch phù hợp trong ngày đó.
-                * Nếu người dùng KHÔNG nói rõ ngày cụ thể
-                  => hỏi lại số tiền để xóa chính xác, trừ khi họ nói "xóa hết/xóa tất cả/không nhớ số tiền".
-            + Nếu người dùng nói "xóa hết/xóa tất cả/không nhớ số tiền"
-              => gọi deleteTransaction với amount = null để xóa tất cả giao dịch phù hợp.
-              \s""")
+                - Khi người dùng muốn xóa giao dịch:
+                    + Nếu người dùng KHÔNG nói số tiền (amount):
+                        * Nếu người dùng đã nói rõ ngày cụ thể (ví dụ "ngày 10 tháng 11", "9/11")
+                          => gọi deleteTransaction với amount = null để XÓA TẤT CẢ giao dịch phù hợp trong ngày đó.
+                        * Nếu người dùng KHÔNG nói rõ ngày cụ thể
+                          => hỏi lại số tiền để xóa chính xác, trừ khi họ nói "xóa hết/xóa tất cả/không nhớ số tiền".
+                    + Nếu người dùng nói "xóa hết/xóa tất cả/không nhớ số tiền"
+                      => gọi deleteTransaction với amount = null để xóa tất cả giao dịch phù hợp.
+                      \s""")
         public String deleteTransaction(
                 Double amount,
                 String category,
@@ -295,7 +295,10 @@ public class ExpenseAIServiceImpl implements ExpenseAIService {
 
             LocalDate dTmp = null;
             if (date != null && !date.isBlank()) {
-                try { dTmp = LocalDate.parse(date); } catch (Exception ignored) {}
+                try {
+                    dTmp = LocalDate.parse(date);
+                } catch (Exception ignored) {
+                }
             }
             final LocalDate d = dTmp;
 
@@ -379,7 +382,8 @@ public class ExpenseAIServiceImpl implements ExpenseAIService {
             if (newDate != null && !newDate.isBlank()) {
                 try {
                     tx.setDate(LocalDate.parse(newDate));
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
 
             txRepo.save(tx);
@@ -409,7 +413,10 @@ public class ExpenseAIServiceImpl implements ExpenseAIService {
 
             LocalDate dTmp = null;
             if (date != null && !date.isBlank()) {
-                try { dTmp = LocalDate.parse(date); } catch (Exception ignored) {}
+                try {
+                    dTmp = LocalDate.parse(date);
+                } catch (Exception ignored) {
+                }
             }
             final LocalDate d = dTmp;
 
@@ -498,7 +505,7 @@ public class ExpenseAIServiceImpl implements ExpenseAIService {
                     "health", "healthcare", "doctor", "hospital"))
                 return CategoryType.HEALTHCARE;
 
-            if (containsAnyWord(s, "thu cung", "pet", "cho", "meo","cat", "dog", "thuc an cho meo")){
+            if (containsAnyWord(s, "thu cung", "pet", "cho", "meo", "cat", "dog", "thuc an cho meo")) {
                 return CategoryType.PETS;
             }
 
@@ -522,12 +529,12 @@ public class ExpenseAIServiceImpl implements ExpenseAIService {
             String s = input.toLowerCase(Locale.ROOT).trim();
 
             s = s.replace("đ", "d");
-            s = s.replace("ă","a").replace("â","a").replace("á","a").replace("à","a").replace("ả","a").replace("ã","a").replace("ạ","a");
-            s = s.replace("ê","e").replace("é","e").replace("è","e").replace("ẻ","e").replace("ẽ","e").replace("ẹ","e");
-            s = s.replace("ô","o").replace("ơ","o").replace("ó","o").replace("ò","o").replace("ỏ","o").replace("õ","o").replace("ọ","o");
-            s = s.replace("ư","u").replace("ú","u").replace("ù","u").replace("ủ","u").replace("ũ","u").replace("ụ","u");
-            s = s.replace("í","i").replace("ì","i").replace("ỉ","i").replace("ĩ","i").replace("ị","i");
-            s = s.replace("ý","y").replace("ỳ","y").replace("ỷ","y").replace("ỹ","y").replace("ỵ","y");
+            s = s.replace("ă", "a").replace("â", "a").replace("á", "a").replace("à", "a").replace("ả", "a").replace("ã", "a").replace("ạ", "a");
+            s = s.replace("ê", "e").replace("é", "e").replace("è", "e").replace("ẻ", "e").replace("ẽ", "e").replace("ẹ", "e");
+            s = s.replace("ô", "o").replace("ơ", "o").replace("ó", "o").replace("ò", "o").replace("ỏ", "o").replace("õ", "o").replace("ọ", "o");
+            s = s.replace("ư", "u").replace("ú", "u").replace("ù", "u").replace("ủ", "u").replace("ũ", "u").replace("ụ", "u");
+            s = s.replace("í", "i").replace("ì", "i").replace("ỉ", "i").replace("ĩ", "i").replace("ị", "i");
+            s = s.replace("ý", "y").replace("ỳ", "y").replace("ỷ", "y").replace("ỹ", "y").replace("ỵ", "y");
 
             s = s.replaceAll("\\s+", " ");
             return s;
@@ -579,7 +586,8 @@ public class ExpenseAIServiceImpl implements ExpenseAIService {
             int year = LocalDate.now().getYear();
             try {
                 return LocalDate.of(year, month, day).toString();
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
 
         return null;

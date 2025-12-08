@@ -6,7 +6,7 @@ import me.huynhducphu.PingMe_Backend.dto.request.blog.UpsertBlogRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.blog.BlogDetailsResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.blog.BlogReviewResponse;
 import me.huynhducphu.PingMe_Backend.model.blog.Blog;
-import me.huynhducphu.PingMe_Backend.repository.BlogRepository;
+import me.huynhducphu.PingMe_Backend.repository.blog.BlogRepository;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import me.huynhducphu.PingMe_Backend.service.integration.S3Service;
 import org.modelmapper.ModelMapper;

@@ -6,8 +6,8 @@ import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.miniapp.expense.CreateTransactionRequest;
 import me.huynhducphu.PingMe_Backend.dto.request.miniapp.expense.UpdateTransactionRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
-import me.huynhducphu.PingMe_Backend.dto.response.miniapp.expense.DeleteTransactionResponse;
-import me.huynhducphu.PingMe_Backend.dto.response.miniapp.expense.TransactionResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.expense.DeleteTransactionResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.expense.TransactionResponse;
 import me.huynhducphu.PingMe_Backend.service.expense.ExpenseTransactionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,6 +39,7 @@ public class ExpenseTransactionController {
     ) {
         return ResponseEntity.ok(new ApiResponse<>(service.getTransactionsInMonth(month, year)));
     }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<DeleteTransactionResponse>> delete(@PathVariable Long id) {
         Long deletedId = service.deleteTransaction(id);
@@ -46,12 +47,14 @@ public class ExpenseTransactionController {
                 new ApiResponse<>(new DeleteTransactionResponse(deletedId))
         );
     }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<TransactionResponse>> detail(@PathVariable Long id) {
         return ResponseEntity.ok(
                 new ApiResponse<>(service.getTransactionDetail(id))
         );
     }
+
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<TransactionResponse>> update(
             @PathVariable Long id,
