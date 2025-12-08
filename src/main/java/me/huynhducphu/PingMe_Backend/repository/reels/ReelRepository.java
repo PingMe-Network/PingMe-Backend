@@ -28,7 +28,12 @@ public interface ReelRepository extends JpaRepository<Reel, Long>,
     )
     Page<Reel> searchByTitle(@Param("q") String q, Pageable pageable);
 
-    // search by hashtag (match anywhere in hashtags column). Pass tag including '#' (e.g. '#fun')
-    @Query(value = "SELECT * FROM reels r WHERE r.hashtags IS NOT NULL AND LOWER(r.hashtags) LIKE LOWER(CONCAT('%', :tag, '%')) ORDER BY r.created_at DESC", nativeQuery = true)
+    // search by hashtag using the element collection table `reel_hashtags`.
+    @Query(value = """
+        SELECT r.* FROM reels r
+        JOIN reel_hashtags h ON h.reel_id = r.id
+        WHERE LOWER(h.tag) = LOWER(:tag)
+        ORDER BY r.created_at DESC
+      """, nativeQuery = true)
     Page<Reel> searchByHashtag(@Param("tag") String tag, Pageable pageable);
 }

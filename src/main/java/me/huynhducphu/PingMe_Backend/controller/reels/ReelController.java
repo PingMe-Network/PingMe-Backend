@@ -7,6 +7,7 @@ import me.huynhducphu.PingMe_Backend.dto.request.reels.ReelRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.common.PageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.reels.ReelResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.reels.ReelSearchHistoryResponse;
 import me.huynhducphu.PingMe_Backend.service.reels.ReelSearchHistoryService;
 import me.huynhducphu.PingMe_Backend.service.reels.ReelService;
 import org.springframework.data.domain.Page;
@@ -60,7 +61,7 @@ public class ReelController {
     }
 
     @GetMapping("/me/search-history")
-    public ResponseEntity<ApiResponse<PageResponse<me.huynhducphu.PingMe_Backend.dto.response.reels.ReelSearchHistoryResponse>>> mySearchHistory(
+    public ResponseEntity<ApiResponse<PageResponse<ReelSearchHistoryResponse>>> mySearchHistory(
             @PageableDefault Pageable pageable
     ) {
         var page = reelSearchHistoryService.getMySearchHistory(pageable);
@@ -68,7 +69,7 @@ public class ReelController {
     }
 
     @GetMapping("/me/created")
-    public ResponseEntity<ApiResponse<PageResponse<me.huynhducphu.PingMe_Backend.dto.response.reels.ReelResponse>>> getMyCreatedReels(
+    public ResponseEntity<ApiResponse<PageResponse<ReelResponse>>> getMyCreatedReels(
             @PageableDefault Pageable pageable
     ) {
         var page = reelService.getMyCreatedReels(pageable);

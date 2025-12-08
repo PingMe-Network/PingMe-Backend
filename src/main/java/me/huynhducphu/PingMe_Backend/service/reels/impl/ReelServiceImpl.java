@@ -28,6 +28,8 @@ import org.springframework.util.unit.DataSize;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -75,8 +77,19 @@ public class ReelServiceImpl implements ReelService {
                 video, reelsFolder, randomFileName, true, maxBytes
         );
 
-        // normalize hashtags (store as comma-separated, preserve input for now)
-        var reel = new Reel(url, dto.getCaption(), dto.getHashtags());
+        // normalize hashtags list: remove leading '#', trim, filter empties
+        List<String> normalized = null;
+        if (dto.getHashtags() != null) {
+            normalized = dto.getHashtags().stream()
+                    .filter(h -> h != null && !h.isBlank())
+                    .map(String::trim)
+                    .map(h -> h.startsWith("#") ? h.substring(1) : h)
+                    .map(String::toLowerCase)
+                    .distinct()
+                    .collect(Collectors.toList());
+        }
+
+        var reel = new Reel(url, dto.getCaption(), normalized);
         reel.setUser(user);
 
         var saved = reelRepository.saveAndFlush(reel);
@@ -101,7 +114,9 @@ public class ReelServiceImpl implements ReelService {
         String q = query.trim();
         Page<Reel> rawPage;
         if (q.startsWith("#")) {
-            rawPage = reelRepository.searchByHashtag(q, pageable);
+            // normalize tag for search (strip leading '#')
+            String tag = q.substring(1).toLowerCase();
+            rawPage = reelRepository.searchByHashtag(tag, pageable);
         } else {
             rawPage = reelRepository.searchByTitle(q, pageable);
         }
@@ -262,7 +277,14 @@ public class ReelServiceImpl implements ReelService {
         }
 
         if (dto.getHashtags() != null) {
-            reel.setHashtags(dto.getHashtags());
+            List<String> normalized = dto.getHashtags().stream()
+                    .filter(h -> h != null && !h.isBlank())
+                    .map(String::trim)
+                    .map(h -> h.startsWith("#") ? h.substring(1) : h)
+                    .map(String::toLowerCase)
+                    .distinct()
+                    .collect(Collectors.toList());
+            reel.setHashtags(normalized);
         }
 
         if (video != null && !video.isEmpty()) {

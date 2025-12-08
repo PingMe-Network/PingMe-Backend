@@ -6,6 +6,9 @@ import me.huynhducphu.PingMe_Backend.model.User;
 import me.huynhducphu.PingMe_Backend.model.common.BaseEntity;
 import me.huynhducphu.PingMe_Backend.model.constant.ReelStatus;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "reels")
 @AllArgsConstructor
@@ -25,9 +28,11 @@ public class Reel extends BaseEntity {
     @Column(length = 200)
     private String caption;
 
-    // Optional: hashtags stored as a single string (e.g. "#fun,#travel")
-    @Column(name = "hashtags", length = 500)
-    private String hashtags;
+    // hashtags stored as a collection of individual tags (normalized, without leading '#')
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "reel_hashtags", joinColumns = @JoinColumn(name = "reel_id"))
+    @Column(name = "tag", length = 100)
+    private List<String> hashtags = new ArrayList<>();
 
     @Column(nullable = false)
     private Long viewCount = 0L;
@@ -49,10 +54,10 @@ public class Reel extends BaseEntity {
         this.viewCount = 0L;
     }
 
-    public Reel(String videoUrl, String caption, String hashtags) {
+    public Reel(String videoUrl, String caption, List<String> hashtags) {
         this.videoUrl = videoUrl;
         this.caption = caption;
-        this.hashtags = hashtags;
+        this.hashtags = hashtags != null ? hashtags : new ArrayList<>();
         this.viewCount = 0L;
     }
 }
