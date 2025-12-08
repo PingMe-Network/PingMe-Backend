@@ -1,4 +1,4 @@
-package me.huynhducphu.PingMe_Backend.controller.miniapp;
+package me.huynhducphu.PingMe_Backend.controller.expense;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
