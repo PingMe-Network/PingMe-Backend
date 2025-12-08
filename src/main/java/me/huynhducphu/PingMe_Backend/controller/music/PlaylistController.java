@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.response.music.misc.PlaylistDetailDto;
 import me.huynhducphu.PingMe_Backend.dto.response.music.misc.PlaylistDto;
 import me.huynhducphu.PingMe_Backend.service.music.PlaylistService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,9 +39,9 @@ public class PlaylistController {
     }
 
     @PostMapping("/{id}/songs/{songId}")
-    public ResponseEntity<Void> addSong(@PathVariable Long id, @PathVariable Long songId) {
-        playlistService.addSongToPlaylist(id, songId);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Map<String, Object>> addSong(@PathVariable Long id, @PathVariable Long songId) {
+        boolean added = playlistService.addSongToPlaylist(id, songId);
+        return ResponseEntity.ok(Map.of("alreadyExists", !added));
     }
 
     @DeleteMapping("/{id}/songs/{songId}")
@@ -66,5 +67,14 @@ public class PlaylistController {
     ) {
         return ResponseEntity.ok(playlistService.updatePlaylist(id, dto));
     }
+
+    @GetMapping("/public")
+    public ResponseEntity<Page<PlaylistDto>> getPublicPlaylists(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return ResponseEntity.ok(playlistService.getPublicPlaylists(page, size));
+    }
+
 
 }

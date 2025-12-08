@@ -2,6 +2,7 @@ package me.huynhducphu.PingMe_Backend.service.music;
 
 import me.huynhducphu.PingMe_Backend.dto.response.music.misc.PlaylistDetailDto;
 import me.huynhducphu.PingMe_Backend.dto.response.music.misc.PlaylistDto;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -14,7 +15,9 @@ public interface PlaylistService {
 
     void deletePlaylist(Long playlistId);
 
-    void addSongToPlaylist(Long playlistId, Long songId);
+    Page<PlaylistDto> getPublicPlaylists(int page, int size);
+
+    boolean addSongToPlaylist(Long playlistId, Long songId);
 
     void removeSongFromPlaylist(Long playlistId, Long songId);
 

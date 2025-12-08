@@ -12,6 +12,10 @@ import me.huynhducphu.PingMe_Backend.repository.music.PlaylistSongRepository;
 import me.huynhducphu.PingMe_Backend.repository.music.SongRepository;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import me.huynhducphu.PingMe_Backend.service.music.PlaylistService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -73,10 +77,15 @@ public class PlaylistServiceImpl implements PlaylistService {
         playlistRepository.delete(playlist);
     }
 
-
+    @Override
+    public Page<PlaylistDto> getPublicPlaylists(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Playlist> result = playlistRepository.findByIsPublicTrue(pageable);
+        return result.map(PlaylistDto::from);
+    }
 
     @Override
-    public void addSongToPlaylist(Long playlistId, Long songId) {
+    public boolean addSongToPlaylist(Long playlistId, Long songId) {
         var userId = currentUserProvider.get().getId();
         Playlist playlist = playlistRepository.findById(playlistId)
                 .orElseThrow(() -> new RuntimeException("Playlist not found"));
@@ -86,9 +95,8 @@ public class PlaylistServiceImpl implements PlaylistService {
                 .orElseThrow(() -> new RuntimeException("Song not found"));
 
         Optional<PlaylistSong> existing = playlistSongRepository.findByPlaylistIdAndSongId(playlistId, songId);
-        if (existing.isPresent()) return; // idempotent
+        if (existing.isPresent()) return false; // already exists
 
-        // determine next position (append to end)
         List<PlaylistSong> items = playlistSongRepository.findByPlaylistIdOrderByPositionAsc(playlistId);
         int nextPos = items.isEmpty() ? 0 : items.get(items.size() - 1).getPosition() + 1;
 
@@ -97,6 +105,7 @@ public class PlaylistServiceImpl implements PlaylistService {
         ps.setSong(songRepository.getReferenceById(songId));
         ps.setPosition(nextPos);
         playlistSongRepository.save(ps);
+        return true; // newly added
     }
 
 
@@ -124,7 +133,7 @@ public class PlaylistServiceImpl implements PlaylistService {
     }
 
 
-        @Override
+    @Override
     public PlaylistDto updatePlaylist(Long playlistId, PlaylistDto dto) {
         var userId = currentUserProvider.get().getId();
         Playlist playlist = playlistRepository.findById(playlistId)
