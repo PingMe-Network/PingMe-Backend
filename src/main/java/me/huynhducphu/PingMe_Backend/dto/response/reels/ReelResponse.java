@@ -2,6 +2,7 @@ package me.huynhducphu.PingMe_Backend.dto.response.reels;
 
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class ReelResponse {
@@ -20,5 +21,5 @@ public class ReelResponse {
     private String userAvatarUrl;
 
     private LocalDateTime createdAt;
-    private String hashtags;
+    private List<String> hashtags;
 }
