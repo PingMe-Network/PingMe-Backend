@@ -1,4 +1,4 @@
-package me.huynhducphu.PingMe_Backend.controller.miniapp;
+package me.huynhducphu.PingMe_Backend.controller.expense;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
