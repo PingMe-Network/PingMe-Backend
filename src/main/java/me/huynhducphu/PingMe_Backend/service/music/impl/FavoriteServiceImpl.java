@@ -9,6 +9,7 @@ import me.huynhducphu.PingMe_Backend.repository.music.SongRepository;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import me.huynhducphu.PingMe_Backend.service.music.FavoriteService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -45,6 +46,7 @@ public class FavoriteServiceImpl implements FavoriteService {
 
 
     @Override
+    @Transactional
     public void removeFavorite(Long songId) {
         var userId = currentUserProvider.get().getId();
         favoriteSongRepository.deleteByUserIdAndSongId(userId, songId);
