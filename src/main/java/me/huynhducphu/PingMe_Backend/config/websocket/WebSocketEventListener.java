@@ -36,8 +36,6 @@ public class WebSocketEventListener {
         var accessor = StompHeaderAccessor.wrap(event.getMessage());
         Principal principal = accessor.getUser();
 
-//        System.out.println(principal);
-
         if (!(principal instanceof UserSocketPrincipal userPrincipal)) {
             log.warn("Không tìm thấy user trong kết nối WebSocket");
             return;
@@ -67,8 +65,6 @@ public class WebSocketEventListener {
                     payload
             );
         }
-
-//        log.info("User {} đã online", name);
     }
 
     @EventListener
