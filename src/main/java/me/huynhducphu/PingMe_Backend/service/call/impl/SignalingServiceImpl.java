@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import me.huynhducphu.PingMe_Backend.dto.request.call.SignalingRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.call.SignalingResponse;
 import me.huynhducphu.PingMe_Backend.model.common.RoomMemberId;
-import me.huynhducphu.PingMe_Backend.repository.RoomParticipantRepository;
+import me.huynhducphu.PingMe_Backend.repository.chat.RoomParticipantRepository;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
