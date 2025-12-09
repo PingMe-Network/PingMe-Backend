@@ -3,6 +3,7 @@ package me.huynhducphu.PingMe_Backend.service.common.impl;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummaryResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummarySimpleResponse;
 import me.huynhducphu.PingMe_Backend.repository.FriendshipRepository;
 import me.huynhducphu.PingMe_Backend.repository.UserRepository;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
@@ -65,5 +66,12 @@ public class UserLookupServiceImpl implements UserLookupService {
         // ===================================================================================================
 
         return userSummaryResponse;
+    }
+
+    @Override
+    public UserSummarySimpleResponse lookupUserById(Long userId) {
+        var user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng với ID: " + userId));
+        return modelMapper.map(user, UserSummarySimpleResponse.class);
     }
 }
