@@ -1,9 +1,11 @@
 package me.huynhducphu.PingMe_Backend.controller.common;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummaryResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummarySimpleResponse;
 import me.huynhducphu.PingMe_Backend.service.common.UserLookupService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +32,15 @@ public class UserLookupController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new ApiResponse<>(userLookupService.lookupUser(email)));
+    }
+
+    @GetMapping("/id")
+    public ResponseEntity<ApiResponse<UserSummarySimpleResponse>> lookupUserById(
+            @Parameter Long id
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new ApiResponse<>(userLookupService.lookupUserById(id)));
     }
 
 }
