@@ -2,8 +2,8 @@ package me.huynhducphu.PingMe_Backend.service.common.impl;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummaryResponse;
-import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummarySimpleResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.user.UserSummaryResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.user.UserSummarySimpleResponse;
 import me.huynhducphu.PingMe_Backend.repository.chat.FriendshipRepository;
 import me.huynhducphu.PingMe_Backend.repository.auth.UserRepository;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;

@@ -3,7 +3,7 @@ package me.huynhducphu.PingMe_Backend.controller.expense;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.miniapp.expense.AiChatRequest;
-import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
+import me.huynhducphu.PingMe_Backend.dto.base.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.expense.AiChatHistoryResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.expense.AiChatResponse;
 import me.huynhducphu.PingMe_Backend.service.expense.ExpenseAIService;

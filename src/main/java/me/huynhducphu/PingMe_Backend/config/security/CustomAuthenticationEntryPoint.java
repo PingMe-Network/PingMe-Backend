@@ -5,7 +5,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
+import me.huynhducphu.PingMe_Backend.advice.base.ErrorCode;
+import me.huynhducphu.PingMe_Backend.dto.base.ApiResponse;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
@@ -33,11 +34,13 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
 
+        ErrorCode errorCode = ErrorCode.INVALID_TOKEN;
+
         objectMapper.writeValue(
                 response.getWriter(),
                 new ApiResponse<>(
-                        "Token không hợp lệ (không đúng định dạng, hết thời gian...)",
-                        "INVALID_JWT_TOKEN"
+                        errorCode.getMessage(),
+                        errorCode.getCode()
                 )
         );
 

@@ -1,7 +1,7 @@
 package me.huynhducphu.PingMe_Backend.service.friendship.impl;
 
 import lombok.RequiredArgsConstructor;
-import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummaryResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.user.UserSummaryResponse;
 import me.huynhducphu.PingMe_Backend.service.friendship.event.FriendshipEvent;
 import me.huynhducphu.PingMe_Backend.dto.ws.friendship.FriendshipEventPayload;
 import me.huynhducphu.PingMe_Backend.model.User;

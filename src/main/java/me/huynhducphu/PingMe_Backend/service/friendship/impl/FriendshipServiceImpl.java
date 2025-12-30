@@ -3,7 +3,7 @@ package me.huynhducphu.PingMe_Backend.service.friendship.impl;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.friendship.FriendInvitationRequest;
-import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummaryResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.user.UserSummaryResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.friendship.HistoryFriendshipResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.friendship.UserFriendshipStatsResponse;
 import me.huynhducphu.PingMe_Backend.service.friendship.event.FriendshipEvent;

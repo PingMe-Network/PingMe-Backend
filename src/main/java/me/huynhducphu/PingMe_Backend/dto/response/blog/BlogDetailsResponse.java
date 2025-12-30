@@ -3,7 +3,7 @@ package me.huynhducphu.PingMe_Backend.dto.response.blog;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummaryResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.user.UserSummaryResponse;
 import me.huynhducphu.PingMe_Backend.model.constant.BlogCategory;
 
 import java.time.LocalDateTime;

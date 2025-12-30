@@ -1,10 +1,8 @@
-package me.huynhducphu.PingMe_Backend.dto.response.common;
+package me.huynhducphu.PingMe_Backend.dto.response.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import me.huynhducphu.PingMe_Backend.model.constant.FriendshipStatus;
-import me.huynhducphu.PingMe_Backend.model.constant.UserStatus;
 
 /**
  * @author Le Tran Gia Huy

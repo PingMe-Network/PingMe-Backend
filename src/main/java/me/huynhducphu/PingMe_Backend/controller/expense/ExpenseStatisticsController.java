@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.miniapp.expense.CreateTargetRequest;
-import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
+import me.huynhducphu.PingMe_Backend.dto.base.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.expense.*;
 import me.huynhducphu.PingMe_Backend.service.expense.ExpenseStatisticsService;
 import me.huynhducphu.PingMe_Backend.service.expense.ExpenseTargetService;

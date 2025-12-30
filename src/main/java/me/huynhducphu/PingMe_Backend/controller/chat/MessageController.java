@@ -7,7 +7,7 @@ import me.huynhducphu.PingMe_Backend.dto.request.chat.message.MarkReadRequest;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.message.SendMessageRequest;
 import me.huynhducphu.PingMe_Backend.dto.request.chat.message.SendWeatherMessageRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageRecalledResponse;
-import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
+import me.huynhducphu.PingMe_Backend.dto.base.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.HistoryMessageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.ReadStateResponse;

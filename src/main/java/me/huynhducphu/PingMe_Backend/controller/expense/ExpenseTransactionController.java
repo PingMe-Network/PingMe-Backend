@@ -5,7 +5,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.miniapp.expense.CreateTransactionRequest;
 import me.huynhducphu.PingMe_Backend.dto.request.miniapp.expense.UpdateTransactionRequest;
-import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
+import me.huynhducphu.PingMe_Backend.dto.base.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.expense.DeleteTransactionResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.expense.TransactionResponse;
 import me.huynhducphu.PingMe_Backend.service.expense.ExpenseTransactionService;

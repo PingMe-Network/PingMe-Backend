@@ -1,4 +1,4 @@
-package me.huynhducphu.PingMe_Backend.dto.response.common;
+package me.huynhducphu.PingMe_Backend.dto.base;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 public class ApiResponse<T> {
 
     private String errorMessage;
-    private String errorCode;
+    private Integer errorCode;
     private T data;
 
     public ApiResponse(String errorMessage) {
@@ -22,7 +22,7 @@ public class ApiResponse<T> {
         this.data = null;
     }
 
-    public ApiResponse(String errorMessage, String errorCode) {
+    public ApiResponse(String errorMessage, Integer errorCode) {
         this.errorMessage = errorMessage;
         this.errorCode = errorCode;
         this.data = null;

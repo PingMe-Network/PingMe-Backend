@@ -1,9 +1,10 @@
 package me.huynhducphu.PingMe_Backend.controller.reels;
+
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.reels.AdminReelFilterRequest;
-import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
-import me.huynhducphu.PingMe_Backend.dto.response.common.PageResponse;
+import me.huynhducphu.PingMe_Backend.dto.base.ApiResponse;
+import me.huynhducphu.PingMe_Backend.dto.base.PageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.reels.AdminReelResponse;
 import me.huynhducphu.PingMe_Backend.service.reels.AdminReelService;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 public class AdminReelController {
 
     private final AdminReelService adminReelService;
+
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<AdminReelResponse>>> getReels(
             @ModelAttribute AdminReelFilterRequest filter,

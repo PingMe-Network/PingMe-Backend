@@ -1,7 +1,7 @@
 package me.huynhducphu.PingMe_Backend.service.common;
 
-import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummaryResponse;
-import me.huynhducphu.PingMe_Backend.dto.response.common.UserSummarySimpleResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.user.UserSummaryResponse;
+import me.huynhducphu.PingMe_Backend.dto.response.user.UserSummarySimpleResponse;
 
 /**
  * Admin 8/21/2025

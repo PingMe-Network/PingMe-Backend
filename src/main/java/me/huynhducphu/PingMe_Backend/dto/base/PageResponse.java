@@ -1,4 +1,4 @@
-package me.huynhducphu.PingMe_Backend.dto.response.common;
+package me.huynhducphu.PingMe_Backend.dto.base;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

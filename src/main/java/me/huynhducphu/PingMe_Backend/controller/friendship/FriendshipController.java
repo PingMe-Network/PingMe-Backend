@@ -3,7 +3,7 @@ package me.huynhducphu.PingMe_Backend.controller.friendship;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.request.friendship.FriendInvitationRequest;
-import me.huynhducphu.PingMe_Backend.dto.response.common.ApiResponse;
+import me.huynhducphu.PingMe_Backend.dto.base.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.friendship.HistoryFriendshipResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.friendship.UserFriendshipStatsResponse;
 import me.huynhducphu.PingMe_Backend.service.friendship.FriendshipService;
