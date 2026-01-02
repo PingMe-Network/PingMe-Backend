@@ -32,12 +32,12 @@ public interface MessageService {
     // 3. Tạo SendMessageRequest với type = WEATHER và tái sử dụng pipeline sendMessage().
     MessageResponse sendWeatherMessage(SendWeatherMessageRequest req);
 
-    MessageRecalledResponse recallMessage(Long messageId);
+    MessageRecalledResponse recallMessage(String messageId);
 
     ReadStateResponse markAsRead(MarkReadRequest markReadRequest);
 
     HistoryMessageResponse getHistoryMessages(
-            Long roomId, Long beforeId, Integer size
+            Long roomId, String beforeId, Integer size
     );
 
     Message createSystemMessage(Room room, String content, User user);

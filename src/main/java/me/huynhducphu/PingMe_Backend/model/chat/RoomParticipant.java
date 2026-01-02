@@ -40,7 +40,7 @@ public class RoomParticipant extends BaseEntity {
     private LocalDateTime lastReadAt;
 
     @Column(name = "last_read_message_id")
-    private Long lastReadMessageId;
+    private String lastReadMessageId;
 
     @MapsId("roomId")
     @ManyToOne(fetch = FetchType.LAZY)

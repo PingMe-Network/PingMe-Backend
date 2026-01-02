@@ -11,7 +11,7 @@ import lombok.*;
 @Data
 public class MessageRecalledEvent {
 
-    private Long messageId;
+    private String messageId;
     private Long roomId;
-    
+
 }

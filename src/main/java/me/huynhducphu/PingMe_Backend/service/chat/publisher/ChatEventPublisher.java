@@ -21,14 +21,15 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class ChatEventPublisher {
 
     private final SimpMessagingTemplate messagingTemplate;
+    private final ChatDtoUtils chatDtoUtils;
 
     /* ========================================================================== */
     /*                           MESSAGE CREATED                                  */
     /* ========================================================================== */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onMessageCreated(MessageCreatedEvent event) {
-        var messageResponse = ChatDtoUtils.toMessageResponseDto(event.getMessage());
-        var roomId = event.getMessage().getRoom().getId();
+        var messageResponse = chatDtoUtils.toMessageResponseDto(event.getMessage());
+        var roomId = event.getMessage().getRoomId();
 
         String destination = "/topic/rooms/" + roomId + "/messages";
         var payload = new MessageCreatedEventPayload(messageResponse);
@@ -62,9 +63,9 @@ public class ChatEventPublisher {
 
         for (Long userId : participants.stream().map(p -> p.getUser().getId()).toList()) {
             var payload = new RoomUpdatedEventPayload(
-                    ChatDtoUtils.toRoomResponseDto(room, participants, userId),
+                    chatDtoUtils.toRoomResponseDto(room, participants),
                     event.getSystemMessage() != null
-                            ? ChatDtoUtils.toMessageResponseDto(event.getSystemMessage())
+                            ? chatDtoUtils.toMessageResponseDto(event.getSystemMessage())
                             : null
             );
 
@@ -86,7 +87,7 @@ public class ChatEventPublisher {
 
         for (Long userId : participants.stream().map(p -> p.getUser().getId()).toList()) {
             var payload = new RoomCreatedEventPayload(
-                    ChatDtoUtils.toRoomResponseDto(room, participants, userId)
+                    chatDtoUtils.toRoomResponseDto(room, participants)
             );
 
             messagingTemplate.convertAndSendToUser(
@@ -105,12 +106,12 @@ public class ChatEventPublisher {
 
         var room = event.getRoom();
         var participants = event.getRoomParticipants();
-        var sysMsgDto = ChatDtoUtils.toMessageResponseDto(event.getSystemMessage());
+        var sysMsgDto = chatDtoUtils.toMessageResponseDto(event.getSystemMessage());
 
         for (Long userId : participants.stream().map(p -> p.getUser().getId()).toList()) {
 
             var payload = new RoomMemberAddedEventPayload(
-                    ChatDtoUtils.toRoomResponseDto(room, participants, userId),
+                    chatDtoUtils.toRoomResponseDto(room, participants),
                     event.getTargetUserId(),
                     event.getActorUserId(),
                     sysMsgDto
@@ -131,12 +132,12 @@ public class ChatEventPublisher {
     public void onMemberRemoved(RoomMemberRemovedEvent event) {
         var room = event.getRoom();
         var participants = event.getParticipants();
-        var sysMsgDto = ChatDtoUtils.toMessageResponseDto(event.getSystemMessage());
+        var sysMsgDto = chatDtoUtils.toMessageResponseDto(event.getSystemMessage());
 
         for (Long userId : participants.stream().map(p -> p.getUser().getId()).toList()) {
 
             var payload = new RoomMemberRemovedEventPayload(
-                    ChatDtoUtils.toRoomResponseDto(room, participants, userId),
+                    chatDtoUtils.toRoomResponseDto(room, participants),
                     event.getTargetUserId(),
                     event.getActorUserId(),
                     sysMsgDto
@@ -153,7 +154,7 @@ public class ChatEventPublisher {
                 event.getTargetUserId().toString(),
                 "/queue/rooms",
                 new RoomMemberRemovedEventPayload(
-                        ChatDtoUtils.toRoomResponseDto(room, participants, event.getTargetUserId()),
+                        chatDtoUtils.toRoomResponseDto(room, participants),
                         event.getTargetUserId(),
                         event.getActorUserId(),
                         sysMsgDto
@@ -169,11 +170,11 @@ public class ChatEventPublisher {
     public void onMemberRoleChanged(RoomMemberRoleChangedEvent event) {
         var room = event.getRoom();
         var participants = event.getParticipants();
-        var sysMsgDto = ChatDtoUtils.toMessageResponseDto(event.getSystemMessage());
+        var sysMsgDto = chatDtoUtils.toMessageResponseDto(event.getSystemMessage());
 
         for (Long userId : participants.stream().map(p -> p.getUser().getId()).toList()) {
             var payload = new RoomMemberRoleChangedEventPayload(
-                    ChatDtoUtils.toRoomResponseDto(room, participants, userId),
+                    chatDtoUtils.toRoomResponseDto(room, participants),
                     event.getTargetUserId(),
                     event.getOldRole(),
                     event.getNewRole(),

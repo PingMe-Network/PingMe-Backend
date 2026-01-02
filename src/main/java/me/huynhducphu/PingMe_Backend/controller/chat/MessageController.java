@@ -67,7 +67,7 @@ public class MessageController {
 
     @DeleteMapping("/{id}/recall")
     public ResponseEntity<ApiResponse<MessageRecalledResponse>> recallMessage(
-            @PathVariable Long id
+            @PathVariable String id
     ) {
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -86,7 +86,7 @@ public class MessageController {
     @GetMapping("/history")
     public ResponseEntity<ApiResponse<HistoryMessageResponse>> getHistoryMessages(
             @RequestParam Long roomId,
-            @RequestParam(required = false) Long beforeId,
+            @RequestParam(required = false) String beforeId,
             @RequestParam(defaultValue = "20") Integer size
     ) {
         var data = messageService.getHistoryMessages(roomId, beforeId, size);

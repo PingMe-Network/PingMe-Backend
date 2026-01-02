@@ -30,7 +30,7 @@ public class RoomResponse {
     @NoArgsConstructor
     @Data
     public static class LastMessage {
-        private Long messageId;
+        private String messageId;
         private Long senderId;
         private String preview;
         private MessageType messageType;

@@ -45,9 +45,8 @@ public class Room extends BaseEntity {
     @Column(name = "theme", columnDefinition = "varchar(50) default 'DEFAULT'")
     private String theme;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "last_message_id")
-    private Message lastMessage;
+    @Column(name = "last_message_id")
+    private String lastMessageId;
 
     @Column(name = "last_message_at")
     private LocalDateTime lastMessageAt;
