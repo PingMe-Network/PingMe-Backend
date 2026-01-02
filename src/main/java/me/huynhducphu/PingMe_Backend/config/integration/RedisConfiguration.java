@@ -55,19 +55,7 @@ public class RedisConfiguration {
 
         return new LettuceConnectionFactory(serverConfig);
     }
-
-
-    // =====================================================================
-    // Đăng ký Object Mapper
-    // =====================================================================
-    @Bean
-    public ObjectMapper redisObjectMapper() {
-        ObjectMapper om = new ObjectMapper();
-        om.registerModule(new JavaTimeModule());
-        om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        return om;
-    }
-
+    
     // =========================================================
     // RedisTemplate cho DeviceMeta (refresh token)
     // =========================================================
