@@ -41,14 +41,17 @@ target/
 *.local
 .env
 .env.*
-#Ignore properties file
+
+# ====================
+# Ignore properties file
+# ====================
 src/main/resources/application-dev.properties
 
 # ====================
 # Editor directories and files
 # ====================
 .vscode/
-!.vscode/extensions.json   # Keep recommended extensions
+!.vscode/extensions.json
 .idea/
 .DS_Store
 *.suo
