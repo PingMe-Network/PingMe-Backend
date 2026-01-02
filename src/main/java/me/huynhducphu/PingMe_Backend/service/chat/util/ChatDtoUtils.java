@@ -1,11 +1,14 @@
 package me.huynhducphu.PingMe_Backend.service.chat.util;
 
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.room.RoomParticipantResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.room.RoomResponse;
 import me.huynhducphu.PingMe_Backend.model.chat.Message;
 import me.huynhducphu.PingMe_Backend.model.chat.Room;
 import me.huynhducphu.PingMe_Backend.model.chat.RoomParticipant;
+import me.huynhducphu.PingMe_Backend.repository.chat.MessageRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -15,18 +18,21 @@ import java.util.List;
  *
  **/
 @Component
+@RequiredArgsConstructor
 public class ChatDtoUtils {
 
-    public static MessageResponse toMessageResponseDto(Message message) {
+    private final MessageRepository messageRepository;
+
+    public MessageResponse toMessageResponseDto(Message message) {
 
         String clientMsgId = message.getClientMsgId() == null ? null : message.getClientMsgId().toString();
         String content = message.isActive() ? message.getContent() : null;
 
         return new MessageResponse(
                 message.getId(),
-                message.getRoom().getId(),
+                message.getRoomId(),
                 clientMsgId,
-                message.getSender().getId(),
+                message.getSenderId(),
                 content,
                 message.getType(),
                 message.getCreatedAt(),
@@ -34,10 +40,9 @@ public class ChatDtoUtils {
         );
     }
 
-    public static RoomResponse toRoomResponseDto(
+    public RoomResponse toRoomResponseDto(
             Room room,
-            List<RoomParticipant> roomParticipants,
-            Long userId
+            List<RoomParticipant> roomParticipants
     ) {
         // Lấy danh sách thành viên trong phòng chat
         List<RoomParticipantResponse> roomParticipantResponses = roomParticipants
@@ -53,12 +58,25 @@ public class ChatDtoUtils {
                 ))
                 .toList();
 
+        RoomResponse res = toRoomResponse(room, roomParticipantResponses);
+
+        return res;
+    }
+
+    private RoomResponse toRoomResponse(
+            Room room,
+            List<RoomParticipantResponse> roomParticipantResponses
+    ) {
         RoomResponse.LastMessage lastMessage = null;
-        if (room.getLastMessage() != null) {
-            Message message = room.getLastMessage();
+        if (room.getLastMessageId() != null) {
+
+            Message message = messageRepository
+                    .findById(room.getLastMessageId())
+                    .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tin nhắn"));
+
             lastMessage = new RoomResponse.LastMessage(
                     message.getId(),
-                    message.getSender().getId(),
+                    message.getSenderId(),
                     message.getContent(),
                     message.getType(),
                     message.getCreatedAt()
@@ -74,7 +92,6 @@ public class ChatDtoUtils {
         res.setParticipants(roomParticipantResponses);
         res.setRoomImgUrl(room.getRoomImgUrl());
         res.setTheme(room.getTheme());
-        
         return res;
     }
 

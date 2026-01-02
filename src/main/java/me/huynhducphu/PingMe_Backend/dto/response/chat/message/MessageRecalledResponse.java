@@ -13,6 +13,6 @@ import lombok.NoArgsConstructor;
 @Data
 public class MessageRecalledResponse {
 
-    private Long id;
+    private String id;
 
 }

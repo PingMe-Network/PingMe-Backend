@@ -12,6 +12,8 @@ import me.huynhducphu.PingMe_Backend.dto.response.chat.message.ReadStateResponse
 import me.huynhducphu.PingMe_Backend.dto.request.chat.message.SendMessageRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.chat.message.MessageResponse;
 import me.huynhducphu.PingMe_Backend.model.User;
+import me.huynhducphu.PingMe_Backend.service.chat.MessageRedisService;
+import me.huynhducphu.PingMe_Backend.service.chat.MessageService;
 import me.huynhducphu.PingMe_Backend.service.chat.event.MessageCreatedEvent;
 import me.huynhducphu.PingMe_Backend.service.chat.event.MessageRecalledEvent;
 import me.huynhducphu.PingMe_Backend.service.chat.event.RoomUpdatedEvent;
@@ -23,8 +25,6 @@ import me.huynhducphu.PingMe_Backend.model.constant.MessageType;
 import me.huynhducphu.PingMe_Backend.repository.chat.MessageRepository;
 import me.huynhducphu.PingMe_Backend.repository.chat.RoomParticipantRepository;
 import me.huynhducphu.PingMe_Backend.repository.chat.RoomRepository;
-import me.huynhducphu.PingMe_Backend.repository.auth.UserRepository;
-import me.huynhducphu.PingMe_Backend.service.chat.MessageRedisService;
 import me.huynhducphu.PingMe_Backend.service.chat.util.ChatDtoUtils;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import me.huynhducphu.PingMe_Backend.service.integration.S3Service;
@@ -42,8 +42,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Admin 8/26/2025
@@ -52,7 +51,7 @@ import java.util.UUID;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service.chat.MessageService {
+public class MessageServiceImpl implements MessageService {
 
     private static final long MAX_IMAGE_SIZE = 10 * 1024 * 1024L;
 
@@ -71,13 +70,13 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
     private final RoomRepository roomRepository;
     private final RoomParticipantRepository roomParticipantRepository;
     private final MessageRepository messageRepository;
-    private final UserRepository userRepository;
 
     // PUBLISHER
     private final ApplicationEventPublisher eventPublisher;
 
     // UTILS
     private final ObjectMapper objectMapper;
+    private final ChatDtoUtils chatDtoUtils;
 
     /* ========================================================================== */
     /*                         CÁC HÀM XỬ LÝ GỬI TIN NHẮN                         */
@@ -134,14 +133,14 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         // Kiểm tra tin nhắn người dùng gửi đã tồn tại chưa, Kiểm tra bằng mã clientMsgId
         // Nếu tìm thấy thì trả về tin nhắn đã tồn tại trong cơ sở dữ liệu
         var existed = messageRepository
-                .findByRoom_IdAndSender_IdAndClientMsgId(roomId, senderId, clientMsgId)
+                .findByRoomIdAndSenderIdAndClientMsgId(roomId, senderId, clientMsgId)
                 .orElse(null);
-        if (existed != null) return ChatDtoUtils.toMessageResponseDto(existed);
+        if (existed != null) return chatDtoUtils.toMessageResponseDto(existed);
 
         // Nếu chưa tồn tại, tạo tin nhắn mới
         Message message = new Message();
-        message.setRoom(room);
-        message.setSender(userRepository.getReferenceById(senderId));
+        message.setRoomId(roomId);
+        message.setSenderId(senderId);
         message.setContent(sendMessageRequest.getContent());
         message.setType(sendMessageRequest.getType());
         message.setClientMsgId(clientMsgId);
@@ -154,7 +153,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
             message = messageRepository.save(message);
         } catch (DataIntegrityViolationException ex) {
             message = messageRepository
-                    .findByRoom_IdAndSender_IdAndClientMsgId(roomId, senderId, clientMsgId)
+                    .findByRoomIdAndSenderIdAndClientMsgId(roomId, senderId, clientMsgId)
                     .orElseThrow(() -> ex);
         }
 
@@ -162,7 +161,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         // Thông tin cập nhật bao gồm:
         // + Tin nhắn cuối cùng
         // + Thời gian nhắn tin nhắn cuối cùng
-        room.setLastMessage(message);
+        room.setLastMessageId(message.getId());
         room.setLastMessageAt(message.getCreatedAt());
 
         // Cập nhật trạng thái của người dùng tham gia phòng (người dùng hiện tại)
@@ -195,7 +194,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         eventPublisher.publishEvent(roomUpdatedEvent);
         // --------------------------------------------------------------------------------
 
-        var dto = ChatDtoUtils.toMessageResponseDto(message);
+        var dto = chatDtoUtils.toMessageResponseDto(message);
 
         // Caching Message
         if (cacheEnabled)
@@ -290,14 +289,14 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
     /* ========================================================================== */
 
     @Override
-    public MessageRecalledResponse recallMessage(Long messageId) {
+    public MessageRecalledResponse recallMessage(String messageId) {
         var currentUser = currentUserProvider.get();
 
         Message messageToRecall = messageRepository
                 .findById(messageId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tin nhắn"));
 
-        if (!currentUser.getId().equals(messageToRecall.getSender().getId()))
+        if (!currentUser.getId().equals(messageToRecall.getSenderId()))
             throw new AccessDeniedException("Không có quyền truy cập");
 
         long hours = ChronoUnit.HOURS.between(messageToRecall.getCreatedAt(), LocalDateTime.now());
@@ -305,7 +304,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
             throw new IllegalArgumentException("Bạn chỉ có thể thu hồi tin nhắn trong vòng 24 giờ");
 
         // Disable message
-        messageToRecall.setActive(false);
+        messageToRecall.setIsActive(false);
 
         // Không phải TEXT -> xóa file
         if (!messageToRecall.getType().equals(MessageType.TEXT)) {
@@ -318,8 +317,8 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         // ---------------------------
         // UPDATE CACHE
         // ---------------------------
-        Long roomId = messageToRecall.getRoom().getId();
-        var dto = ChatDtoUtils.toMessageResponseDto(messageToRecall);
+        Long roomId = messageToRecall.getRoomId();
+        var dto = chatDtoUtils.toMessageResponseDto(messageToRecall);
 
         if (cacheEnabled)
             messageRedisService.updateMessage(roomId, messageId, dto);
@@ -344,7 +343,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
 
         Long userId = currentUser.getId();
         Long roomId = markReadRequest.getRoomId();
-        Long lastReadMessageId = markReadRequest.getLastReadMessageId();
+        String lastReadMessageId = markReadRequest.getLastReadMessageId();
 
         Room room = roomRepository
                 .findById(roomId)
@@ -355,30 +354,52 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
                 .orElseThrow(() -> new AccessDeniedException("Bạn không phải thành viên của phòng chat này"));
 
         var msgOpt = messageRepository.findById(lastReadMessageId);
-        if (msgOpt.isEmpty() || !msgOpt.get().getRoom().getId().equals(roomId))
+        if (msgOpt.isEmpty() || !msgOpt.get().getRoomId().equals(roomId))
             throw new IllegalArgumentException("tin nhắn không thuộc phòng này");
 
-        Long newPointer = (roomParticipant.getLastReadMessageId() == null)
-                ? lastReadMessageId
-                : Math.max(roomParticipant.getLastReadMessageId(), lastReadMessageId);
+        Message lastReadMessage = msgOpt.get();
+        String newPointer = lastReadMessageId;
+
+        if (roomParticipant.getLastReadMessageId() != null) {
+            Optional<Message> oldMsgOpt = messageRepository.findById(roomParticipant.getLastReadMessageId());
+            if (oldMsgOpt.isPresent()) {
+                Message oldMessage = oldMsgOpt.get();
+
+                if (lastReadMessage.getCreatedAt().isBefore(oldMessage.getCreatedAt())) {
+                    newPointer = roomParticipant.getLastReadMessageId();
+                }
+            }
+        }
 
         roomParticipant.setLastReadMessageId(newPointer);
         roomParticipant.setLastReadAt(LocalDateTime.now());
 
         long unread = 0L;
-        if (room.getLastMessage() != null) {
-            long lastMsgId = room.getLastMessage().getId();
-            unread = Math.max(0, lastMsgId - newPointer);
+        if (room.getLastMessageId() != null) {
+            unread = messageRepository.countByRoomIdAndCreatedAtGreaterThan(
+                    roomId,
+                    lastReadMessage.getCreatedAt()
+            );
         }
 
-        return new ReadStateResponse(roomId, userId, newPointer, roomParticipant.getLastReadAt(), unread);
+        return new ReadStateResponse(
+                roomId,
+                userId,
+                newPointer,
+                roomParticipant.getLastReadAt(),
+                unread
+        );
     }
 
     /* ========================================================================== */
     /*                  CÁC HÀM XỬ LÝ LẤY LỊCH SỬ TIN NHẮN                        */
     /* ========================================================================== */
     @Override
-    public HistoryMessageResponse getHistoryMessages(Long roomId, Long beforeId, Integer size) {
+    public HistoryMessageResponse getHistoryMessages(
+            Long roomId,
+            String beforeId,
+            Integer size
+    ) {
 
         // --------------------------------------------------------------------------------
         // Validate input
@@ -415,7 +436,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
             if (cacheEnabled) {
                 var cached = messageRedisService.getMessages(roomId, null, fixed);
                 if (!cached.isEmpty()) {
-                    Long nextBeforeId = cached.getLast().getId();
+                    String nextBeforeId = cached.getLast().getId();
                     return new HistoryMessageResponse(cached, true, nextBeforeId);
                 }
             }
@@ -444,7 +465,7 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
             var older = messageRedisService.getMessages(roomId, beforeId, fixed);
 
             if (!older.isEmpty()) {
-                Long nextBeforeId = older.getLast().getId();
+                String nextBeforeId = older.getLast().getId();
                 return new HistoryMessageResponse(older, true, nextBeforeId);
             }
         }
@@ -462,21 +483,39 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
         return db;
     }
 
-    private HistoryMessageResponse loadFromDbCursor(Long roomId, Long beforeId, int size) {
+    private HistoryMessageResponse loadFromDbCursor(
+            Long roomId,
+            String beforeId,
+            int size
+    ) {
+        // Query size + 1 để biết còn trang sau không
         Pageable limit = PageRequest.of(0, size + 1);
+        List<Message> res;
 
-        List<Message> res = messageRepository.findHistoryMessagesByKeySet(roomId, beforeId, limit);
+        if (beforeId == null)
+            res = messageRepository
+                    .findByRoomIdOrderByIdDesc(roomId, limit);
+        else
+            res = messageRepository
+                    .findByRoomIdAndIdLessThanOrderByIdDesc(roomId, beforeId, limit);
 
+        // Kiểm tra hasMore và Cắt bớt phần tử thừa (QUAN TRỌNG)
         boolean hasMore = res.size() > size;
+        List<Message> trimmedMessages = hasMore ? res.subList(0, size) : res;
 
-        List<Message> trimmed = hasMore ? res.subList(0, size) : res;
+        // Convert sang DTO
+        List<MessageResponse> responses = new ArrayList<>(
+                trimmedMessages.stream().map(chatDtoUtils::toMessageResponseDto).toList()
+        );
 
-        List<MessageResponse> responses = trimmed.stream()
-                .map(ChatDtoUtils::toMessageResponseDto)
-                .toList();
+        // Tính nextBeforeId dựa trên tin nhắn CŨ NHẤT (tin cuối cùng của list giảm dần)
+        String nextBeforeId = null;
+        if (!responses.isEmpty())
+            nextBeforeId = responses.getLast().getId();
 
-        Long nextBeforeId =
-                responses.isEmpty() ? null : responses.getLast().getId();
+
+        // Đảo ngược lại thành Tăng Dần (Cũ -> Mới) để khớp với UI Chat
+        Collections.reverse(responses);
 
         return new HistoryMessageResponse(responses, hasMore, nextBeforeId);
     }
@@ -487,20 +526,21 @@ public class MessageServiceImpl implements me.huynhducphu.PingMe_Backend.service
     @Override
     public Message createSystemMessage(Room room, String content, User user) {
         var msg = new Message();
-        msg.setRoom(room);
-        msg.setSender(user);
+        msg.setRoomId(room.getId());
+        msg.setSenderId(user.getId());
         msg.setType(MessageType.SYSTEM);
         msg.setContent(content);
-        msg.setActive(true);
+        msg.setIsActive(true);
         msg.setCreatedAt(LocalDateTime.now());
         msg.setClientMsgId(UUID.randomUUID());
 
 
         var saved = messageRepository.save(msg);
-        var dto = ChatDtoUtils.toMessageResponseDto(saved);
+        var dto = chatDtoUtils.toMessageResponseDto(saved);
 
         if (cacheEnabled)
             messageRedisService.cacheNewMessage(room.getId(), dto);
+
 
         return saved;
     }

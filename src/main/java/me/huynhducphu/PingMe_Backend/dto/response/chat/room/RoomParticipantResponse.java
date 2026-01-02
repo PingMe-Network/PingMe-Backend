@@ -21,6 +21,6 @@ public class RoomParticipantResponse {
     private String avatarUrl;
     private UserStatus status;
     private RoomRole role;
-    private Long lastReadMessageId;
+    private String lastReadMessageId;
     private LocalDateTime lastReadAt;
 }

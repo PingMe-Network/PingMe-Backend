@@ -17,5 +17,5 @@ public class HistoryMessageResponse {
 
     private List<MessageResponse> messageResponses;
     private Boolean hasMore;
-    private Long nextBeforeId;
+    private String nextBeforeId;
 }

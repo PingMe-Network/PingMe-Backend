@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class ReadStateResponse {
     private Long roomId;
     private Long userId;
-    private Long lastReadMessageId;
+    private String lastReadMessageId;
     private LocalDateTime lastReadAt;
     private long unreadCount;
 }

@@ -56,6 +56,9 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
     // PUBLISHER
     private final ApplicationEventPublisher eventPublisher;
 
+    // UTILS
+    private final ChatDtoUtils chatDtoUtils;
+
     private static final long MAX_IMAGE_SIZE = 10 * 1024 * 1024L;
 
     /* ========================================================================== */
@@ -77,10 +80,9 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
 
         if (room != null) {
             ensureParticipants(room, currentUser.getId(), createOrGetDirectRoomRequest.getTargetUserId());
-            return ChatDtoUtils.toRoomResponseDto(
+            return chatDtoUtils.toRoomResponseDto(
                     room,
-                    roomParticipantRepository.findByRoom_Id(room.getId()),
-                    currentUser.getId()
+                    roomParticipantRepository.findByRoom_Id(room.getId())
             );
         }
 
@@ -90,7 +92,7 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
             newRoom.setRoomType(RoomType.DIRECT);
             newRoom.setDirectKey(directKey);
             newRoom.setName(null);
-            newRoom.setLastMessage(null);
+            newRoom.setLastMessageId(null);
             newRoom.setLastMessageAt(null);
 
             var savedRoom = roomRepository.save(newRoom);
@@ -106,15 +108,14 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
                     )
             );
 
-            return ChatDtoUtils.toRoomResponseDto(
+            return chatDtoUtils.toRoomResponseDto(
                     savedRoom,
-                    roomParticipantRepository.findByRoom_Id(savedRoom.getId()),
-                    currentUser.getId()
+                    roomParticipantRepository.findByRoom_Id(savedRoom.getId())
             );
         } catch (DataIntegrityViolationException ex) {
             Room existed = roomRepository.findByDirectKey(directKey).orElseThrow(() -> ex);
             ensureParticipants(existed, currentUser.getId(), createOrGetDirectRoomRequest.getTargetUserId());
-            return ChatDtoUtils.toRoomResponseDto(existed, roomParticipantRepository.findByRoom_Id(existed.getId()), currentUser.getId());
+            return chatDtoUtils.toRoomResponseDto(existed, roomParticipantRepository.findByRoom_Id(existed.getId()));
         }
     }
 
@@ -144,7 +145,7 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
         room.setRoomType(RoomType.GROUP);
         room.setName(createGroupRoomRequest.getName());
         room.setDirectKey(null);
-        room.setLastMessage(null);
+        room.setLastMessageId(null);
         room.setLastMessageAt(null);
 
         var savedRoom = roomRepository.save(room);
@@ -169,10 +170,9 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
                 )
         );
 
-        return ChatDtoUtils.toRoomResponseDto(
+        return chatDtoUtils.toRoomResponseDto(
                 savedRoom,
-                roomParticipantRepository.findByRoom_Id(savedRoom.getId()),
-                currentUser.getId()
+                roomParticipantRepository.findByRoom_Id(savedRoom.getId())
         );
     }
 
@@ -238,10 +238,9 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
             );
         }
 
-        return ChatDtoUtils.toRoomResponseDto(
+        return chatDtoUtils.toRoomResponseDto(
                 room,
-                roomParticipantRepository.findByRoom_Id(room.getId()),
-                currentUser.getId()
+                roomParticipantRepository.findByRoom_Id(room.getId())
         );
     }
 
@@ -310,10 +309,9 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
                 )
         );
 
-        return ChatDtoUtils.toRoomResponseDto(
+        return chatDtoUtils.toRoomResponseDto(
                 room,
-                members,
-                currentUser.getId()
+                members
         );
     }
 
@@ -386,7 +384,7 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
                 )
         );
 
-        return ChatDtoUtils.toRoomResponseDto(room, members, currentUser.getId());
+        return chatDtoUtils.toRoomResponseDto(room, members);
     }
 
     @Override
@@ -436,7 +434,7 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
                 )
         );
 
-        return ChatDtoUtils.toRoomResponseDto(room, members, currentUser.getId());
+        return chatDtoUtils.toRoomResponseDto(room, members);
     }
 
     @Override
@@ -477,7 +475,7 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
 
             eventPublisher.publishEvent(new RoomUpdatedEvent(room, members, sysMsg));
 
-            return ChatDtoUtils.toRoomResponseDto(room, members, currentUser.getId());
+            return chatDtoUtils.toRoomResponseDto(room, members);
         }
 
         // ================================================
@@ -520,7 +518,7 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
 
         eventPublisher.publishEvent(new RoomUpdatedEvent(room, members, sysMsg));
 
-        return ChatDtoUtils.toRoomResponseDto(room, members, currentUser.getId());
+        return chatDtoUtils.toRoomResponseDto(room, members);
     }
 
     /* ========================================================================== */
@@ -548,7 +546,7 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
                     new RoomUpdatedEvent(room, members, null)
             );
 
-            return ChatDtoUtils.toRoomResponseDto(room, members, currentUser.getId());
+            return chatDtoUtils.toRoomResponseDto(room, members);
         }
 
         // ------------------------------------------------------
@@ -584,7 +582,7 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
                 new RoomUpdatedEvent(room, members, sysMsg)
         );
 
-        return ChatDtoUtils.toRoomResponseDto(room, members, currentUser.getId());
+        return chatDtoUtils.toRoomResponseDto(room, members);
     }
 
 
@@ -612,7 +610,7 @@ public class RoomServiceImpl implements me.huynhducphu.PingMe_Backend.service.ch
                 .stream()
                 .map(room -> {
                     var members = participantsByRoom.getOrDefault(room.getId(), List.of());
-                    return ChatDtoUtils.toRoomResponseDto(room, members, currentUserId);
+                    return chatDtoUtils.toRoomResponseDto(room, members);
                 })
                 .toList();
 

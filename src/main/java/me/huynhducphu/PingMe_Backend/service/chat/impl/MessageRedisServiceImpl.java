@@ -14,7 +14,7 @@ import java.util.List;
 
 /**
  * Admin 11/14/2025
- *
+ * FIXED: 2026-01-02 (Sync with Ascending DB Logic)
  **/
 @Service
 public class MessageRedisServiceImpl implements MessageRedisService {
@@ -23,30 +23,26 @@ public class MessageRedisServiceImpl implements MessageRedisService {
     private static final Duration CACHE_TTL = Duration.ofHours(2);
 
     private final RedisTemplate<String, String> redisTemplate;
-
-    private final ObjectMapper redisObjectMapper;
+    private final ObjectMapper objectMapper;
 
     public MessageRedisServiceImpl(
             @Qualifier("redisMessageStringTemplate")
             RedisTemplate<String, String> redisTemplate,
-            ObjectMapper redisObjectMapper) {
+            ObjectMapper objectMapper) {
         this.redisTemplate = redisTemplate;
-        this.redisObjectMapper = redisObjectMapper;
+        this.objectMapper = objectMapper;
     }
 
     /* ========================================================================== */
-    /*                             WRITE → REDIS CACHE                             */
+    /* WRITE → REDIS CACHE                             */
     /* ========================================================================== */
 
-    /**
-     * Cache 1 tin nhắn mới nhất vào đầu danh sách (newest-first).
-     * Giới hạn max bằng MAX_CACHE_MESSAGES và refresh TTL.
-     */
     @Override
     public void cacheNewMessage(Long roomId, MessageResponse message) {
         String key = buildKey(roomId);
         try {
-            String json = redisObjectMapper.writeValueAsString(message);
+            String json = objectMapper.writeValueAsString(message);
+            // Push tin mới nhất vào đầu (Left) -> Redis: [New, Old, Oldest...]
             redisTemplate.opsForList().leftPush(key, json);
             redisTemplate.opsForList().trim(key, 0, MAX_CACHE_MESSAGES - 1);
             touchTtl(key);
@@ -54,11 +50,6 @@ public class MessageRedisServiceImpl implements MessageRedisService {
         }
     }
 
-    /**
-     * Cache batch messages (newest → oldest).
-     * Dữ liệu đầu vào dạng newest-first nên phải reverse trước khi push.
-     * Push vào đầu list → giữ cấu trúc newest-first.
-     */
     @Override
     public void cacheMessages(Long roomId, List<MessageResponse> messages) {
         if (messages == null || messages.isEmpty()) return;
@@ -66,11 +57,8 @@ public class MessageRedisServiceImpl implements MessageRedisService {
         String key = buildKey(roomId);
 
         try {
-            List<MessageResponse> copy = new ArrayList<>(messages);
-            Collections.reverse(copy);
-
-            for (MessageResponse m : copy) {
-                String json = redisObjectMapper.writeValueAsString(m);
+            for (MessageResponse m : messages) {
+                String json = objectMapper.writeValueAsString(m);
                 redisTemplate.opsForList().leftPush(key, json);
             }
 
@@ -80,10 +68,6 @@ public class MessageRedisServiceImpl implements MessageRedisService {
         }
     }
 
-    /**
-     * Backfill older messages vào cuối list (append older history).
-     * Dùng khi scroll lên và DB trả về dữ liệu cũ.
-     */
     @Override
     public void appendOlderMessages(Long roomId, List<MessageResponse> messages) {
         if (messages == null || messages.isEmpty()) return;
@@ -91,8 +75,11 @@ public class MessageRedisServiceImpl implements MessageRedisService {
         String key = buildKey(roomId);
 
         try {
-            for (MessageResponse m : messages) {
-                String json = redisObjectMapper.writeValueAsString(m);
+            List<MessageResponse> copy = new ArrayList<>(messages);
+            Collections.reverse(copy);
+
+            for (MessageResponse m : copy) {
+                String json = objectMapper.writeValueAsString(m);
                 redisTemplate.opsForList().rightPush(key, json);
             }
 
@@ -103,16 +90,15 @@ public class MessageRedisServiceImpl implements MessageRedisService {
     }
 
     /* ========================================================================== */
-    /*                             READ ← REDIS CACHE                              */
+    /* READ ← REDIS CACHE                              */
     /* ========================================================================== */
 
-    /**
-     * Lấy messages từ cache:
-     * - beforeId == null → lấy newest batch.
-     * - beforeId != null → lọc older hơn beforeId.
-     */
     @Override
-    public List<MessageResponse> getMessages(Long roomId, Long beforeId, int size) {
+    public List<MessageResponse> getMessages(
+            Long roomId,
+            String beforeId,
+            int size
+    ) {
         String key = buildKey(roomId);
 
         List<String> jsonList = redisTemplate.opsForList().range(key, 0, -1);
@@ -121,59 +107,67 @@ public class MessageRedisServiceImpl implements MessageRedisService {
         List<MessageResponse> all = new ArrayList<>(jsonList.size());
         for (String json : jsonList) {
             try {
-                all.add(redisObjectMapper.readValue(json, MessageResponse.class));
+                all.add(objectMapper.readValue(json, MessageResponse.class));
             } catch (Exception ignored) {
             }
         }
 
-        // case 1: beforeId == null → lấy newest
+        List<MessageResponse> result;
+
         if (beforeId == null) {
             int end = Math.min(size, all.size());
-            return all.subList(0, end);
-        }
-
-        // case 2: beforeId != null → lấy older hơn beforeId
-        List<MessageResponse> older = new ArrayList<>(size);
-        for (MessageResponse m : all) {
-            if (m.getId() < beforeId) {
-                older.add(m);
-                if (older.size() == size) break;
+            result = new ArrayList<>(all.subList(0, end));
+        } else {
+            int beforeIdx = -1;
+            for (int i = 0; i < all.size(); i++) {
+                if (all.get(i).getId().equals(beforeId)) {
+                    beforeIdx = i;
+                    break;
+                }
             }
-        }
 
-        return older;
+            if (beforeIdx == -1) {
+                return List.of();
+            }
+
+            int startIdx = beforeIdx + 1;
+            int endIdx = Math.min(startIdx + size, all.size());
+
+            if (startIdx >= all.size()) {
+                return List.of();
+            }
+
+            result = new ArrayList<>(all.subList(startIdx, endIdx));
+        }
+        
+        Collections.reverse(result);
+
+        return result;
     }
 
     /* ========================================================================== */
-    /*                    UPDATE / REMOVE MESSAGE TRONG CACHE                      */
+    /* UPDATE / REMOVE MESSAGE TRONG CACHE                      */
     /* ========================================================================== */
 
-    /**
-     * Xoá toàn bộ cache của room (khi rời nhóm hoặc reload data).
-     */
     @Override
     public void evictRoom(Long roomId) {
         String key = buildKey(roomId);
         redisTemplate.delete(key);
     }
 
-    /**
-     * Update 1 message trong cache theo messageId.
-     * Duyệt list và replace item ngay tại index.
-     */
     @Override
-    public void updateMessage(Long roomId, Long messageId, MessageResponse updated) {
+    public void updateMessage(Long roomId, String messageId, MessageResponse updated) {
         String key = buildKey(roomId);
         List<String> jsonList = redisTemplate.opsForList().range(key, 0, -1);
         if (jsonList == null || jsonList.isEmpty()) return;
 
         try {
-            String updatedJson = redisObjectMapper.writeValueAsString(updated);
+            String updatedJson = objectMapper.writeValueAsString(updated);
 
             for (int i = 0; i < jsonList.size(); i++) {
                 String json = jsonList.get(i);
                 try {
-                    MessageResponse dto = redisObjectMapper.readValue(
+                    MessageResponse dto = objectMapper.readValue(
                             json,
                             MessageResponse.class
                     );
@@ -189,9 +183,7 @@ public class MessageRedisServiceImpl implements MessageRedisService {
         }
     }
 
-    // ========================================================
-    // Utils
-    // ========================================================
+    //Utils
     private String buildKey(Long roomId) {
         return "chat:room:" + roomId + ":messages";
     }
@@ -199,5 +191,4 @@ public class MessageRedisServiceImpl implements MessageRedisService {
     private void touchTtl(String key) {
         redisTemplate.expire(key, CACHE_TTL);
     }
-
 }

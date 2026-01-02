@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class MarkReadRequest {
     @NotNull(message = "Mã tin nhắn không được để trống")
-    private Long lastReadMessageId;
+    private String lastReadMessageId;
 
     @NotNull(message = "Mã phòng không được để trống")
     private Long roomId;

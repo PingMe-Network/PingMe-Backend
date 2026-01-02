@@ -46,9 +46,9 @@
             <email>phatdang19052004@gmail.com</email>
         </developer>
         <developer>
-            <id>xxx</id>
+            <id>22654091</id>
             <name>Phạm Ngọc Hùng</name>
-            <email>xxx@gmail.com</email>
+            <email>nhpel11@gmail.com</email>
         </developer>
     </developers>
 
@@ -102,6 +102,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
         </dependency>
         <dependency>
             <groupId>com.turkraft.springfilter</groupId>

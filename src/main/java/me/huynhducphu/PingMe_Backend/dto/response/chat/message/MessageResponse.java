@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Data
 public class MessageResponse {
-    private Long id;
+    private String id;
 
     private Long roomId;
     private String clientMsgId;
