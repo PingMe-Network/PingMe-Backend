@@ -57,12 +57,6 @@ public class User extends BaseEntity {
     @Column(name = "avatar_url")
     private String avatarUrl;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private List<Blog> blogs;
-
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private List<BlogComment> blogComments;
-
     @ManyToOne
     @JoinColumn(name = "role_id")
     private Role role;
