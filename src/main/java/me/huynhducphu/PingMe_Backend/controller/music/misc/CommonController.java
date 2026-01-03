@@ -1,5 +1,7 @@
 package me.huynhducphu.PingMe_Backend.controller.music.misc;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.model.constant.ArtistRole;
 import org.springframework.http.ResponseEntity;
@@ -13,11 +15,19 @@ import org.springframework.web.bind.annotation.RestController;
  * @project DHKTPM18ATT_Nhom10_PingMe_Backend
  * @package me.huynhducphu.PingMe_Backend.controller.music.misc
  */
-
+@Tag(
+        name = "Common Music Data",
+        description = "Các endpoints lấy dữ liệu chung liên quan đến âm nhạc"
+)
 @RestController
 @RequestMapping("/music/common")
 @RequiredArgsConstructor
 public class CommonController {
+
+    @Operation(
+            summary = "Danh sách vai trò nghệ sĩ",
+            description = "Lấy toàn bộ các vai trò của nghệ sĩ (ArtistRole enum)"
+    )
     @GetMapping("/roles")
     public ResponseEntity<ArtistRole[]> getArtistRoles() {
         // Hàm .values() của Enum trả về mảng tất cả các giá trị
