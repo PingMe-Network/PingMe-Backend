@@ -98,8 +98,8 @@ public class RedisConfiguration {
         return tpl;
     }
 
-    @Bean(name = "redisDtoTemplate")
-    public RedisTemplate<String, Object> redisDtoTemplate(RedisConnectionFactory cf, ObjectMapper om) {
+    @Bean(name = "redisSongHistoryTemplate")
+    public RedisTemplate<String, Object> redisSongHistoryTemplate(RedisConnectionFactory cf, ObjectMapper om) {
         RedisTemplate<String, Object> tpl = new RedisTemplate<>();
         tpl.setConnectionFactory(cf);
 
