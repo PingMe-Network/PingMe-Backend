@@ -1,30 +1,39 @@
 package me.huynhducphu.PingMe_Backend.service.admin.impl;
 
 import jakarta.persistence.EntityNotFoundException;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import me.huynhducphu.PingMe_Backend.dto.admin.request.user.CreateUserRequest;
 import me.huynhducphu.PingMe_Backend.dto.admin.response.user.DefaultUserResponse;
+import me.huynhducphu.PingMe_Backend.dto.base.ApiResponse;
 import me.huynhducphu.PingMe_Backend.model.User;
+import me.huynhducphu.PingMe_Backend.model.constant.AccountStatus;
 import me.huynhducphu.PingMe_Backend.model.constant.AuthProvider;
 import me.huynhducphu.PingMe_Backend.repository.auth.UserRepository;
 import me.huynhducphu.PingMe_Backend.service.admin.UserManagementService;
+import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
 import org.modelmapper.ModelMapper;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Admin 8/3/2025
  **/
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Transactional
 public class UserManagementServiceImpl implements UserManagementService {
-
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final ModelMapper modelMapper;
+    UserRepository userRepository;
+    PasswordEncoder passwordEncoder;
+    ModelMapper modelMapper;
+    CurrentUserProvider currentUserProvider;
 
     @Override
     public DefaultUserResponse saveUser(CreateUserRequest createUserRequest) {
@@ -54,5 +63,17 @@ public class UserManagementServiceImpl implements UserManagementService {
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng với id này"));
     }
 
-
+    @PreAuthorize("hasRole('ADMIN')")
+    @Override
+    public boolean deleteUserById(Long id) {
+        try {
+            User user = userRepository.findById(id)
+                            .orElseThrow(() -> new NullPointerException("Không tìm thấy tài khoản!"));
+            user.setAccountStatus(AccountStatus.DEACTIVATED);
+            userRepository.save(user);
+            return true;
+        }catch (Exception e){
+            return false;
+        }
+    }
 }

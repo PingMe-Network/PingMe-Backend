@@ -9,6 +9,7 @@ import me.huynhducphu.PingMe_Backend.model.authorization.Role;
 import me.huynhducphu.PingMe_Backend.model.blog.Blog;
 import me.huynhducphu.PingMe_Backend.model.blog.BlogComment;
 import me.huynhducphu.PingMe_Backend.model.common.BaseEntity;
+import me.huynhducphu.PingMe_Backend.model.constant.AccountStatus;
 import me.huynhducphu.PingMe_Backend.model.constant.AuthProvider;
 import me.huynhducphu.PingMe_Backend.model.constant.Gender;
 import me.huynhducphu.PingMe_Backend.model.constant.UserStatus;
@@ -61,4 +62,7 @@ public class User extends BaseEntity {
     @JoinColumn(name = "role_id")
     private Role role;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "account_status", nullable = false)
+    AccountStatus accountStatus;
 }

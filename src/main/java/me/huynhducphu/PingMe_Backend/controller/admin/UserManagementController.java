@@ -2,6 +2,7 @@ package me.huynhducphu.PingMe_Backend.controller.admin;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import me.huynhducphu.PingMe_Backend.advice.base.ErrorCode;
 import me.huynhducphu.PingMe_Backend.dto.admin.request.user.CreateUserRequest;
 import me.huynhducphu.PingMe_Backend.dto.base.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.base.PageResponse;
@@ -56,5 +57,13 @@ public class UserManagementController {
                 .body(new ApiResponse<>(userManagementService.getUserById(id)));
     }
 
+    @DeleteMapping("/{id}")
+    public  ResponseEntity<?> deleteUserById(@PathVariable Long id) {
+        boolean isDeleted = userManagementService.deleteUserById(id);
+        ApiResponse<?> apiResponse = new ApiResponse<>();
+        apiResponse.setErrorCode(ErrorCode.OK.getCode());
+        apiResponse.setErrorMessage(isDeleted ? "Xóa người dùng thành công!" : "Xóa người dùng thất bại!");
+        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+    }
 
 }

@@ -32,6 +32,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .getUserByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException(email));
 
+
+
         // Chuyển đổi entity User sang User của Spring Security,
         // dùng để xác thực và lưu trong SecurityContext.
         // (User ở đây là org.springframework.security.core.userdetails.User)

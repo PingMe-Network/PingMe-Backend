@@ -8,6 +8,5 @@ import me.huynhducphu.PingMe_Backend.dto.response.user.UserSummarySimpleResponse
  **/
 public interface UserLookupService {
     UserSummaryResponse lookupUser(String email);
-
     UserSummarySimpleResponse lookupUserById(Long userId);
 }
