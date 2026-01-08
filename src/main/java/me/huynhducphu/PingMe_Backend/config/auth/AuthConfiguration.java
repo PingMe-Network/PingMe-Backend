@@ -2,6 +2,7 @@ package me.huynhducphu.PingMe_Backend.config.auth;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.util.Base64;
+import lombok.extern.slf4j.Slf4j;
 import me.huynhducphu.PingMe_Backend.service.authorization.PermissionCacheService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -23,12 +24,14 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Admin 8/3/2025
  **/
 @Configuration
+@Slf4j
 public class AuthConfiguration {
 
     @Value("${app.jwt.secret}")
@@ -57,17 +60,15 @@ public class AuthConfiguration {
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
             String role = jwt.getClaimAsString("role");
-
+            log.info("User role: " + role);
 
             if (role == null || role.isBlank())
                 return List.of();
 
-            List<GrantedAuthority> authorities = permissionCacheService
-                    .getPermissionsByRole(role)
-                    .stream()
-                    .map(p -> (GrantedAuthority) new SimpleGrantedAuthority(p))
-                    .toList();
+            List<GrantedAuthority> authorities = new ArrayList<>();
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
 
+            log.info("User authorities: " + authorities);
             return authorities;
         });
         return jwtAuthenticationConverter;
