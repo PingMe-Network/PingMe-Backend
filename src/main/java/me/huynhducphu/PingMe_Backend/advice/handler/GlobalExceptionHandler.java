@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -96,6 +97,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(new ApiResponse<>(e.getMessage(), ErrorCode.UNAUTHORIZED.getCode()));
+    }
+
+    @ExceptionHandler(value = DisabledException.class)
+    public ResponseEntity<ApiResponse<?>> handlingDisabledException(DisabledException exception){
+        ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
+        ApiResponse<?> apiResponse = new ApiResponse<>();
+        apiResponse.setErrorCode(errorCode.getCode());
+        apiResponse.setErrorMessage(errorCode.getMessage());
+        return ResponseEntity.status(errorCode.getStatusCode()).body(apiResponse);
     }
 
     // =========================================================================

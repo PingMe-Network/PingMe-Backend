@@ -1,7 +1,9 @@
 package me.huynhducphu.PingMe_Backend.service.common.impl;
 
 import lombok.RequiredArgsConstructor;
+import me.huynhducphu.PingMe_Backend.model.constant.AccountStatus;
 import me.huynhducphu.PingMe_Backend.repository.auth.UserRepository;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -32,7 +34,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .getUserByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException(email));
 
-
+        if(user.getAccountStatus() == AccountStatus.DEACTIVATED)
+            throw new DisabledException("Tài khoản của bạn đã bị vô hiệu hóa!");
+        if(user.getAccountStatus() == AccountStatus.SUSPENDED)
+            throw new DisabledException("Tài khoản của bạn đã bị tạm khóa!");
 
         // Chuyển đổi entity User sang User của Spring Security,
         // dùng để xác thực và lưu trong SecurityContext.

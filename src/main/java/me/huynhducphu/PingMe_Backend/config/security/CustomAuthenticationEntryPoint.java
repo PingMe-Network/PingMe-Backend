@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.advice.base.ErrorCode;
 import me.huynhducphu.PingMe_Backend.dto.base.ApiResponse;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -34,7 +35,11 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
 
-        ErrorCode errorCode = ErrorCode.INVALID_TOKEN;
+        ErrorCode errorCode = null;
+
+        if(authException instanceof DisabledException)
+            errorCode = ErrorCode.ACCESS_DENIED;
+        else errorCode = ErrorCode.INVALID_TOKEN;
 
         objectMapper.writeValue(
                 response.getWriter(),
