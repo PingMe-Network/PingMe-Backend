@@ -48,6 +48,8 @@ public class JwtServiceImpl implements JwtService {
                 .expiresAt(validity)
                 .subject(user.getEmail())
                 .claim("role", roleName)
+                .claim("id", user.getId())
+                .claim("name", user.getName())
                 .build();
 
         // Cuối cùng, encode JWT và lấy ra chuỗi token trả về
