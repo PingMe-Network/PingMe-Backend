@@ -62,21 +62,24 @@ public class CustomHandshakeHandler extends DefaultHandshakeHandler {
         var userSocketPrincipal = new UserSocketPrincipal();
 
         var jwt = jwtDecoder.decode(accessToken);
-        Map<String, Object> claims = jwt.getClaim("user");
 
-        userSocketPrincipal.setId((Long) claims.get("id"));
-        userSocketPrincipal.setEmail((String) claims.get("email"));
-        userSocketPrincipal.setName((String) claims.get("name"));
+        Long id = jwt.getClaim("id");
+        String email = jwt.getSubject();
+        String name = jwt.getClaim("name");
+
+
+        userSocketPrincipal.setId(id);
+        userSocketPrincipal.setEmail(email);
+        userSocketPrincipal.setName(name);
 
         return userSocketPrincipal;
     }
 
-    private Principal authenticateUser(String accessToken) {
+    private void authenticateUser(String accessToken) {
         try {
             BearerTokenAuthenticationToken authToken = new BearerTokenAuthenticationToken(accessToken);
             Authentication authentication = wsAuthManager.authenticate(authToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            return authentication;
         } catch (Exception e) {
             throw new AccessDeniedException("JWT không hợp lệ");
         }

@@ -41,15 +41,15 @@ public class JwtServiceImpl implements JwtService {
         // + issuedAt: thời điểm token được tạo ra
         // + expiresAt: thời điểm token hết hạn
         // + subject: email của người dùng (được dùng làm định danh chính)
-        // + claim "user": thông tin cơ bản của người dùng, được map sang DTO UserSessionResponse
         // + claim "role": tên chức vụ của người dùng
         String roleName = user.getRole() != null ? user.getRole().getName() : "";
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuedAt(now)
                 .expiresAt(validity)
                 .subject(user.getEmail())
-                .claim("user", modelMapper.map(user, CurrentUserSessionResponse.class))
                 .claim("role", roleName)
+                .claim("id", user.getId())
+                .claim("name", user.getName())
                 .build();
 
         // Cuối cùng, encode JWT và lấy ra chuỗi token trả về

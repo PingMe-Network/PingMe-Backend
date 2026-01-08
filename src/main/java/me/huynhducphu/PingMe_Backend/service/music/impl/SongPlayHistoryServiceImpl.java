@@ -22,7 +22,7 @@ public class SongPlayHistoryServiceImpl implements me.huynhducphu.PingMe_Backend
 
     public SongPlayHistoryServiceImpl(
             SongPlayHistoryRepository songPlayHistoryRepository,
-            @Qualifier("redisDtoTemplate") RedisTemplate<String, Object> redis) {
+            @Qualifier("redisSongHistoryTemplate") RedisTemplate<String, Object> redis) {
         this.songPlayHistoryRepository = songPlayHistoryRepository;
         this.redis = redis;
     }

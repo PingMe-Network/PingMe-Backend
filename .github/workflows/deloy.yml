@@ -3,7 +3,7 @@ name: CI/CD Deploy to Elastic Beanstalk
 on:
   push:
     branches:
-      '**'
+      'main'
 
 jobs:
   build:
@@ -35,6 +35,7 @@ jobs:
         run: docker push ${{ secrets.DOCKER_USERNAME }}/pingme-backend:latest
 
   deploy:
+    if: false
     name: Deploy to Elastic Beanstalk
     needs: build
     runs-on: ubuntu-latest
