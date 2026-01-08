@@ -95,7 +95,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleAuthorization(AccessDeniedException e) {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
-                .body(new ApiResponse<>(e.getMessage(), ErrorCode.ACCESS_DENIED.getCode()));
+                .body(new ApiResponse<>(e.getMessage(), ErrorCode.UNAUTHORIZED.getCode()));
     }
 
     // =========================================================================
