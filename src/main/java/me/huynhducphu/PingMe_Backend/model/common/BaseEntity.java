@@ -36,5 +36,4 @@ public class BaseEntity {
 
     @Column(name = "active", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     private boolean active = true;
-
 }
