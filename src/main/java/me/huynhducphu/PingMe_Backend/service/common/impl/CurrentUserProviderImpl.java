@@ -3,8 +3,10 @@ package me.huynhducphu.PingMe_Backend.service.common.impl;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.model.User;
+import me.huynhducphu.PingMe_Backend.model.constant.AccountStatus;
 import me.huynhducphu.PingMe_Backend.repository.auth.UserRepository;
 import me.huynhducphu.PingMe_Backend.service.common.CurrentUserProvider;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
@@ -35,8 +37,16 @@ public class CurrentUserProviderImpl implements CurrentUserProvider {
 
         // Từ email đã lấy được, truy vấn xuống database để tìm user tương ứng.
         // Nếu không tìm thấy, ném ra ngoại lệ báo rằng không có người dùng nào khớp.
-        return userRepository
+        var user = userRepository
                 .getUserByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng hiện tại"));
+
+        if (user.getAccountStatus() == AccountStatus.DEACTIVATED)
+            throw new DisabledException("Tài khoản của bạn đã bị vô hiệu hóa!");
+
+        if (user.getAccountStatus() == AccountStatus.SUSPENDED)
+            throw new DisabledException("Tài khoản của bạn đã bị tạm khóa!");
+
+        return user;
     }
 }

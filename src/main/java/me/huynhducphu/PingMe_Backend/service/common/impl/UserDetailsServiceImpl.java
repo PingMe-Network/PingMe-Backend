@@ -34,11 +34,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .getUserByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException(email));
 
-        if(user.getAccountStatus() == AccountStatus.DEACTIVATED)
-            throw new DisabledException("Tài khoản của bạn đã bị vô hiệu hóa!");
-        if(user.getAccountStatus() == AccountStatus.SUSPENDED)
-            throw new DisabledException("Tài khoản của bạn đã bị tạm khóa!");
-
         // Chuyển đổi entity User sang User của Spring Security,
         // dùng để xác thực và lưu trong SecurityContext.
         // (User ở đây là org.springframework.security.core.userdetails.User)

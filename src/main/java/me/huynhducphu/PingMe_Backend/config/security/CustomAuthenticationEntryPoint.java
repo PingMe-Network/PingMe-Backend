@@ -37,10 +37,6 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
         ErrorCode errorCode = null;
 
-        if(authException instanceof DisabledException)
-            errorCode = ErrorCode.ACCESS_DENIED;
-        else errorCode = ErrorCode.INVALID_TOKEN;
-
         objectMapper.writeValue(
                 response.getWriter(),
                 new ApiResponse<>(
@@ -48,6 +44,5 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
                         errorCode.getCode()
                 )
         );
-
     }
 }
