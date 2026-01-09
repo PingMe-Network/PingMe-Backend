@@ -46,12 +46,11 @@ public class ReelController {
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<ReelResponse>> createReel(
             @Parameter(description = "JSON dữ liệu reel", required = true)
-            @RequestPart("data") String dataJson,
+            @RequestPart("data") ReelRequest data,
 
             @Parameter(description = "File video reel", required = true)
             @RequestPart("video") MultipartFile video
-    ) throws Exception {
-        ReelRequest data = objectMapper.readValue(dataJson, ReelRequest.class);
+    ) {
         var res = reelService.createReel(data, video);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(res));
     }
@@ -189,12 +188,11 @@ public class ReelController {
             @PathVariable Long reelId,
 
             @Parameter(description = "JSON dữ liệu reel", required = true)
-            @RequestPart("data") String dataJson,
+            @RequestPart("data") ReelRequest data,
 
             @Parameter(description = "Video mới (optional)")
             @RequestPart(value = "video", required = false) MultipartFile video
-    ) throws Exception {
-        ReelRequest data = objectMapper.readValue(dataJson, ReelRequest.class);
+    ) {
         var res = reelService.updateReel(reelId, data, video);
         return ResponseEntity.ok(new ApiResponse<>(res));
     }
