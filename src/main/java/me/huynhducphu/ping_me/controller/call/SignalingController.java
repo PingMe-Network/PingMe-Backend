@@ -44,7 +44,6 @@ public class SignalingController {
             @RequestBody SignalingRequest request
     ) {
         signalingService.processSignaling(request);
-        System.out.println("Signaling message processed: " + request);
         return ResponseEntity.ok().build();
     }
 }

@@ -43,7 +43,6 @@ public class AdminReelController {
             @Parameter(description = "Thông tin phân trang")
             @PageableDefault Pageable pageable
     ) {
-        System.out.println("FILTER = " + filter);
         var page = adminReelService.getReels(filter, pageable);
         return ResponseEntity.ok(new ApiResponse<>(new PageResponse<>(page)));
     }
