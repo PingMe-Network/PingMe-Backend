@@ -1,7 +1,7 @@
-package me.huynhducphu.ping_me.service.integration.impl;
+package me.huynhducphu.ping_me.service.ffmpeg;
 
 import lombok.extern.slf4j.Slf4j;
-import me.huynhducphu.ping_me.service.integration.constant.MediaType;
+import me.huynhducphu.ping_me.service.ffmpeg.constants.MediaType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,7 +21,7 @@ import java.util.function.BiFunction;
  */
 @Slf4j
 @Service
-public class MediaCompressionServiceImpl implements me.huynhducphu.ping_me.service.integration.MediaCompressionService {
+public class FFMPEGService {
 
     private static final String FFMPEG_CMD = "ffmpeg";
 
@@ -35,7 +35,6 @@ public class MediaCompressionServiceImpl implements me.huynhducphu.ping_me.servi
     @Value("${app.ffmpeg.enabled:true}") // Mặc định true nếu quên config
     private boolean ffmpegEnabled;
 
-    @Override
     public File compressMedia(MultipartFile originalFile, MediaType mediaType) {
         if (!ffmpegEnabled) {
             throw new UnsupportedOperationException("Chức năng nén đang bị vô hiệu hóa bởi Admin.");
@@ -73,7 +72,7 @@ public class MediaCompressionServiceImpl implements me.huynhducphu.ping_me.servi
         } catch (InterruptedException e) {
             // QUAN TRỌNG: Khôi phục trạng thái interrupt của thread
             Thread.currentThread().interrupt();
-            
+
             log.error("Tiến trình nén bị ngắt quãng (Interrupted): {}", originalFile.getOriginalFilename());
 
             deleteFileSilent(tempOutput);
