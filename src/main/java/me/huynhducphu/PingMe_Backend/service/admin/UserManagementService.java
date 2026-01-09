@@ -10,8 +10,7 @@ import org.springframework.data.domain.Pageable;
  **/
 public interface UserManagementService {
     DefaultUserResponse saveUser(CreateUserRequest createUserRequest);
-
     Page<DefaultUserResponse> getAllUsers(Pageable pageable);
-
     DefaultUserResponse getUserById(Long id);
+    boolean deleteUserById(Long id);
 }

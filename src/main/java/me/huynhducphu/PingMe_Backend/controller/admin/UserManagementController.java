@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import me.huynhducphu.PingMe_Backend.advice.base.ErrorCode;
 import me.huynhducphu.PingMe_Backend.dto.admin.request.user.CreateUserRequest;
 import me.huynhducphu.PingMe_Backend.dto.admin.response.user.DefaultUserResponse;
 import me.huynhducphu.PingMe_Backend.dto.base.ApiResponse;
@@ -78,4 +79,14 @@ public class UserManagementController {
                 .status(HttpStatus.OK)
                 .body(new ApiResponse<>(userManagementService.getUserById(id)));
     }
+
+    @DeleteMapping("/{id}")
+    public  ResponseEntity<ApiResponse<Void>> deleteUserById(@PathVariable Long id) {
+        boolean isDeleted = userManagementService.deleteUserById(id);
+        ApiResponse<Void> apiResponse = new ApiResponse<>();
+        apiResponse.setErrorCode(ErrorCode.OK.getCode());
+        apiResponse.setErrorMessage(isDeleted ? "Xóa người dùng thành công!" : "Xóa người dùng thất bại!");
+        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+    }
+
 }

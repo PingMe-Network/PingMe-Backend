@@ -55,7 +55,6 @@ public class UserAccountServiceImpl implements UserAccountService {
     private final UserRepository userRepository;
 
     private final CurrentUserProvider currentUserProvider;
-
     private static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
     private static final Long MAX_AVATAR_FILE_SIZE = 2 * 1024 * 1024L;
 

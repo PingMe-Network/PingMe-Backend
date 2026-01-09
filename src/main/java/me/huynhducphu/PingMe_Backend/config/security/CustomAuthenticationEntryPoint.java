@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import me.huynhducphu.PingMe_Backend.advice.base.ErrorCode;
 import me.huynhducphu.PingMe_Backend.dto.base.ApiResponse;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -43,6 +44,5 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
                         errorCode.getCode()
                 )
         );
-
     }
 }

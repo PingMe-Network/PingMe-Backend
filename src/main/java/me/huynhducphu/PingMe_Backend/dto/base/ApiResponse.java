@@ -1,6 +1,7 @@
 package me.huynhducphu.PingMe_Backend.dto.base;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@Builder
 public class ApiResponse<T> {
 
     private String errorMessage;

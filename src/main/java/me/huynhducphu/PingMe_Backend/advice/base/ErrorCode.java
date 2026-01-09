@@ -10,6 +10,11 @@ import org.springframework.http.HttpStatusCode;
  **/
 @Getter
 public enum ErrorCode {
+    // 200 - 299
+    OK(200, "Thành công.", HttpStatus.OK),
+
+    // 400-499
+    UNAUTHORIZED(403, "Bạn không có quyền truy cập tài nguyên này!", HttpStatus.FORBIDDEN),
 
     // ===== System & Common (1000 - 1099) =====
     UNCATEGORIZED_EXCEPTION(1099, "Lỗi hệ thống không xác định", HttpStatus.INTERNAL_SERVER_ERROR),
