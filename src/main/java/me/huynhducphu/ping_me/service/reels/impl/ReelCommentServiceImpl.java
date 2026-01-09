@@ -10,7 +10,7 @@ import me.huynhducphu.ping_me.model.reels.ReelCommentReaction;
 import me.huynhducphu.ping_me.repository.reels.ReelCommentReactionRepository;
 import me.huynhducphu.ping_me.repository.reels.ReelCommentRepository;
 import me.huynhducphu.ping_me.repository.reels.ReelRepository;
-import me.huynhducphu.ping_me.service.common.CurrentUserProvider;
+import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
 import me.huynhducphu.ping_me.service.reels.ReelCommentService;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -207,6 +207,7 @@ public class ReelCommentServiceImpl implements ReelCommentService {
 
         return toResponse(comment);
     }
+
     @Override
     public boolean isCommentOwner(Long commentId) {
         var me = currentUserProvider.get();

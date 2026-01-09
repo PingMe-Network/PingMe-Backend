@@ -1,4 +1,4 @@
-package me.huynhducphu.ping_me.controller.common;
+package me.huynhducphu.ping_me.controller.user;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import me.huynhducphu.ping_me.dto.base.ApiResponse;
 import me.huynhducphu.ping_me.dto.response.user.UserSummaryResponse;
 import me.huynhducphu.ping_me.dto.response.user.UserSummarySimpleResponse;
-import me.huynhducphu.ping_me.service.common.UserLookupService;
+import me.huynhducphu.ping_me.service.user.UserLookupService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

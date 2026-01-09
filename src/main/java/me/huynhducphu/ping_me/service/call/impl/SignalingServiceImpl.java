@@ -6,7 +6,7 @@ import me.huynhducphu.ping_me.dto.request.call.SignalingRequest;
 import me.huynhducphu.ping_me.dto.response.call.SignalingResponse;
 import me.huynhducphu.ping_me.model.common.RoomMemberId;
 import me.huynhducphu.ping_me.repository.chat.RoomParticipantRepository;
-import me.huynhducphu.ping_me.service.common.CurrentUserProvider;
+import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 

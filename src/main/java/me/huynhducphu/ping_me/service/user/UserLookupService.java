@@ -1,4 +1,4 @@
-package me.huynhducphu.ping_me.service.common;
+package me.huynhducphu.ping_me.service.user;
 
 import me.huynhducphu.ping_me.dto.response.user.UserSummaryResponse;
 import me.huynhducphu.ping_me.dto.response.user.UserSummarySimpleResponse;
@@ -8,5 +8,6 @@ import me.huynhducphu.ping_me.dto.response.user.UserSummarySimpleResponse;
  **/
 public interface UserLookupService {
     UserSummaryResponse lookupUser(String email);
+
     UserSummarySimpleResponse lookupUserById(Long userId);
 }

@@ -1,11 +1,11 @@
-package me.huynhducphu.ping_me.service.common.impl;
+package me.huynhducphu.ping_me.service.user.current_user;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.ping_me.model.User;
 import me.huynhducphu.ping_me.model.constant.AccountStatus;
 import me.huynhducphu.ping_me.repository.auth.UserRepository;
-import me.huynhducphu.ping_me.service.common.CurrentUserProvider;
+import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;

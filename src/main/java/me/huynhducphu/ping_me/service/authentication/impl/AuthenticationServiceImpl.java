@@ -5,17 +5,15 @@ import lombok.RequiredArgsConstructor;
 import me.huynhducphu.ping_me.dto.request.authentication.*;
 import me.huynhducphu.ping_me.dto.response.authentication.common.AuthResultWrapper;
 import me.huynhducphu.ping_me.dto.response.authentication.DefaultAuthResponse;
-import me.huynhducphu.ping_me.dto.response.authentication.CurrentUserDeviceMetaResponse;
-import me.huynhducphu.ping_me.dto.response.authentication.CurrentUserProfileResponse;
 import me.huynhducphu.ping_me.dto.response.authentication.CurrentUserSessionResponse;
 import me.huynhducphu.ping_me.model.User;
 import me.huynhducphu.ping_me.model.constant.AuthProvider;
 import me.huynhducphu.ping_me.repository.auth.UserRepository;
-import me.huynhducphu.ping_me.service.authentication.UserAccountService;
+import me.huynhducphu.ping_me.service.authentication.AuthenticationService;
 import me.huynhducphu.ping_me.service.authentication.JwtService;
-import me.huynhducphu.ping_me.service.common.CurrentUserProvider;
+import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
 import me.huynhducphu.ping_me.service.authentication.RefreshTokenRedisService;
-import me.huynhducphu.ping_me.service.s3.S3Service;
+import me.huynhducphu.ping_me.utils.mapper.UserMapper;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -25,38 +23,32 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * Admin 8/3/2025
  **/
-@RestController
-@RequestMapping("/auth")
+@Service
 @RequiredArgsConstructor
 @Transactional
-public class UserAccountServiceImpl implements UserAccountService {
+public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
 
     private final JwtService jwtService;
-    private final S3Service s3Service;
     private final RefreshTokenRedisService refreshTokenRedisService;
 
     private final ModelMapper modelMapper;
+    private final UserMapper userMapper;
 
     private final UserRepository userRepository;
 
     private final CurrentUserProvider currentUserProvider;
     private static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
-    private static final Long MAX_AVATAR_FILE_SIZE = 2 * 1024 * 1024L;
 
     @Value("${app.jwt.access-token-expiration}")
     private Long accessTokenExpiration;
@@ -82,7 +74,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         var savedUser = userRepository.save(user);
 
-        return mapToCurrentUserSessionResponse(savedUser);
+        return userMapper.mapToCurrentUserSessionResponse(savedUser);
     }
 
     @Override
@@ -136,109 +128,9 @@ public class UserAccountServiceImpl implements UserAccountService {
         return buildAuthResultWrapper(refreshTokenUser, submitSessionMetaRequest);
     }
 
-    @Override
-    public CurrentUserSessionResponse getCurrentUserSession() {
-        return mapToCurrentUserSessionResponse(currentUserProvider.get());
-    }
-
-    @Override
-    public CurrentUserProfileResponse getCurrentUserInfo() {
-        var user = currentUserProvider.get();
-        var currentUserProfileResponse = modelMapper.map(user, CurrentUserProfileResponse.class);
-
-        String roleName = user.getRole() != null ? user.getRole().getName() : "";
-        currentUserProfileResponse.setRoleName(roleName);
-        return currentUserProfileResponse;
-    }
-
-    @Override
-    public List<CurrentUserDeviceMetaResponse> getCurrentUserAllDeviceMetas(
-            String refreshToken
-    ) {
-        var currentUser = currentUserProvider.get();
-
-        String email = jwtService.decodeJwt(refreshToken).getSubject();
-        var refreshTokenUser = userRepository
-                .getUserByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng"));
-
-        if (!refreshTokenUser.getId().equals(currentUser.getId()))
-            throw new AccessDeniedException("Không có quyền truy cập");
-
-        return refreshTokenRedisService.getAllDeviceMetas(currentUser.getId().toString(), refreshToken);
-    }
-
-    @Override
-    public CurrentUserSessionResponse updateCurrentUserPassword(
-            ChangePasswordRequest changePasswordRequest
-    ) {
-        var user = currentUserProvider.get();
-
-        if (!passwordEncoder.matches(changePasswordRequest.getOldPassword(), user.getPassword()))
-            throw new DataIntegrityViolationException("Mật khẩu cũ không chính xác");
-
-        user.setPassword(passwordEncoder.encode(changePasswordRequest.getNewPassword()));
-
-        return mapToCurrentUserSessionResponse(user);
-    }
-
-    @Override
-    public CurrentUserSessionResponse updateCurrentUserProfile(
-            ChangeProfileRequest changeProfileRequest
-    ) {
-        var user = currentUserProvider.get();
-
-        user.setName(changeProfileRequest.getName());
-        user.setGender(changeProfileRequest.getGender());
-        user.setAddress(changeProfileRequest.getAddress());
-        user.setDob(changeProfileRequest.getDob());
-
-        return mapToCurrentUserSessionResponse(user);
-    }
-
-    @Override
-    public CurrentUserSessionResponse updateCurrentUserAvatar(
-            MultipartFile avatarFile
-    ) {
-        var user = currentUserProvider.get();
-
-        String url = s3Service.uploadFile(
-                avatarFile,
-                "avatar",
-                user.getEmail(),
-                true,
-                MAX_AVATAR_FILE_SIZE
-        );
-
-        user.setAvatarUrl(url);
-        user.setUpdatedAt(LocalDateTime.now());
-
-        return mapToCurrentUserSessionResponse(user);
-    }
-
-    @Override
-    public void deleteCurrentUserDeviceMeta(String sessionId) {
-        String[] part = sessionId.split(":");
-        String sessionUserId = part[3];
-
-        var currentUser = currentUserProvider.get();
-
-        if (!currentUser.getId().toString().equals(sessionUserId))
-            throw new AccessDeniedException("Không có quyền truy cập");
-
-        refreshTokenRedisService.deleteRefreshToken(sessionId);
-    }
-
     // =====================================
     // Utilities methods
     // =====================================
-    private CurrentUserSessionResponse mapToCurrentUserSessionResponse(User user) {
-        var res = modelMapper.map(user, CurrentUserSessionResponse.class);
-
-        var roleName = user.getRole() != null ? user.getRole().getName() : "";
-        res.setRoleName(roleName);
-        return res;
-    }
 
     private AuthResultWrapper buildAuthResultWrapper(
             User user,
@@ -249,7 +141,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         // ================================================
         var accessToken = jwtService.buildJwt(user, accessTokenExpiration);
         var defaultAuthResponseDto = new DefaultAuthResponse(
-                mapToCurrentUserSessionResponse(user),
+                userMapper.mapToCurrentUserSessionResponse(user),
                 accessToken
         );
 
@@ -277,14 +169,6 @@ public class UserAccountServiceImpl implements UserAccountService {
                 defaultAuthResponseDto,
                 refreshTokenCookie
         );
-    }
-
-    public void connect(Long userId) {
-        userRepository.connect(userId);
-    }
-
-    public void disconnect(Long userId) {
-        userRepository.disconnect(userId);
     }
 
 }

@@ -11,7 +11,7 @@ import me.huynhducphu.ping_me.model.constant.AccountStatus;
 import me.huynhducphu.ping_me.model.constant.AuthProvider;
 import me.huynhducphu.ping_me.repository.auth.UserRepository;
 import me.huynhducphu.ping_me.service.admin.UserManagementService;
-import me.huynhducphu.ping_me.service.common.CurrentUserProvider;
+import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
 import org.modelmapper.ModelMapper;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -67,11 +67,11 @@ public class UserManagementServiceImpl implements UserManagementService {
     public boolean deleteUserById(Long id) {
         try {
             User user = userRepository.findById(id)
-                            .orElseThrow(() -> new NullPointerException("Không tìm thấy tài khoản!"));
+                    .orElseThrow(() -> new NullPointerException("Không tìm thấy tài khoản!"));
             user.setAccountStatus(AccountStatus.DEACTIVATED);
             userRepository.save(user);
             return true;
-        }catch (Exception e){
+        } catch (Exception e) {
             return false;
         }
     }

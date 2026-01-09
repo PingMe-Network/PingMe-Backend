@@ -7,7 +7,7 @@ import me.huynhducphu.ping_me.dto.response.blog.BlogDetailsResponse;
 import me.huynhducphu.ping_me.dto.response.blog.BlogReviewResponse;
 import me.huynhducphu.ping_me.model.blog.Blog;
 import me.huynhducphu.ping_me.repository.blog.BlogRepository;
-import me.huynhducphu.ping_me.service.common.CurrentUserProvider;
+import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
 import me.huynhducphu.ping_me.service.s3.S3Service;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;

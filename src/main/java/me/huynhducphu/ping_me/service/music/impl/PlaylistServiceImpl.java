@@ -10,7 +10,7 @@ import me.huynhducphu.ping_me.repository.auth.UserRepository;
 import me.huynhducphu.ping_me.repository.music.PlaylistRepository;
 import me.huynhducphu.ping_me.repository.music.PlaylistSongRepository;
 import me.huynhducphu.ping_me.repository.music.SongRepository;
-import me.huynhducphu.ping_me.service.common.CurrentUserProvider;
+import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
 import me.huynhducphu.ping_me.service.music.PlaylistService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -65,7 +65,6 @@ public class PlaylistServiceImpl implements PlaylistService {
         List<PlaylistSong> items = playlistSongRepository.findByPlaylistIdOrderByPositionAsc(playlistId);
         return PlaylistDetailDto.from(playlist, items);
     }
-
 
 
     @Override

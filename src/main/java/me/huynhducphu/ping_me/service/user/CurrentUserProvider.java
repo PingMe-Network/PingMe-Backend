@@ -1,4 +1,4 @@
-package me.huynhducphu.ping_me.service.common;
+package me.huynhducphu.ping_me.service.user;
 
 import me.huynhducphu.ping_me.model.User;
 
