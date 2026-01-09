@@ -81,9 +81,9 @@ public class UserManagementController {
     }
 
     @DeleteMapping("/{id}")
-    public  ResponseEntity<?> deleteUserById(@PathVariable Long id) {
+    public  ResponseEntity<ApiResponse<Void>> deleteUserById(@PathVariable Long id) {
         boolean isDeleted = userManagementService.deleteUserById(id);
-        ApiResponse<?> apiResponse = new ApiResponse<>();
+        ApiResponse<Void> apiResponse = new ApiResponse<>();
         apiResponse.setErrorCode(ErrorCode.OK.getCode());
         apiResponse.setErrorMessage(isDeleted ? "Xóa người dùng thành công!" : "Xóa người dùng thất bại!");
         return ResponseEntity.status(HttpStatus.OK).body(apiResponse);

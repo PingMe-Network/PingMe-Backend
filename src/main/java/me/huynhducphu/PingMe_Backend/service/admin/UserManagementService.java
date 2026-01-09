@@ -2,7 +2,6 @@ package me.huynhducphu.PingMe_Backend.service.admin;
 
 import me.huynhducphu.PingMe_Backend.dto.admin.request.user.CreateUserRequest;
 import me.huynhducphu.PingMe_Backend.dto.admin.response.user.DefaultUserResponse;
-import me.huynhducphu.PingMe_Backend.dto.base.ApiResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

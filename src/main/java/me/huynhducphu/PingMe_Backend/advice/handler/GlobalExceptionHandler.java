@@ -100,9 +100,9 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(value = DisabledException.class)
-    public ResponseEntity<ApiResponse<?>> handlingDisabledException(DisabledException exception){
+    public ResponseEntity<ApiResponse<Void>> handlingDisabledException(DisabledException exception){
         ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
-        ApiResponse<?> apiResponse = new ApiResponse<>();
+        ApiResponse<Void> apiResponse = new ApiResponse<>();
         apiResponse.setErrorCode(errorCode.getCode());
         apiResponse.setErrorMessage(errorCode.getMessage());
         return ResponseEntity.status(errorCode.getStatusCode()).body(apiResponse);
