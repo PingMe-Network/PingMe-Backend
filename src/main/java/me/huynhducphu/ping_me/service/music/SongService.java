@@ -13,8 +13,8 @@ import java.io.IOException;
 import java.util.List;
 
 public interface SongService {
-    long MAX_AUDIO_SIZE = 20 * 1024 * 1024;
-    long MAX_COVER_SIZE = 5 * 1024 * 1024;
+    Long MAX_AUDIO_SIZE = 20L * 1024L * 1024L;
+    Long MAX_COVER_SIZE = 5L * 1024L * 1024L;
 
     List<SongResponseWithAllAlbum> getAllSongs();
 

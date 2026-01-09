@@ -19,7 +19,7 @@ import java.util.List;
 @Service
 public class MessageRedisServiceImpl implements MessageRedisService {
 
-    private static final int MAX_CACHE_MESSAGES = 200;
+    private static final Long MAX_CACHE_MESSAGES = 200L;
     private static final Duration CACHE_TTL = Duration.ofHours(2);
 
     private final RedisTemplate<String, String> redisTemplate;
@@ -139,7 +139,7 @@ public class MessageRedisServiceImpl implements MessageRedisService {
 
             result = new ArrayList<>(all.subList(startIdx, endIdx));
         }
-        
+
         Collections.reverse(result);
 
         return result;

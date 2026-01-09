@@ -13,7 +13,7 @@ import java.util.List;
  * @package me.huynhducphu.PingMe_Backend.service.music
  */
 public interface AlbumService {
-    long MAX_COVER_SIZE = 5 * 1024 * 1024;
+    Long MAX_COVER_SIZE = 5L * 1024L * 1024L;
 
     List<AlbumResponse> getAllAlbums();
 

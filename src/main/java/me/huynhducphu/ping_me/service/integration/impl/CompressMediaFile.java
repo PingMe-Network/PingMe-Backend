@@ -44,7 +44,7 @@ public class CompressMediaFile {
     /**
      * Nén Audio về định dạng MP3 128kbps
      */
-    private File compressAudio(MultipartFile originalFile) throws IOException {
+    private File compressAudio(MultipartFile originalFile) {
         File tempInput = null;
         File tempOutput = null;
 
@@ -85,8 +85,7 @@ public class CompressMediaFile {
 
             // 5. Đọc log của FFmpeg (Quan trọng: Nếu không đọc, buffer đầy sẽ gây treo tiến trình)
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
+                while (reader.readLine() != null) {
                     // Bạn có thể log ra console để debug nếu muốn
                     // System.out.println("[FFmpeg]: " + line);
                 }
@@ -179,10 +178,6 @@ public class CompressMediaFile {
 
             // 5. Đọc log (Bắt buộc để tránh treo tiến trình)
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    // System.out.println("[FFmpeg Video]: " + line); // Bật log nếu cần debug
-                }
             }
 
             int exitCode = process.waitFor();

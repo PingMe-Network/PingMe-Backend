@@ -22,7 +22,7 @@ public class ArtistServiceImpl implements ArtistService {
     private final ArtistRepository artistRepository;
     private final S3Service s3Service;
 
-    private static final long MAX_IMG_SIZE = 5 * 1024 * 1024; // 5MB
+    private static final Long MAX_IMG_SIZE = 5L * 1024L * 1024L; // 5MB
 
     @Override
     public List<ArtistResponse> getAllArtists() {
