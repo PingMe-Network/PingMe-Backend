@@ -5,8 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import me.huynhducphu.ping_me.config.websocket.auth.UserSocketPrincipal;
 import me.huynhducphu.ping_me.dto.ws.user_status.UserOnlineStatusRespone;
 import me.huynhducphu.ping_me.model.chat.Friendship;
-import me.huynhducphu.ping_me.service.authentication.UserAccountService;
 import me.huynhducphu.ping_me.service.friendship.FriendshipService;
+import me.huynhducphu.ping_me.service.user.CurrentUserProfileService;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
@@ -28,7 +28,7 @@ import java.security.Principal;
 @Slf4j
 public class WebSocketEventListener {
     private final SimpMessagingTemplate messagingTemplate;
-    private final UserAccountService userAccountService;
+    private final CurrentUserProfileService currentUserProfileService;
     private final FriendshipService friendshipService;
 
     @EventListener
@@ -45,7 +45,7 @@ public class WebSocketEventListener {
         String name = userPrincipal.getName();   // hoặc userPrincipal.getEmail() nếu muốn dùng email
 
         // Đánh dấu user online
-        userAccountService.connect(userId);
+        currentUserProfileService.connect(userId);
 
         // Lấy danh sách bạn bè
         var friends = friendshipService.getAllFriendshipsOfCurrentUser(userPrincipal.getEmail());
@@ -80,7 +80,7 @@ public class WebSocketEventListener {
         String name = userPrincipal.getName();
 
         // Đánh dấu user offline
-        userAccountService.disconnect(userId);
+        currentUserProfileService.disconnect(userId);
 
         // Lấy danh sách bạn bè
         var friends = friendshipService.getAllFriendshipsOfCurrentUser(userPrincipal.getEmail());

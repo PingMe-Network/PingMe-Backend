@@ -1,4 +1,4 @@
-package me.huynhducphu.ping_me.service.user.impl;
+package me.huynhducphu.ping_me.service.user.base;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
