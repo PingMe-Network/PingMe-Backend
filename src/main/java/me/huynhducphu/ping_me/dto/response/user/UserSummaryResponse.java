@@ -1,0 +1,32 @@
+package me.huynhducphu.ping_me.dto.response.user;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import me.huynhducphu.ping_me.model.constant.FriendshipStatus;
+import me.huynhducphu.ping_me.model.constant.UserStatus;
+
+/**
+ * Admin 8/19/2025
+ **/
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class UserSummaryResponse {
+
+    private Long id;
+    private String email;
+    private String name;
+    private String avatarUrl;
+    private UserStatus status;
+    private FriendshipSummary friendshipSummary;
+
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Data
+    public static class FriendshipSummary {
+        private Long id;
+        private FriendshipStatus friendshipStatus;
+    }
+
+}
