@@ -1,0 +1,16 @@
+package me.huynhducphu.ping_me.service.admin;
+
+import me.huynhducphu.ping_me.dto.admin.request.user.CreateUserRequest;
+import me.huynhducphu.ping_me.dto.admin.response.user.DefaultUserResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+/**
+ * Admin 8/3/2025
+ **/
+public interface UserManagementService {
+    DefaultUserResponse saveUser(CreateUserRequest createUserRequest);
+    Page<DefaultUserResponse> getAllUsers(Pageable pageable);
+    DefaultUserResponse getUserById(Long id);
+    boolean deleteUserById(Long id);
+}
