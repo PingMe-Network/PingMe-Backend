@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import me.huynhducphu.ping_me.dto.response.authentication.CurrentUserSessionResponse;
-import me.huynhducphu.ping_me.dto.response.authentication.auth.DefaultAuthResponse;
 import org.springframework.http.ResponseCookie;
 
 /**
@@ -16,7 +15,7 @@ import org.springframework.http.ResponseCookie;
 public class AuthResultWrapper {
 
     private CurrentUserSessionResponse userSession;
-    
+
     private String accessToken;
     private ResponseCookie refreshTokenCookie;
 
