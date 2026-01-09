@@ -4,14 +4,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import me.huynhducphu.PingMe_Backend.dto.base.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.request.music.GenreRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.music.GenreResponse;
 import me.huynhducphu.PingMe_Backend.service.music.GenreService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,12 +33,9 @@ public class GenreController {
             summary = "Lấy danh sách thể loại",
             description = "Lấy toàn bộ thể loại âm nhạc chưa bị xoá"
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Lấy danh sách thể loại thành công")
-    })
     @GetMapping("/all")
-    public ResponseEntity<List<GenreResponse>> getAllGenres() {
-        return ResponseEntity.ok(genreService.getAllGenres());
+    public ResponseEntity<ApiResponse<List<GenreResponse>>> getAllGenres() {
+        return ResponseEntity.ok(new ApiResponse<>(genreService.getAllGenres()));
     }
 
     // ======================= GET BY ID =======================
@@ -46,16 +43,12 @@ public class GenreController {
             summary = "Lấy chi tiết thể loại",
             description = "Lấy thông tin thể loại theo ID"
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Tìm thấy thể loại"),
-            @ApiResponse(responseCode = "404", description = "Không tìm thấy thể loại")
-    })
     @GetMapping("/{id}")
-    public ResponseEntity<GenreResponse> getGenreById(
+    public ResponseEntity<ApiResponse<GenreResponse>> getGenreById(
             @Parameter(description = "ID thể loại", example = "1")
             @PathVariable Long id
     ) {
-        return ResponseEntity.ok(genreService.getGenreById(id));
+        return ResponseEntity.ok(new ApiResponse<>(genreService.getGenreById(id)));
     }
 
     // ======================= CREATE =======================
@@ -63,12 +56,8 @@ public class GenreController {
             summary = "Tạo mới thể loại",
             description = "Tạo thể loại âm nhạc mới"
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Tạo thể loại thành công"),
-            @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ")
-    })
     @PostMapping(value = "/save", consumes = "multipart/form-data")
-    public ResponseEntity<GenreResponse> saveGenre(
+    public ResponseEntity<ApiResponse<GenreResponse>> saveGenre(
             @Parameter(
                     description = "Thông tin thể loại",
                     required = true,
@@ -79,7 +68,9 @@ public class GenreController {
             @Valid
             @RequestPart("genreRequest") GenreRequest genreRequest
     ) {
-        return ResponseEntity.ok(genreService.createGenre(genreRequest));
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(genreService.createGenre(genreRequest)));
     }
 
     // ======================= UPDATE =======================
@@ -87,19 +78,15 @@ public class GenreController {
             summary = "Cập nhật thể loại",
             description = "Cập nhật thông tin thể loại theo ID"
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Cập nhật thành công"),
-            @ApiResponse(responseCode = "404", description = "Không tìm thấy thể loại")
-    })
     @PutMapping(value = "/update/{id}", consumes = "multipart/form-data")
-    public ResponseEntity<GenreResponse> updateGenre(
+    public ResponseEntity<ApiResponse<GenreResponse>> updateGenre(
             @Parameter(description = "ID thể loại", example = "1")
             @PathVariable Long id,
 
             @Valid
             @RequestPart("genreRequest") GenreRequest request
     ) {
-        return ResponseEntity.ok(genreService.updateGenre(id, request));
+        return ResponseEntity.ok(new ApiResponse<>(genreService.updateGenre(id, request)));
     }
 
     // ======================= SOFT DELETE =======================
@@ -107,16 +94,13 @@ public class GenreController {
             summary = "Xoá mềm thể loại",
             description = "Đánh dấu thể loại là đã xoá (có thể khôi phục)"
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Xoá mềm thành công")
-    })
     @DeleteMapping("/soft-delete/{id}")
-    public ResponseEntity<Void> softDeleteGenre(
+    public ResponseEntity<ApiResponse<Void>> softDeleteGenre(
             @Parameter(description = "ID thể loại", example = "1")
             @PathVariable Long id
     ) {
         genreService.softDeleteGenre(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(new ApiResponse<>(null));
     }
 
     // ======================= RESTORE =======================
@@ -124,16 +108,13 @@ public class GenreController {
             summary = "Khôi phục thể loại",
             description = "Khôi phục thể loại đã bị xoá mềm"
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Khôi phục thành công")
-    })
     @PutMapping("/restore/{id}")
-    public ResponseEntity<Void> restoreGenre(
+    public ResponseEntity<ApiResponse<Void>> restoreGenre(
             @Parameter(description = "ID thể loại", example = "1")
             @PathVariable Long id
     ) {
         genreService.restoreGenre(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(new ApiResponse<>(null));
     }
 
     // ======================= HARD DELETE =======================
@@ -141,15 +122,12 @@ public class GenreController {
             summary = "Xoá cứng thể loại",
             description = "Xoá vĩnh viễn thể loại khỏi hệ thống"
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Xoá cứng thành công")
-    })
     @DeleteMapping("/hard-delete/{id}")
-    public ResponseEntity<Void> hardDeleteGenre(
+    public ResponseEntity<ApiResponse<Void>> hardDeleteGenre(
             @Parameter(description = "ID thể loại", example = "1")
             @PathVariable Long id
     ) {
         genreService.hardDeleteGenre(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(new ApiResponse<>(null));
     }
 }

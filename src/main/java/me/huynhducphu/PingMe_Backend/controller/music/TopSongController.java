@@ -2,10 +2,9 @@ package me.huynhducphu.PingMe_Backend.controller.music;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import me.huynhducphu.PingMe_Backend.dto.base.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.music.misc.TopSongPlayCounterDto;
 import me.huynhducphu.PingMe_Backend.service.music.SongPlayHistoryService;
 import org.springframework.http.ResponseEntity;
@@ -29,20 +28,15 @@ public class TopSongController {
             summary = "Top bài hát hôm nay",
             description = "Trả về danh sách bài hát được nghe nhiều nhất trong ngày hiện tại (cached)"
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Lấy BXH hôm nay thành công")
-    })
     @GetMapping("/today")
-    public ResponseEntity<List<TopSongPlayCounterDto>> getTopSongsToday(
+    public ResponseEntity<ApiResponse<List<TopSongPlayCounterDto>>> getTopSongsToday(
             @Parameter(
                     description = "Số lượng bài hát trong BXH",
                     example = "10"
             )
             @RequestParam(defaultValue = "10") int limit
     ) {
-        return ResponseEntity.ok(
-                songPlayHistoryService.getTopSongsTodayCached(limit)
-        );
+        return ResponseEntity.ok(new ApiResponse<>(songPlayHistoryService.getTopSongsTodayCached(limit)));
     }
 
     // ========================= WEEK =========================
@@ -50,20 +44,15 @@ public class TopSongController {
             summary = "Top bài hát tuần này",
             description = "Trả về danh sách bài hát được nghe nhiều nhất trong tuần hiện tại (cached)"
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Lấy BXH tuần thành công")
-    })
     @GetMapping("/week")
-    public ResponseEntity<List<TopSongPlayCounterDto>> getTopSongsThisWeek(
+    public ResponseEntity<ApiResponse<List<TopSongPlayCounterDto>>> getTopSongsThisWeek(
             @Parameter(
                     description = "Số lượng bài hát trong BXH",
                     example = "10"
             )
             @RequestParam(defaultValue = "10") int limit
     ) {
-        return ResponseEntity.ok(
-                songPlayHistoryService.getTopSongsThisWeekCached(limit)
-        );
+        return ResponseEntity.ok(new ApiResponse<>(songPlayHistoryService.getTopSongsThisWeekCached(limit)));
     }
 
     // ========================= MONTH =========================
@@ -71,19 +60,14 @@ public class TopSongController {
             summary = "Top bài hát tháng này",
             description = "Trả về danh sách bài hát được nghe nhiều nhất trong tháng hiện tại (cached)"
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Lấy BXH tháng thành công")
-    })
     @GetMapping("/month")
-    public ResponseEntity<List<TopSongPlayCounterDto>> getTopSongsThisMonth(
+    public ResponseEntity<ApiResponse<List<TopSongPlayCounterDto>>> getTopSongsThisMonth(
             @Parameter(
                     description = "Số lượng bài hát trong BXH",
                     example = "10"
             )
             @RequestParam(defaultValue = "10") int limit
     ) {
-        return ResponseEntity.ok(
-                songPlayHistoryService.getTopSongsThisMonthCached(limit)
-        );
+        return ResponseEntity.ok(new ApiResponse<>(songPlayHistoryService.getTopSongsThisMonthCached(limit)));
     }
 }

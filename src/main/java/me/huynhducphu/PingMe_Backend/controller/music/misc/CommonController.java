@@ -3,6 +3,7 @@ package me.huynhducphu.PingMe_Backend.controller.music.misc;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import me.huynhducphu.PingMe_Backend.dto.base.ApiResponse;
 import me.huynhducphu.PingMe_Backend.model.constant.ArtistRole;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,8 +30,7 @@ public class CommonController {
             description = "Lấy toàn bộ các vai trò của nghệ sĩ (ArtistRole enum)"
     )
     @GetMapping("/roles")
-    public ResponseEntity<ArtistRole[]> getArtistRoles() {
-        // Hàm .values() của Enum trả về mảng tất cả các giá trị
-        return ResponseEntity.ok(ArtistRole.values());
+    public ResponseEntity<ApiResponse<ArtistRole[]>> getArtistRoles() {
+        return ResponseEntity.ok(new ApiResponse<>(ArtistRole.values()));
     }
 }

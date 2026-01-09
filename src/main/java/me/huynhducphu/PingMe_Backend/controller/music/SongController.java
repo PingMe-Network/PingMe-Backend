@@ -4,15 +4,15 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import me.huynhducphu.PingMe_Backend.dto.base.ApiResponse;
 import me.huynhducphu.PingMe_Backend.dto.request.music.SongRequest;
 import me.huynhducphu.PingMe_Backend.dto.response.music.SongResponse;
 import me.huynhducphu.PingMe_Backend.dto.response.music.SongResponseWithAllAlbum;
 import me.huynhducphu.PingMe_Backend.service.music.SongService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,16 +36,12 @@ public class SongController {
             summary = "Lấy chi tiết bài hát",
             description = "Trả về thông tin chi tiết của một bài hát theo ID"
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Lấy bài hát thành công"),
-            @ApiResponse(responseCode = "404", description = "Không tìm thấy bài hát")
-    })
     @GetMapping("/{id}")
-    public ResponseEntity<SongResponse> getSongDetail(
+    public ResponseEntity<ApiResponse<SongResponse>> getSongDetail(
             @Parameter(description = "ID bài hát", example = "1")
             @PathVariable Long id
     ) {
-        return ResponseEntity.ok(songService.getSongById(id));
+        return ResponseEntity.ok(new ApiResponse<>(songService.getSongById(id)));
     }
 
     // ========================= GET ALL =========================
@@ -53,12 +49,9 @@ public class SongController {
             summary = "Lấy danh sách tất cả bài hát",
             description = "Trả về danh sách bài hát kèm album, artist, genre"
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công")
-    })
     @GetMapping("/all")
-    public ResponseEntity<List<SongResponseWithAllAlbum>> getAllSongs() {
-        return ResponseEntity.ok(songService.getAllSongs());
+    public ResponseEntity<ApiResponse<List<SongResponseWithAllAlbum>>> getAllSongs() {
+        return ResponseEntity.ok(new ApiResponse<>(songService.getAllSongs()));
     }
 
     // ========================= SEARCH BY TITLE =========================
@@ -66,15 +59,12 @@ public class SongController {
             summary = "Tìm bài hát theo tên",
             description = "Tìm kiếm bài hát gần đúng theo tiêu đề"
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Tìm kiếm thành công")
-    })
     @GetMapping("/search")
-    public ResponseEntity<List<SongResponse>> getSongByTitle(
+    public ResponseEntity<ApiResponse<List<SongResponse>>> getSongByTitle(
             @Parameter(description = "Tên bài hát", example = "Love")
             @RequestParam("title") String title
     ) {
-        return ResponseEntity.ok(songService.getSongByTitle(title));
+        return ResponseEntity.ok(new ApiResponse<>(songService.getSongByTitle(title)));
     }
 
     // ========================= SEARCH BY ALBUM =========================
@@ -83,11 +73,11 @@ public class SongController {
             description = "Trả về danh sách bài hát thuộc một album"
     )
     @GetMapping("/search-by-album")
-    public ResponseEntity<List<SongResponseWithAllAlbum>> getSongByAlbum(
+    public ResponseEntity<ApiResponse<List<SongResponseWithAllAlbum>>> getSongByAlbum(
             @Parameter(description = "ID album", example = "5")
             @RequestParam("id") Long albumId
     ) {
-        return ResponseEntity.ok(songService.getSongByAlbum(albumId));
+        return ResponseEntity.ok(new ApiResponse<>(songService.getSongByAlbum(albumId)));
     }
 
     // ========================= SEARCH BY ARTIST =========================
@@ -96,11 +86,11 @@ public class SongController {
             description = "Trả về tất cả bài hát của một nghệ sĩ"
     )
     @GetMapping("/search-by-artist")
-    public ResponseEntity<List<SongResponseWithAllAlbum>> getSongsByArtist(
+    public ResponseEntity<ApiResponse<List<SongResponseWithAllAlbum>>> getSongsByArtist(
             @Parameter(description = "ID nghệ sĩ", example = "3")
             @RequestParam("id") Long artistId
     ) {
-        return ResponseEntity.ok(songService.getSongsByArtist(artistId));
+        return ResponseEntity.ok(new ApiResponse<>(songService.getSongsByArtist(artistId)));
     }
 
     // ========================= TOP PLAYED =========================
@@ -109,11 +99,11 @@ public class SongController {
             description = "Trả về danh sách bài hát có lượt nghe cao nhất"
     )
     @GetMapping("/getTopSong/{number}")
-    public ResponseEntity<List<SongResponseWithAllAlbum>> getTopSongs(
+    public ResponseEntity<ApiResponse<List<SongResponseWithAllAlbum>>> getTopSongs(
             @Parameter(description = "Số lượng bài hát", example = "10")
             @PathVariable int number
     ) {
-        return ResponseEntity.ok(songService.getTopPlayedSongs(number));
+        return ResponseEntity.ok(new ApiResponse<>(songService.getTopPlayedSongs(number)));
     }
 
     // ========================= SEARCH BY GENRE =========================
@@ -122,11 +112,11 @@ public class SongController {
             description = "Trả về danh sách bài hát thuộc một genre"
     )
     @GetMapping("/genre")
-    public ResponseEntity<List<SongResponseWithAllAlbum>> getByGenre(
+    public ResponseEntity<ApiResponse<List<SongResponseWithAllAlbum>>> getByGenre(
             @Parameter(description = "ID thể loại", example = "2")
             @RequestParam("id") Long genreId
     ) {
-        return ResponseEntity.ok(songService.getSongByGenre(genreId));
+        return ResponseEntity.ok(new ApiResponse<>(songService.getSongByGenre(genreId)));
     }
 
     // ========================= SAVE SONG =========================
@@ -134,12 +124,8 @@ public class SongController {
             summary = "Thêm bài hát mới",
             description = "Upload bài hát kèm file nhạc & ảnh bìa (multipart/form-data)"
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Thêm bài hát thành công"),
-            @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ")
-    })
     @PostMapping("/save")
-    public ResponseEntity<List<SongResponse>> save(
+    public ResponseEntity<ApiResponse<List<SongResponse>>> save(
             @Parameter(
                     description = "Thông tin bài hát",
                     content = @Content(schema = @Schema(implementation = SongRequest.class))
@@ -152,7 +138,9 @@ public class SongController {
             @Parameter(description = "Ảnh bìa bài hát")
             @RequestPart("imgFile") MultipartFile imgFile
     ) {
-        return ResponseEntity.ok(songService.save(songRequest, musicFile, imgFile));
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(songService.save(songRequest, musicFile, imgFile)));
     }
 
     // ========================= UPDATE SONG =========================
@@ -161,7 +149,7 @@ public class SongController {
             description = "Cập nhật thông tin bài hát, có thể thay file nhạc hoặc ảnh"
     )
     @PutMapping("/update/{id}")
-    public ResponseEntity<List<SongResponse>> update(
+    public ResponseEntity<ApiResponse<List<SongResponse>>> update(
             @Parameter(description = "ID bài hát", example = "1")
             @PathVariable Long id,
 
@@ -173,31 +161,40 @@ public class SongController {
             @RequestPart(value = "imgFile", required = false)
             MultipartFile imgFile
     ) throws IOException {
-        return ResponseEntity.ok(songService.update(id, songRequest, musicFile, imgFile));
+        return ResponseEntity.ok(new ApiResponse<>(songService.update(id, songRequest, musicFile, imgFile)));
     }
 
     // ========================= SOFT DELETE =========================
     @Operation(summary = "Xóa mềm bài hát", description = "Ẩn bài hát khỏi hệ thống")
     @DeleteMapping("/soft-delete/{id}")
-    public ResponseEntity<Void> softDelete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> softDelete(
+            @Parameter(description = "ID bài hát", example = "1")
+            @PathVariable Long id
+    ) {
         songService.softDelete(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(new ApiResponse<>(null));
     }
 
     // ========================= HARD DELETE =========================
     @Operation(summary = "Xóa vĩnh viễn bài hát")
     @DeleteMapping("/hard-delete/{id}")
-    public ResponseEntity<Void> hardDelete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> hardDelete(
+            @Parameter(description = "ID bài hát", example = "1")
+            @PathVariable Long id
+    ) {
         songService.hardDelete(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(new ApiResponse<>(null));
     }
 
     // ========================= RESTORE =========================
     @Operation(summary = "Khôi phục bài hát đã xóa")
     @PutMapping("/restore/{id}")
-    public ResponseEntity<Void> restore(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> restore(
+            @Parameter(description = "ID bài hát", example = "1")
+            @PathVariable Long id
+    ) {
         songService.restore(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(new ApiResponse<>(null));
     }
 
     // ========================= PLAY COUNT =========================
@@ -206,11 +203,11 @@ public class SongController {
             description = "Tăng play count khi người dùng phát bài hát"
     )
     @PostMapping("/{id}/play")
-    public ResponseEntity<Void> increasePlayCount(
+    public ResponseEntity<ApiResponse<Void>> increasePlayCount(
             @Parameter(description = "ID bài hát", example = "1")
             @PathVariable Long id
     ) {
         songService.increasePlayCount(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(new ApiResponse<>(null));
     }
 }
