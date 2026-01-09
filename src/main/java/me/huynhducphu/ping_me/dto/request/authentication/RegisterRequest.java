@@ -19,10 +19,7 @@ import java.time.LocalDate;
 public class RegisterRequest {
 
     @NotBlank(message = "Email người dùng không được để trống")
-    @Email(
-            message = "Định dạng email không hợp lệ",
-            regexp = "^[\\w\\-.]+@([\\w\\-]+\\.)+[\\w\\-]{2,4}$"
-    )
+    @Email(message = "Định dạng email không hợp lệ")
     private String email;
 
     @NotBlank(message = "Tên người dùng được để trống")

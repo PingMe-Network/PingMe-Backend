@@ -15,10 +15,7 @@ import lombok.NoArgsConstructor;
 public class CreateUserRequest {
 
     @NotBlank(message = "Email không được để trống")
-    @Email(
-            message = "Email không hợp lệ",
-            regexp = "^[\\w\\-.]+@([\\w\\-]+\\.)+[\\w\\-]{2,4}$"
-    )
+    @Email(message = "Email không hợp lệ")
     private String email;
 
     @NotBlank(message = "Tên người dùng không được để trống")
