@@ -35,7 +35,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
 
-        ErrorCode errorCode = null;
+        ErrorCode errorCode = ErrorCode.INVALID_TOKEN;
 
         objectMapper.writeValue(
                 response.getWriter(),
