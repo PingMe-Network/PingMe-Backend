@@ -2,12 +2,12 @@ package me.huynhducphu.ping_me.controller.music;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import me.huynhducphu.ping_me.dto.base.ApiResponse;
 import me.huynhducphu.ping_me.dto.response.music.misc.FavoriteDto;
 import me.huynhducphu.ping_me.service.music.FavoriteService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,13 +29,9 @@ public class FavoriteController {
             summary = "Lấy danh sách bài hát yêu thích",
             description = "Trả về danh sách các bài hát mà người dùng hiện tại đã đánh dấu yêu thích"
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Lấy danh sách yêu thích thành công"),
-            @ApiResponse(responseCode = "401", description = "Chưa đăng nhập")
-    })
     @GetMapping
-    public ResponseEntity<List<FavoriteDto>> getFavorites() {
-        return ResponseEntity.ok(favoriteService.getFavorites());
+    public ResponseEntity<ApiResponse<List<FavoriteDto>>> getFavorites() {
+        return ResponseEntity.ok(new ApiResponse<>(favoriteService.getFavorites()));
     }
 
     // ======================= ADD FAVORITE =======================
@@ -43,18 +39,15 @@ public class FavoriteController {
             summary = "Thêm bài hát vào danh sách yêu thích",
             description = "Đánh dấu một bài hát là yêu thích theo songId"
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Thêm yêu thích thành công"),
-            @ApiResponse(responseCode = "404", description = "Không tìm thấy bài hát"),
-            @ApiResponse(responseCode = "401", description = "Chưa đăng nhập")
-    })
     @PostMapping("/{songId}")
-    public ResponseEntity<Void> addFav(
+    public ResponseEntity<ApiResponse<Void>> addFav(
             @Parameter(description = "ID bài hát", example = "12")
             @PathVariable Long songId
     ) {
         favoriteService.addFavorite(songId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(null));
     }
 
     // ======================= REMOVE FAVORITE =======================
@@ -62,18 +55,13 @@ public class FavoriteController {
             summary = "Xoá bài hát khỏi danh sách yêu thích",
             description = "Bỏ đánh dấu yêu thích một bài hát theo songId"
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Xoá yêu thích thành công"),
-            @ApiResponse(responseCode = "404", description = "Không tìm thấy bài hát"),
-            @ApiResponse(responseCode = "401", description = "Chưa đăng nhập")
-    })
     @DeleteMapping("/{songId}")
-    public ResponseEntity<Void> removeFav(
+    public ResponseEntity<ApiResponse<Void>> removeFav(
             @Parameter(description = "ID bài hát", example = "12")
             @PathVariable Long songId
     ) {
         favoriteService.removeFavorite(songId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(new ApiResponse<>(null));
     }
 
     // ======================= CHECK FAVORITE =======================
@@ -81,15 +69,11 @@ public class FavoriteController {
             summary = "Kiểm tra bài hát có nằm trong danh sách yêu thích hay không",
             description = "Trả về true nếu bài hát đã được yêu thích, ngược lại là false"
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Kiểm tra thành công"),
-            @ApiResponse(responseCode = "401", description = "Chưa đăng nhập")
-    })
     @GetMapping("/is/{songId}")
-    public ResponseEntity<Boolean> isFavorite(
+    public ResponseEntity<ApiResponse<Boolean>> isFavorite(
             @Parameter(description = "ID bài hát", example = "12")
             @PathVariable Long songId
     ) {
-        return ResponseEntity.ok(favoriteService.isFavorite(songId));
+        return ResponseEntity.ok(new ApiResponse<>(favoriteService.isFavorite(songId)));
     }
 }
