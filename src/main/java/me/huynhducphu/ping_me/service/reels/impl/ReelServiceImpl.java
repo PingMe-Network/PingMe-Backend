@@ -15,8 +15,8 @@ import me.huynhducphu.ping_me.repository.reels.ReelRepository;
 import me.huynhducphu.ping_me.repository.reels.ReelSaveRepository;
 import me.huynhducphu.ping_me.repository.reels.ReelViewRepository;
 import me.huynhducphu.ping_me.service.common.CurrentUserProvider;
-import me.huynhducphu.ping_me.service.integration.S3Service;
 import me.huynhducphu.ping_me.service.reels.ReelService;
+import me.huynhducphu.ping_me.service.s3.S3Service;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -258,11 +258,11 @@ public class ReelServiceImpl implements ReelService {
         res.setUserName(reel.getUser().getName());
         res.setUserAvatarUrl(reel.getUser().getAvatarUrl());
         res.setHashtags(reel.getHashtags());
-         return res;
-     }
+        return res;
+    }
 
-     @Override
-     public ReelResponse updateReel(Long reelId, ReelRequest dto, MultipartFile video) {
+    @Override
+    public ReelResponse updateReel(Long reelId, ReelRequest dto, MultipartFile video) {
         var user = currentUserProvider.get();
 
         var reel = reelRepository.findById(reelId)
@@ -321,4 +321,4 @@ public class ReelServiceImpl implements ReelService {
         return toReelResponse(saved, user.getId());
     }
 
- }
+}

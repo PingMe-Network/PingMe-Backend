@@ -8,7 +8,7 @@ import me.huynhducphu.ping_me.dto.response.blog.BlogReviewResponse;
 import me.huynhducphu.ping_me.model.blog.Blog;
 import me.huynhducphu.ping_me.repository.blog.BlogRepository;
 import me.huynhducphu.ping_me.service.common.CurrentUserProvider;
-import me.huynhducphu.ping_me.service.integration.S3Service;
+import me.huynhducphu.ping_me.service.s3.S3Service;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -1,4 +1,5 @@
 package me.huynhducphu.ping_me.service.reels.impl;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.ping_me.dto.request.reels.AdminReelFilterRequest;
@@ -7,7 +8,7 @@ import me.huynhducphu.ping_me.model.constant.ReelStatus;
 import me.huynhducphu.ping_me.model.reels.Reel;
 import me.huynhducphu.ping_me.repository.reels.*;
 import me.huynhducphu.ping_me.repository.reels.spec.ReelSpecifications;
-import me.huynhducphu.ping_me.service.integration.S3Service;
+import me.huynhducphu.ping_me.service.s3.S3Service;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -54,8 +55,8 @@ public class AdminReelServiceImpl implements me.huynhducphu.ping_me.service.reel
     public AdminReelResponse hideReel(Long reelId, String adminNote) {
         var reel = reelRepository.findById(reelId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy Reel"));
-         reel.setStatus(ReelStatus.HIDDEN);
-         reel.setAdminNote(adminNote);
+        reel.setStatus(ReelStatus.HIDDEN);
+        reel.setAdminNote(adminNote);
         var saved = reelRepository.save(reel);
         return toAdminResponse(saved);
     }

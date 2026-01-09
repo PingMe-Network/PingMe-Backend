@@ -1,4 +1,4 @@
-package me.huynhducphu.ping_me.service.integration.constant;
+package me.huynhducphu.ping_me.service.ffmpeg.constants;
 
 /**
  * @author Le Tran Gia Huy

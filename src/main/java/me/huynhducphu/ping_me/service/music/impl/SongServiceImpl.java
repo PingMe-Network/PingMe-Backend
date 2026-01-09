@@ -12,13 +12,13 @@ import me.huynhducphu.ping_me.model.constant.ArtistRole;
 import me.huynhducphu.ping_me.model.music.*;
 import me.huynhducphu.ping_me.repository.music.*;
 import me.huynhducphu.ping_me.service.common.CurrentUserProvider;
-import me.huynhducphu.ping_me.service.integration.constant.MediaType;
-import me.huynhducphu.ping_me.service.integration.S3Service;
+import me.huynhducphu.ping_me.service.ffmpeg.constants.MediaType;
 import me.huynhducphu.ping_me.service.music.SongService;
 import me.huynhducphu.ping_me.service.music.util.AudioUtil;
 import me.huynhducphu.ping_me.repository.music.GenreRepository;
 import me.huynhducphu.ping_me.repository.music.SongPlayHistoryRepository;
 import me.huynhducphu.ping_me.repository.music.SongRepository;
+import me.huynhducphu.ping_me.service.s3.S3Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.PageRequest;
@@ -175,7 +175,7 @@ public class SongServiceImpl implements SongService {
             song.setDuration(calculatedDuration);
 
             // C. Tạo tên file mới (Luôn là .mp3 vì mình nén sang mp3)
-            String audioFileName = UUID.randomUUID().toString() + ".mp3";
+            String audioFileName = UUID.randomUUID() + ".mp3";
 
             // E. Upload lên S3 (S3Service không biết đây là file fake, nó cứ upload thôi)
             String songUrl = s3Service.uploadCompressedFile(
@@ -188,8 +188,6 @@ public class SongServiceImpl implements SongService {
             );
             song.setSongUrl(songUrl);
 
-        } catch (IOException e) {
-            throw new RuntimeException("Lỗi khi xử lý/nén file nhạc: " + e.getMessage());
         } finally {
             // F. QUAN TRỌNG: Dọn dẹp file nén tạm trên ổ cứng server
             // Dù upload thành công hay thất bại cũng phải xóa để tránh đầy ổ cứng

@@ -1,11 +1,10 @@
-package me.huynhducphu.ping_me.service.integration.impl;
+package me.huynhducphu.ping_me.service.s3;
 
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.ping_me.advice.exception.S3UploadException;
-import me.huynhducphu.ping_me.service.integration.MediaCompressionService;
-import me.huynhducphu.ping_me.service.integration.constant.MediaType;
-import me.huynhducphu.ping_me.service.integration.S3Service;
-import me.huynhducphu.ping_me.service.util.CustomMultipartFile;
+import me.huynhducphu.ping_me.service.ffmpeg.FFMPEGService;
+import me.huynhducphu.ping_me.service.ffmpeg.constants.MediaType;
+import me.huynhducphu.ping_me.service.s3.util.CustomMultipartFile;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,15 +20,14 @@ import java.io.File;
  **/
 @Service
 @RequiredArgsConstructor
-public class S3ServiceImpl implements S3Service {
+public class S3Service {
 
     private final S3Client s3Client;
-    private final MediaCompressionService mediaCompressionService;
+    private final FFMPEGService ffmpegService;
 
     private final String awsBucketName;
     private final String awsRegion;
 
-    @Override
     public String uploadFile(
             MultipartFile file, String key,
             boolean getUrl, long maxFileSize
@@ -66,7 +64,6 @@ public class S3ServiceImpl implements S3Service {
         }
     }
 
-    @Override
     public String uploadFile(
             MultipartFile file, String folder,
             String fileName, boolean getUrl,
@@ -77,14 +74,13 @@ public class S3ServiceImpl implements S3Service {
     }
 
 
-    @Override
     public String uploadCompressedFile(
             MultipartFile file, String folder,
             String fileName, boolean getUrl,
             long maxFileSize, MediaType mediaType
     ) {
 
-        File compressedFile = mediaCompressionService.compressMedia(file, mediaType);
+        File compressedFile = ffmpegService.compressMedia(file, mediaType);
         MultipartFile multipartCompressed = new CustomMultipartFile(
                 compressedFile,
                 fileName,
@@ -95,7 +91,6 @@ public class S3ServiceImpl implements S3Service {
         return uploadFile(multipartCompressed, key, getUrl, maxFileSize);
     }
 
-    @Override
     public void deleteFileByKey(String key) {
         try {
             if (key == null)
@@ -119,7 +114,6 @@ public class S3ServiceImpl implements S3Service {
         }
     }
 
-    @Override
     public void deleteFileByUrl(String url) {
         String base = String.format("https://%s.s3.%s.amazonaws.com/", awsBucketName, awsRegion);
         if (!url.startsWith(base)) {

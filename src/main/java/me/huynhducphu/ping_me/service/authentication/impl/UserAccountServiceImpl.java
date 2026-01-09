@@ -15,7 +15,7 @@ import me.huynhducphu.ping_me.service.authentication.UserAccountService;
 import me.huynhducphu.ping_me.service.authentication.JwtService;
 import me.huynhducphu.ping_me.service.common.CurrentUserProvider;
 import me.huynhducphu.ping_me.service.authentication.RefreshTokenRedisService;
-import me.huynhducphu.ping_me.service.integration.S3Service;
+import me.huynhducphu.ping_me.service.s3.S3Service;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
