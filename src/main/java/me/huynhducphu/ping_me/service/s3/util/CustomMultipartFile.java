@@ -1,4 +1,4 @@
-package me.huynhducphu.ping_me.service.util;
+package me.huynhducphu.ping_me.service.s3.util;
 
 import org.springframework.web.multipart.MultipartFile;
 
