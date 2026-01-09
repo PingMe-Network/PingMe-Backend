@@ -14,7 +14,7 @@ import me.huynhducphu.ping_me.repository.reels.ReelLikeRepository;
 import me.huynhducphu.ping_me.repository.reels.ReelRepository;
 import me.huynhducphu.ping_me.repository.reels.ReelSaveRepository;
 import me.huynhducphu.ping_me.repository.reels.ReelViewRepository;
-import me.huynhducphu.ping_me.service.common.CurrentUserProvider;
+import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
 import me.huynhducphu.ping_me.service.reels.ReelService;
 import me.huynhducphu.ping_me.service.s3.S3Service;
 import org.modelmapper.ModelMapper;

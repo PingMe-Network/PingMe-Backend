@@ -16,7 +16,7 @@ import me.huynhducphu.ping_me.repository.chat.RoomParticipantRepository;
 import me.huynhducphu.ping_me.repository.chat.RoomRepository;
 import me.huynhducphu.ping_me.repository.auth.UserRepository;
 import me.huynhducphu.ping_me.service.chat.util.ChatDtoUtils;
-import me.huynhducphu.ping_me.service.common.CurrentUserProvider;
+import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
 import me.huynhducphu.ping_me.service.s3.S3Service;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;

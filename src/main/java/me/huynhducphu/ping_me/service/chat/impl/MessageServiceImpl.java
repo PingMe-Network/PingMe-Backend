@@ -26,7 +26,7 @@ import me.huynhducphu.ping_me.repository.chat.MessageRepository;
 import me.huynhducphu.ping_me.repository.chat.RoomParticipantRepository;
 import me.huynhducphu.ping_me.repository.chat.RoomRepository;
 import me.huynhducphu.ping_me.service.chat.util.ChatDtoUtils;
-import me.huynhducphu.ping_me.service.common.CurrentUserProvider;
+import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
 import me.huynhducphu.ping_me.service.s3.S3Service;
 import me.huynhducphu.ping_me.service.weather.WeatherService;
 import org.springframework.beans.factory.annotation.Value;

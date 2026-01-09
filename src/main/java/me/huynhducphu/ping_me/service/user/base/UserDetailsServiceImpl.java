@@ -1,4 +1,4 @@
-package me.huynhducphu.ping_me.service.common.impl;
+package me.huynhducphu.ping_me.service.user.base;
 
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.ping_me.repository.auth.UserRepository;

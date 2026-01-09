@@ -13,7 +13,7 @@ import me.huynhducphu.ping_me.model.constant.AuthProvider;
 import me.huynhducphu.ping_me.repository.auth.UserRepository;
 import me.huynhducphu.ping_me.service.authentication.UserAccountService;
 import me.huynhducphu.ping_me.service.authentication.JwtService;
-import me.huynhducphu.ping_me.service.common.CurrentUserProvider;
+import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
 import me.huynhducphu.ping_me.service.authentication.RefreshTokenRedisService;
 import me.huynhducphu.ping_me.service.s3.S3Service;
 import org.modelmapper.ModelMapper;

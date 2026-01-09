@@ -11,7 +11,7 @@ import me.huynhducphu.ping_me.dto.response.music.misc.GenreDto;
 import me.huynhducphu.ping_me.model.constant.ArtistRole;
 import me.huynhducphu.ping_me.model.music.*;
 import me.huynhducphu.ping_me.repository.music.*;
-import me.huynhducphu.ping_me.service.common.CurrentUserProvider;
+import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
 import me.huynhducphu.ping_me.service.ffmpeg.constants.MediaType;
 import me.huynhducphu.ping_me.service.music.SongService;
 import me.huynhducphu.ping_me.service.music.util.AudioUtil;

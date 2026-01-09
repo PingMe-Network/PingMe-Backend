@@ -7,7 +7,7 @@ import me.huynhducphu.ping_me.dto.response.blog.BlogCommentResponse;
 import me.huynhducphu.ping_me.model.blog.BlogComment;
 import me.huynhducphu.ping_me.repository.blog.BlogCommentRepository;
 import me.huynhducphu.ping_me.repository.blog.BlogRepository;
-import me.huynhducphu.ping_me.service.common.CurrentUserProvider;
+import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

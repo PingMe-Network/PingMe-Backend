@@ -1,4 +1,4 @@
-package me.huynhducphu.ping_me.service.common.impl;
+package me.huynhducphu.ping_me.service.user.impl;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -6,8 +6,8 @@ import me.huynhducphu.ping_me.dto.response.user.UserSummaryResponse;
 import me.huynhducphu.ping_me.dto.response.user.UserSummarySimpleResponse;
 import me.huynhducphu.ping_me.repository.chat.FriendshipRepository;
 import me.huynhducphu.ping_me.repository.auth.UserRepository;
-import me.huynhducphu.ping_me.service.common.CurrentUserProvider;
-import me.huynhducphu.ping_me.service.common.UserLookupService;
+import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
+import me.huynhducphu.ping_me.service.user.UserLookupService;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 

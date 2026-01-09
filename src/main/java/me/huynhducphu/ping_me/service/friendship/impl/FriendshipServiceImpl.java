@@ -13,7 +13,7 @@ import me.huynhducphu.ping_me.model.constant.FriendshipStatus;
 import me.huynhducphu.ping_me.model.chat.Friendship;
 import me.huynhducphu.ping_me.repository.chat.FriendshipRepository;
 import me.huynhducphu.ping_me.repository.auth.UserRepository;
-import me.huynhducphu.ping_me.service.common.CurrentUserProvider;
+import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
