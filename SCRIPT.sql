@@ -28,64 +28,101 @@ VALUES (1, 1, '2025-11-23 10:37:30.000000', 'anonymousUser', '2025-11-23 10:37:3
 -- Test1@gmail.com / Test2@gmail.com / ... / Test10@gmail.com
 -- ===========================================================================================================
 INSERT INTO `users` (`id`, `active`, `created_at`, `created_by`, `updated_at`, `updated_by`, `address`, `auth_provider`,
-`avatar_url`, `dob`, `email`, `gender`, `name`, `password`, `status`, `role_id`)
-VALUES (1, 1, '2025-11-18 22:48:59.615037', 'anonymousUser', '2025-11-18 23:05:04.360119', 'Test1@gmail.com',
-'56/9 Lạc Long Quân, P.5, Q.11, TP.HCM', 'LOCAL',
-'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/avatar/Test1@gmail.com', '2025-07-17', 'Test1@gmail.com',
-'MALE', 'Phạm Tuấn Khoa', '$2a$10$6RAjVIU8XxvwJ2ewoDPoAeCUlKJqH7gRHaashHrwkwVv0WKm5/z5e', 'OFFLINE', 2),
+                     `avatar_url`, `dob`, `email`, `gender`, `name`, `password`, `status`, `role_id`, `account_status`)
+VALUES
+-- User cũ (1-15) set ACTIVE
+(1, 1, '2025-11-18 22:48:59.615037', 'anonymousUser', '2025-11-18 23:05:04.360119', 'Test1@gmail.com',
+ '56/9 Lạc Long Quân, P.5, Q.11, TP.HCM', 'LOCAL',
+ 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/avatar/Test1@gmail.com', '2025-07-17', 'Test1@gmail.com',
+ 'MALE', 'Phạm Tuấn Khoa', '$2a$10$6RAjVIU8XxvwJ2ewoDPoAeCUlKJqH7gRHaashHrwkwVv0WKm5/z5e', 'OFFLINE', 2, 'ACTIVE'),
+
 (2, 1, '2025-11-18 22:49:47.075581', 'anonymousUser', '2025-11-18 23:05:42.434655', 'Test2@gmail.com',
-'10/9 Lê Duẩn, P.Thắng Nhất, TP.Vũng Tàu', 'LOCAL',
-'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/avatar/Test2@gmail.com', '2025-09-10', 'Test2@gmail.com',
-'FEMALE', 'Trần Thị Thu Trang', '$2a$10$GiN9ZRoCKZDMmyjQ08LjAOGcLUDISkywdkDdMEsOc1ayTSctpAP82', 'OFFLINE', 2),
+ '10/9 Lê Duẩn, P.Thắng Nhất, TP.Vũng Tàu', 'LOCAL',
+ 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/avatar/Test2@gmail.com', '2025-09-10', 'Test2@gmail.com',
+ 'FEMALE', 'Trần Thị Thu Trang', '$2a$10$GiN9ZRoCKZDMmyjQ08LjAOGcLUDISkywdkDdMEsOc1ayTSctpAP82', 'OFFLINE', 2, 'ACTIVE'),
+
 (3, 1, '2025-11-18 22:51:09.449569', 'anonymousUser', '2025-11-18 23:06:20.796721', 'Test3@gmail.com',
-'45 Nguyễn Tất Thành, P.Vĩnh Thọ, Nha Trang', 'LOCAL',
-'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/avatar/Test3@gmail.com', '2025-04-30', 'Test3@gmail.com',
-'MALE', 'Bùi Anh Quân', '$2a$10$ND9jQ7/ybwMp.8XBIiw4k.hJtg2fvxqusVTA/c7AWnqZjN/2yucgG', 'OFFLINE', 2),
+ '45 Nguyễn Tất Thành, P.Vĩnh Thọ, Nha Trang', 'LOCAL',
+ 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/avatar/Test3@gmail.com', '2025-04-30', 'Test3@gmail.com',
+ 'MALE', 'Bùi Anh Quân', '$2a$10$ND9jQ7/ybwMp.8XBIiw4k.hJtg2fvxqusVTA/c7AWnqZjN/2yucgG', 'OFFLINE', 2, 'ACTIVE'),
+
 (4, 1, '2025-11-18 22:53:00.105600', 'anonymousUser', '2025-11-18 23:09:24.414137', 'Test4@gmail.com',
-'68/2 Nguyễn Văn Trỗi, P.8, Phú Nhuận, TP.HCM', 'LOCAL',
-'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/avatar/Test4@gmail.com', '2001-04-17', 'Test4@gmail.com',
-'FEMALE', 'Phạm Bảo Ngọc', '$2a$10$.L99JYyUqk4DIKhrvUfv4OAaQw3DpGgdlUA9PCIPIg1u55RX.mMaK', 'OFFLINE', 2),
+ '68/2 Nguyễn Văn Trỗi, P.8, Phú Nhuận, TP.HCM', 'LOCAL',
+ 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/avatar/Test4@gmail.com', '2001-04-17', 'Test4@gmail.com',
+ 'FEMALE', 'Phạm Bảo Ngọc', '$2a$10$.L99JYyUqk4DIKhrvUfv4OAaQw3DpGgdlUA9PCIPIg1u55RX.mMaK', 'OFFLINE', 2, 'ACTIVE'),
+
 (5, 1, '2025-11-18 22:54:09.992369', 'anonymousUser', '2025-11-18 23:09:54.900420', 'Test5@gmail.com',
-'112 Trần Hưng Đạo, P.Mỹ Bình, Long Xuyên, An Giang', 'LOCAL',
-'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/avatar/Test5@gmail.com', '2001-01-09', 'Test5@gmail.com',
-'MALE', 'Võ Nhật Long', '$2a$10$VdLRPrwdjcO.J0Vq.MO2Iu2tNd9flFZ6tFasACEMOmTT0Rb96nrB2', 'OFFLINE', 2),
+ '112 Trần Hưng Đạo, P.Mỹ Bình, Long Xuyên, An Giang', 'LOCAL',
+ 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/avatar/Test5@gmail.com', '2001-01-09', 'Test5@gmail.com',
+ 'MALE', 'Võ Nhật Long', '$2a$10$VdLRPrwdjcO.J0Vq.MO2Iu2tNd9flFZ6tFasACEMOmTT0Rb96nrB2', 'OFFLINE', 2, 'ACTIVE'),
+
 (6, 1, '2025-11-18 22:57:19.534273', 'anonymousUser', '2025-11-18 23:16:32.044163', 'Test6@gmail.com',
-'33 Nguyễn Thị Minh Khai, P.Bến Thành, Q.1, TP.HCM', 'LOCAL',
-'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/avatar/Test6@gmail.com', '2000-09-13', 'Test6@gmail.com',
-'FEMALE', 'Trần Quế My', '$2a$10$avKIRLICxePlrPnThNhALO0mltduU4OcgOoUnTmqXzBWT6Dv.Vwce', 'OFFLINE', 2),
+ '33 Nguyễn Thị Minh Khai, P.Bến Thành, Q.1, TP.HCM', 'LOCAL',
+ 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/avatar/Test6@gmail.com', '2000-09-13', 'Test6@gmail.com',
+ 'FEMALE', 'Trần Quế My', '$2a$10$avKIRLICxePlrPnThNhALO0mltduU4OcgOoUnTmqXzBWT6Dv.Vwce', 'OFFLINE', 2, 'ACTIVE'),
+
 (7, 1, '2025-11-18 22:58:40.727272', 'anonymousUser', '2025-11-18 23:19:05.678958', 'Test7@gmail.com',
-'23/7 Hoàng Hoa Thám, P.6, Q.Bình Thạnh, TP.HCM', 'LOCAL',
-'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/avatar/Test7@gmail.com', '2025-06-21', 'Test7@gmail.com',
-'MALE', 'Đặng Xuân Nam', '$2a$10$/R47zjqACeJvZUcgqvEV1uJtkGz96KGfKHM6L/.qVJcqNnOeBwUbi', 'OFFLINE', 2),
+ '23/7 Hoàng Hoa Thám, P.6, Q.Bình Thạnh, TP.HCM', 'LOCAL',
+ 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/avatar/Test7@gmail.com', '2025-06-21', 'Test7@gmail.com',
+ 'MALE', 'Đặng Xuân Nam', '$2a$10$/R47zjqACeJvZUcgqvEV1uJtkGz96KGfKHM6L/.qVJcqNnOeBwUbi', 'OFFLINE', 2, 'ACTIVE'),
+
 (8, 1, '2025-11-18 22:59:51.828506', 'anonymousUser', '2025-11-18 23:21:32.273121', 'Test8@gmail.com',
-'50 Tôn Đức Thắng, P.Bến Nghé, Q.1, TP.HCM', 'LOCAL',
-'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/avatar/Test8@gmail.com', '2003-10-18', 'Test8@gmail.com',
-'FEMALE', 'Phạm Hải Yến', '$2a$10$L5q7vVIc4cELw6cJ.pOYOOhMGBmnTB3kkbgDAdknKwapXlMqdV19K', 'OFFLINE', 2),
+ '50 Tôn Đức Thắng, P.Bến Nghé, Q.1, TP.HCM', 'LOCAL',
+ 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/avatar/Test8@gmail.com', '2003-10-18', 'Test8@gmail.com',
+ 'FEMALE', 'Phạm Hải Yến', '$2a$10$L5q7vVIc4cELw6cJ.pOYOOhMGBmnTB3kkbgDAdknKwapXlMqdV19K', 'OFFLINE', 2, 'ACTIVE'),
+
 (9, 1, '2025-11-18 23:03:47.999784', 'anonymousUser', '2025-11-18 23:23:14.336209', 'Test9@gmail.com',
-'18A Hà Huy Tập, P.Tân Lợi, TP.Buôn Ma Thuột', 'LOCAL',
-'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/avatar/Test9@gmail.com', '2000-12-03', 'Test9@gmail.com',
-'MALE', 'Nguyễn Tấn Tín', '$2a$10$LXf6qogfe2XJr.BM7Of4YO3P8InO8Fgs2Up9rsn7FjZ4Mx8hZzyfG', 'OFFLINE', 2),
+ '18A Hà Huy Tập, P.Tân Lợi, TP.Buôn Ma Thuột', 'LOCAL',
+ 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/avatar/Test9@gmail.com', '2000-12-03', 'Test9@gmail.com',
+ 'MALE', 'Nguyễn Tấn Tín', '$2a$10$LXf6qogfe2XJr.BM7Of4YO3P8InO8Fgs2Up9rsn7FjZ4Mx8hZzyfG', 'OFFLINE', 2, 'ACTIVE'),
+
 (10, 1, '2025-11-18 23:04:34.924416', 'anonymousUser', '2025-11-18 23:23:48.527676', 'Test10@gmail.com',
-'44/7 Phan Đăng Lưu, P.3, Q.Bình Thạnh, TP.HCM', 'LOCAL',
-'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/avatar/Test10@gmail.com', '2002-06-25', 'Test10@gmail.com',
-'FEMALE', 'Đỗ Hoài Như', '$2a$10$xTxJpev9CJ8QxrXpTc/RmO7KayY9lDCakEFKxKossIoyneB0Oxq16', 'OFFLINE', 2),
+ '44/7 Phan Đăng Lưu, P.3, Q.Bình Thạnh, TP.HCM', 'LOCAL',
+ 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/avatar/Test10@gmail.com', '2002-06-25', 'Test10@gmail.com',
+ 'FEMALE', 'Đỗ Hoài Như', '$2a$10$xTxJpev9CJ8QxrXpTc/RmO7KayY9lDCakEFKxKossIoyneB0Oxq16', 'OFFLINE', 2, 'ACTIVE'),
+
 (11, 1, '2025-11-18 23:06:50.393330', 'anonymousUser', '2025-11-18 23:36:04.009499', 'huynhducphu2502@gmail.com',
-'120 Xóm Chiếu, Phường 14, Quận 4, TPHCM', 'LOCAL',
-'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/avatar/huynhducphu2502@gmail.com', '2003-02-25',
-'huynhducphu2502@gmail.com', 'MALE', 'Huỳnh Đức Phú',
-'$2a$10$qVGedE0iLfFMkBhsFqvNte571l38ZbQLO8luBK9xF0qbKvaclm7tW', 'OFFLINE', 1),
+ '120 Xóm Chiếu, Phường 14, Quận 4, TPHCM', 'LOCAL',
+ 'https://pingme-s3.s3.ap-southeast-1.amazonaws.com/avatar/huynhducphu2502@gmail.com', '2003-02-25',
+ 'huynhducphu2502@gmail.com', 'MALE', 'Huỳnh Đức Phú',
+ '$2a$10$qVGedE0iLfFMkBhsFqvNte571l38ZbQLO8luBK9xF0qbKvaclm7tW', 'OFFLINE', 1, 'ACTIVE'),
+
 (12, 1, '2025-11-23 10:43:51.329198', 'anonymousUser', '2025-11-23 10:43:51.329198', 'anonymousUser', '',
-'LOCAL', NULL, '2025-11-01', 'tranlehuygia2210@gmail.com', 'MALE', 'Lê Trần Gia Huy',
-'$2a$10$aymbUZwxdgH7YdEVd51Qd.DQV6S2x3wValMrEwpPkoRr1p1c/v9bW', NULL, 1),
+ 'LOCAL', NULL, '2025-11-01', 'tranlehuygia2210@gmail.com', 'MALE', 'Lê Trần Gia Huy',
+ '$2a$10$aymbUZwxdgH7YdEVd51Qd.DQV6S2x3wValMrEwpPkoRr1p1c/v9bW', NULL, 1, 'ACTIVE'),
+
 (13, 1, '2025-11-23 10:44:34.041359', 'anonymousUser', '2025-11-23 10:44:34.041359', 'anonymousUser', '',
-'LOCAL', NULL, '2025-11-01', 'atvn15@gmail.com', 'MALE', 'Nguyễn Anh Tùng',
-'$2a$10$5qVqbH5DNRDR0jqihcBa6.QxGSKT1VfIXf.NVUR1CrwCTY.71LffK', NULL, 1),
+ 'LOCAL', NULL, '2025-11-01', 'atvn15@gmail.com', 'MALE', 'Nguyễn Anh Tùng',
+ '$2a$10$5qVqbH5DNRDR0jqihcBa6.QxGSKT1VfIXf.NVUR1CrwCTY.71LffK', NULL, 1, 'ACTIVE'),
+
 (14, 1, '2025-11-23 10:45:03.711495', 'anonymousUser', '2025-11-23 10:45:03.711495', 'anonymousUser', '',
-'LOCAL', NULL, '2025-11-01', 'shibalnq2112@gmail.com', 'MALE', 'Lê Nguyễn Quỳnh',
-'$2a$10$rjodqTNy1AaT.PXOzdIqt.MtzO8mhbbSQ8XK/ki2MGjoq.G4ZzgX2', NULL, 1),
+ 'LOCAL', NULL, '2025-11-01', 'shibalnq2112@gmail.com', 'MALE', 'Lê Nguyễn Quỳnh',
+ '$2a$10$rjodqTNy1AaT.PXOzdIqt.MtzO8mhbbSQ8XK/ki2MGjoq.G4ZzgX2', NULL, 1, 'ACTIVE'),
+
 (15, 1, '2025-11-23 11:00:28.015457', 'anonymousUser', '2025-11-23 11:00:28.015457', 'anonymousUser', '',
-'LOCAL', NULL, '2025-11-01', 'nhpel11@gmail.com', 'MALE', 'Phạm Ngọc Hùng',
-'$2a$10$AZ15eoSTJsSYffcY7eGsNeA5MovUgMlzooG5DKQLcE.6tFPyAA5pq', NULL, 1);
+ 'LOCAL', NULL, '2025-11-01', 'nhpel11@gmail.com', 'MALE', 'Phạm Ngọc Hùng',
+ '$2a$10$AZ15eoSTJsSYffcY7eGsNeA5MovUgMlzooG5DKQLcE.6tFPyAA5pq', NULL, 1, 'ACTIVE'),
+
+-- User mới (16-20) set DEACTIVATED
+(16, 1, '2025-12-01 08:00:00.000000', 'admin', '2025-12-01 08:00:00.000000', 'admin', '123 Đường A, Quận 1',
+ 'LOCAL', NULL, '1999-01-01', 'Test16_Deactive@gmail.com', 'MALE', 'Nguyễn Văn Bị Khóa',
+ '$2a$10$6RAjVIU8XxvwJ2ewoDPoAeCUlKJqH7gRHaashHrwkwVv0WKm5/z5e', 'OFFLINE', 2, 'DEACTIVATED'),
+
+(17, 1, '2025-12-01 08:05:00.000000', 'admin', '2025-12-01 08:05:00.000000', 'admin', '456 Đường B, Quận 2',
+ 'LOCAL', NULL, '1998-05-05', 'Test17_Deactive@gmail.com', 'FEMALE', 'Trần Thị Vô Hiệu',
+ '$2a$10$6RAjVIU8XxvwJ2ewoDPoAeCUlKJqH7gRHaashHrwkwVv0WKm5/z5e', 'OFFLINE', 2, 'DEACTIVATED'),
+
+(18, 1, '2025-12-01 08:10:00.000000', 'admin', '2025-12-01 08:10:00.000000', 'admin', '789 Đường C, Quận 3',
+ 'LOCAL', NULL, '2000-10-10', 'Test18_Deactive@gmail.com', 'MALE', 'Lê Văn Cấm',
+ '$2a$10$6RAjVIU8XxvwJ2ewoDPoAeCUlKJqH7gRHaashHrwkwVv0WKm5/z5e', 'OFFLINE', 2, 'DEACTIVATED'),
+
+(19, 1, '2025-12-01 08:15:00.000000', 'admin', '2025-12-01 08:15:00.000000', 'admin', '321 Đường D, Quận 4',
+ 'LOCAL', NULL, '1995-12-12', 'Test19_Deactive@gmail.com', 'FEMALE', 'Phạm Thị Dừng',
+ '$2a$10$6RAjVIU8XxvwJ2ewoDPoAeCUlKJqH7gRHaashHrwkwVv0WKm5/z5e', 'OFFLINE', 2, 'DEACTIVATED'),
+
+(20, 1, '2025-12-01 08:20:00.000000', 'admin', '2025-12-01 08:20:00.000000', 'admin', '654 Đường E, Quận 5',
+ 'LOCAL', NULL, '1997-07-07', 'Test20_Deactive@gmail.com', 'MALE', 'Hoàng Văn Chặn',
+ '$2a$10$6RAjVIU8XxvwJ2ewoDPoAeCUlKJqH7gRHaashHrwkwVv0WKm5/z5e', 'OFFLINE', 2, 'DEACTIVATED');
 
 -- ===========================================================================================================
 -- Tạo mối quan hệ giữa các User (chủ yếu là tài khoản HuynhDucPhu2502@gmail.com với 9 user TestX@gmail.com)
