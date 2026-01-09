@@ -2,6 +2,7 @@ package me.huynhducphu.ping_me.service.integration.impl;
 
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.ping_me.advice.exception.S3UploadException;
+import me.huynhducphu.ping_me.service.integration.MediaCompressionService;
 import me.huynhducphu.ping_me.service.integration.constant.MediaType;
 import me.huynhducphu.ping_me.service.integration.S3Service;
 import me.huynhducphu.ping_me.service.util.CustomMultipartFile;
@@ -14,7 +15,6 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.File;
-import java.io.IOException;
 
 /**
  * Admin 8/16/2025
@@ -24,7 +24,7 @@ import java.io.IOException;
 public class S3ServiceImpl implements S3Service {
 
     private final S3Client s3Client;
-    private final CompressMediaFile compressedMediaFile;
+    private final MediaCompressionService mediaCompressionService;
 
     private final String awsBucketName;
     private final String awsRegion;
@@ -82,9 +82,9 @@ public class S3ServiceImpl implements S3Service {
             MultipartFile file, String folder,
             String fileName, boolean getUrl,
             long maxFileSize, MediaType mediaType
-    ) throws IOException {
+    ) {
 
-        File compressedFile = compressedMediaFile.compressMedia(file, mediaType);
+        File compressedFile = mediaCompressionService.compressMedia(file, mediaType);
         MultipartFile multipartCompressed = new CustomMultipartFile(
                 compressedFile,
                 fileName,

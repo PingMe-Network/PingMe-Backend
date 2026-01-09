@@ -13,7 +13,6 @@ import me.huynhducphu.ping_me.model.music.*;
 import me.huynhducphu.ping_me.repository.music.*;
 import me.huynhducphu.ping_me.service.common.CurrentUserProvider;
 import me.huynhducphu.ping_me.service.integration.constant.MediaType;
-import me.huynhducphu.ping_me.service.integration.impl.CompressMediaFile;
 import me.huynhducphu.ping_me.service.integration.S3Service;
 import me.huynhducphu.ping_me.service.music.SongService;
 import me.huynhducphu.ping_me.service.music.util.AudioUtil;
@@ -48,8 +47,8 @@ public class SongServiceImpl implements SongService {
     private final GenreRepository genreRepository;
     private final SongArtistRoleRepository songArtistRoleRepository;
     private final AudioUtil audioUtil;
-    private final CompressMediaFile compressMediaFile;
     private final SongPlayHistoryRepository songPlayHistoryRepository;
+
     @Autowired
     @Qualifier("redisMessageStringTemplate")
     private RedisTemplate<String, String> redis;
@@ -138,7 +137,7 @@ public class SongServiceImpl implements SongService {
         Pageable pageable = PageRequest.of(0, limit);
         List<Song> topSongs = songRepository.findSongsByPlayCount(pageable);
         List<SongResponseWithAllAlbum> songResponsesWithAllAlbum = new ArrayList<>();
-        topSongs.forEach(x->{
+        topSongs.forEach(x -> {
             SongResponseWithAllAlbum songResponseWithAllAlbum = mapToSongResponseWithAllAlbums(x);
             songResponsesWithAllAlbum.add(songResponseWithAllAlbum);
         });
@@ -629,7 +628,7 @@ public class SongServiceImpl implements SongService {
                                 r.getArtist().getName(),
                                 ArtistRole.MAIN_ARTIST,
                                 r.getArtist().getImgUrl()
-                                 // Set role cứng hoặc lấy r.getRole()
+                                // Set role cứng hoặc lấy r.getRole()
                         )
                 ));
 
@@ -642,7 +641,7 @@ public class SongServiceImpl implements SongService {
                         r.getArtist().getName(),
                         r.getRole(),
                         r.getArtist().getImgUrl()
-                         // <--- QUAN TRỌNG: Lấy role thực tế từ DB
+                        // <--- QUAN TRỌNG: Lấy role thực tế từ DB
                 ))
                 .collect(Collectors.toList());
 
