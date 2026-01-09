@@ -10,7 +10,7 @@ import org.springframework.http.HttpStatus;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class S3UploadException extends RuntimeException {
-    private HttpStatus httpStatus;
+    private final HttpStatus httpStatus;
 
     public S3UploadException(String message, HttpStatus httpStatus) {
         super(message);
