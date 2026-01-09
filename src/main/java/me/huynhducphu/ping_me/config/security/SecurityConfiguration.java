@@ -24,6 +24,7 @@ public class SecurityConfiguration {
     private static final String[] WHITELIST = {
             // Authentication
             "/auth/login",
+            "/auth/mobile/login",
             "/auth/logout",
             "/auth/register",
             "/auth/refresh",
@@ -40,7 +41,7 @@ public class SecurityConfiguration {
             // Health check - Kiểm tra nhịp tim
             "/actuator/health",
             "/actuator/health/**",
-            
+
     };
 
     @Value("${app.cors.allowed-origins}")

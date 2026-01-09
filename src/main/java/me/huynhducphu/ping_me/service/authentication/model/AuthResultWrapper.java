@@ -1,9 +1,9 @@
-package me.huynhducphu.ping_me.dto.response.authentication.common;
+package me.huynhducphu.ping_me.service.authentication.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import me.huynhducphu.ping_me.dto.response.authentication.DefaultAuthResponse;
+import me.huynhducphu.ping_me.dto.response.authentication.CurrentUserSessionResponse;
 import org.springframework.http.ResponseCookie;
 
 /**
@@ -14,7 +14,9 @@ import org.springframework.http.ResponseCookie;
 @Data
 public class AuthResultWrapper {
 
-    private DefaultAuthResponse defaultAuthResponse;
+    private CurrentUserSessionResponse userSession;
+
+    private String accessToken;
     private ResponseCookie refreshTokenCookie;
 
 }

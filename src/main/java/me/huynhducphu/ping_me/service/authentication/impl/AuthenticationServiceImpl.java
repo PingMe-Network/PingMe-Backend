@@ -3,8 +3,8 @@ package me.huynhducphu.ping_me.service.authentication.impl;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.ping_me.dto.request.authentication.*;
-import me.huynhducphu.ping_me.dto.response.authentication.common.AuthResultWrapper;
-import me.huynhducphu.ping_me.dto.response.authentication.DefaultAuthResponse;
+import me.huynhducphu.ping_me.service.authentication.model.AuthResultWrapper;
+import me.huynhducphu.ping_me.dto.response.authentication.auth.DefaultAuthResponse;
 import me.huynhducphu.ping_me.dto.response.authentication.CurrentUserSessionResponse;
 import me.huynhducphu.ping_me.model.User;
 import me.huynhducphu.ping_me.model.constant.AuthProvider;
@@ -137,24 +137,21 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             SubmitSessionMetaRequest submitSessionMetaRequest
     ) {
         // ================================================
-        // HANDLE ACCESS TOKEN
+        // CREATE TOKEN
         // ================================================
         var accessToken = jwtService.buildJwt(user, accessTokenExpiration);
-        var defaultAuthResponseDto = new DefaultAuthResponse(
-                userMapper.mapToCurrentUserSessionResponse(user),
-                accessToken
-        );
+        var refreshToken = jwtService.buildJwt(user, refreshTokenExpiration);
 
         // ================================================
-        // HANDLE REFRESH TOKEN
+        // HANDLE WHITELIST REFRESH TOKEN VIA REDIS
         // ================================================
-        var refreshToken = jwtService.buildJwt(user, refreshTokenExpiration);
         refreshTokenRedisService.saveRefreshToken(
                 refreshToken,
                 user.getId().toString(),
                 submitSessionMetaRequest,
                 Duration.ofSeconds(refreshTokenExpiration)
         );
+
 
         var refreshTokenCookie = ResponseCookie
                 .from(REFRESH_TOKEN_COOKIE_NAME, refreshToken)
@@ -166,7 +163,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build();
 
         return new AuthResultWrapper(
-                defaultAuthResponseDto,
+                userMapper.mapToCurrentUserSessionResponse(user),
+                accessToken,
                 refreshTokenCookie
         );
     }
