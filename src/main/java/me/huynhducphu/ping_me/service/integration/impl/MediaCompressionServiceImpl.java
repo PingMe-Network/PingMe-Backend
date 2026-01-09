@@ -70,15 +70,24 @@ public class MediaCompressionServiceImpl implements me.huynhducphu.ping_me.servi
 
             return tempOutput;
 
-        } catch (Exception e) {
-            log.error("Lỗi nén file [{}]: {}", originalFile.getOriginalFilename(), e.getMessage());
-            // Xóa file output nếu lỗi (tránh file rác 0kb)
-            if (tempOutput != null && tempOutput.exists()) {
-                if (!tempOutput.delete()) log.warn("Không thể xóa file rác output: {}", tempOutput.getAbsolutePath());
-            }
-            throw new RuntimeException("Lỗi xử lý media: " + e.getMessage(), e);
+        } catch (InterruptedException e) {
+            // QUAN TRỌNG: Khôi phục trạng thái interrupt của thread
+            Thread.currentThread().interrupt();
+            
+            log.error("Tiến trình nén bị ngắt quãng (Interrupted): {}", originalFile.getOriginalFilename());
+
+            deleteFileSilent(tempOutput);
+
+            throw new RuntimeException("Tiến trình xử lý media bị hủy bỏ", e);
+
+        } catch (IOException e) {
+            log.error("Lỗi I/O khi xử lý file [{}]: {}", originalFile.getOriginalFilename(), e.getMessage());
+
+            deleteFileSilent(tempOutput);
+
+            throw new RuntimeException("Lỗi đọc/ghi file hoặc lỗi thực thi FFmpeg", e);
+
         } finally {
-            // Luôn xóa file input gốc
             if (tempInput != null && tempInput.exists()) {
                 if (!tempInput.delete()) log.warn("Không thể xóa file rác input: {}", tempInput.getAbsolutePath());
             }
@@ -117,7 +126,7 @@ public class MediaCompressionServiceImpl implements me.huynhducphu.ping_me.servi
                 "-y",
                 "-i", inputPath,
                 "-b:a", AUDIO_BITRATE,
-                "-map", "0:a:0", // Chỉ lấy audio stream đầu tiên
+                "-map", "0:a:0",
                 outputPath
         );
     }
@@ -132,9 +141,17 @@ public class MediaCompressionServiceImpl implements me.huynhducphu.ping_me.servi
                 "-preset", VIDEO_PRESET,
                 "-c:a", AUDIO_CODEC_AAC,
                 "-b:a", AUDIO_BITRATE,
-                "-movflags", "+faststart", // Tối ưu play video trên web
+                "-movflags", "+faststart",
                 outputPath
         );
+    }
+
+    private void deleteFileSilent(File file) {
+        if (file != null && file.exists()) {
+            if (!file.delete()) {
+                log.warn("Không thể xóa file tạm: {}", file.getAbsolutePath());
+            }
+        }
     }
 
 }
