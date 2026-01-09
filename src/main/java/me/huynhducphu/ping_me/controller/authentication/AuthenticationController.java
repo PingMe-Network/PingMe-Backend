@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import me.huynhducphu.ping_me.dto.base.ApiResponse;
 import me.huynhducphu.ping_me.dto.request.authentication.*;
 import me.huynhducphu.ping_me.dto.response.authentication.*;
+import me.huynhducphu.ping_me.dto.response.authentication.auth.DefaultAuthResponse;
+import me.huynhducphu.ping_me.dto.response.authentication.auth.MobileAuthResponse;
 import me.huynhducphu.ping_me.service.authentication.AuthenticationService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -49,16 +51,42 @@ public class AuthenticationController {
             description = "Đăng nhập và khởi tạo phiên làm việc mới"
     )
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<DefaultAuthResponse>> loginLocal(
+    public ResponseEntity<ApiResponse<DefaultAuthResponse>> login(
             @Parameter(description = "Thông tin đăng nhập", required = true)
             @RequestBody @Valid LoginRequest loginRequest
     ) {
         var authResultWrapper = authenticationService.login(loginRequest);
+        var payload = new DefaultAuthResponse(
+                authResultWrapper.getUserSession(),
+                authResultWrapper.getAccessToken()
+        );
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .header(HttpHeaders.SET_COOKIE, authResultWrapper.getRefreshTokenCookie().toString())
-                .body(new ApiResponse<>(authResultWrapper.getDefaultAuthResponse()));
+                .body(new ApiResponse<>(payload));
+    }
+
+    @Operation(
+            summary = "Đăng nhập qua thiết bị di động",
+            description = "Đăng nhập và khởi tạo phiên làm việc mới qua thiết bị di động"
+    )
+    @PostMapping("/mobile/login")
+    public ResponseEntity<ApiResponse<MobileAuthResponse>> loginMobile(
+            @Parameter(description = "Thông tin đăng nhập", required = true)
+            @RequestBody @Valid LoginRequest loginRequest
+    ) {
+        var authResultWrapper = authenticationService.login(loginRequest);
+        var payload = new MobileAuthResponse(
+                authResultWrapper.getUserSession(),
+                authResultWrapper.getAccessToken(),
+                authResultWrapper.getRefreshTokenCookie().getValue()
+        );
+
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new ApiResponse<>(payload));
     }
 
     // ================= LOGOUT =================
@@ -91,10 +119,14 @@ public class AuthenticationController {
             @RequestBody SubmitSessionMetaRequest submitSessionMetaRequest
     ) {
         var authResultWrapper = authenticationService.refreshSession(refreshToken, submitSessionMetaRequest);
+        var payload = new DefaultAuthResponse(
+                authResultWrapper.getUserSession(),
+                authResultWrapper.getAccessToken()
+        );
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .header(HttpHeaders.SET_COOKIE, authResultWrapper.getRefreshTokenCookie().toString())
-                .body(new ApiResponse<>(authResultWrapper.getDefaultAuthResponse()));
+                .header(HttpHeaders.SET_COOKIE, authResultWrapper.getRefreshTokenCookie().getValue())
+                .body(new ApiResponse<>(payload));
     }
 }

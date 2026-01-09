@@ -1,0 +1,23 @@
+package me.huynhducphu.ping_me.service.authentication.model;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import me.huynhducphu.ping_me.dto.response.authentication.CurrentUserSessionResponse;
+import me.huynhducphu.ping_me.dto.response.authentication.auth.DefaultAuthResponse;
+import org.springframework.http.ResponseCookie;
+
+/**
+ * Admin 8/4/2025
+ **/
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
+public class AuthResultWrapper {
+
+    private CurrentUserSessionResponse userSession;
+    
+    private String accessToken;
+    private ResponseCookie refreshTokenCookie;
+
+}
