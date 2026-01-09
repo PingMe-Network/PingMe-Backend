@@ -11,6 +11,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -32,7 +34,7 @@ public class FFMPEGService {
     private static final String VIDEO_CRF = "28";
     private static final String VIDEO_PRESET = "fast";
 
-    @Value("${app.ffmpeg.enabled:true}") // Mặc định true nếu quên config
+    @Value("${app.ffmpeg.enabled:true}")
     private boolean ffmpegEnabled;
 
     public File compressMedia(MultipartFile originalFile, MediaType mediaType) {
@@ -55,41 +57,49 @@ public class FFMPEGService {
         File tempOutput = null;
 
         try {
-            // 1. Chuẩn bị file Input/Output
-            tempInput = File.createTempFile("raw_", "_" + originalFile.getOriginalFilename());
+            // --- BƯỚC 1: CẤU HÌNH FILE AN TOÀN (FIX SONAR S5443 & S6549) ---
+
+            // A. Lấy thư mục tạm an toàn (Secure Directory)
+            File secureDir = getSecureTempDir();
+
+            // B. Lấy Extension an toàn (Không dùng tên file gốc để nối chuỗi)
+            String originalName = originalFile.getOriginalFilename();
+            String inputExtension = ".tmp";
+            if (originalName != null && originalName.contains(".")) {
+                inputExtension = originalName.substring(originalName.lastIndexOf("."));
+            }
+
+            // C. Tạo file Input và Output TRONG thư mục an toàn
+            // createTempFile sẽ tự sinh tên ngẫu nhiên (ví dụ: raw_12345.mp4) -> Chống trùng lặp & đoán tên
+            tempInput = File.createTempFile("raw_", inputExtension, secureDir);
             Files.copy(originalFile.getInputStream(), tempInput.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-            tempOutput = File.createTempFile("compressed_", outputExtension);
+            tempOutput = File.createTempFile("compressed_", outputExtension, secureDir);
 
-            // 2. Lấy danh sách lệnh từ builder cụ thể
+            // --- BƯỚC 2: XỬ LÝ FFMPEG ---
+
+            // Lấy danh sách lệnh từ builder cụ thể
             List<String> command = commandBuilder.apply(tempInput.getAbsolutePath(), tempOutput.getAbsolutePath());
 
-            // 3. Thực thi FFmpeg
+            // Thực thi
             executeFfmpegCommand(command);
 
             return tempOutput;
 
         } catch (InterruptedException e) {
-            // QUAN TRỌNG: Khôi phục trạng thái interrupt của thread
             Thread.currentThread().interrupt();
-
-            log.error("Tiến trình nén bị ngắt quãng (Interrupted): {}", originalFile.getOriginalFilename());
-
+            log.error("Tiến trình nén bị ngắt quãng: {}", originalFile.getOriginalFilename());
             deleteFileSilent(tempOutput);
-
             throw new RuntimeException("Tiến trình xử lý media bị hủy bỏ", e);
 
         } catch (IOException e) {
             log.error("Lỗi I/O khi xử lý file [{}]: {}", originalFile.getOriginalFilename(), e.getMessage());
-
             deleteFileSilent(tempOutput);
-
             throw new RuntimeException("Lỗi đọc/ghi file hoặc lỗi thực thi FFmpeg", e);
 
         } finally {
-            if (tempInput != null && tempInput.exists()) {
-                if (!tempInput.delete()) log.warn("Không thể xóa file rác input: {}", tempInput.getAbsolutePath());
-            }
+            // Clean code: Dùng hàm helper để xóa, không viết lại logic check null
+            deleteFileSilent(tempInput);
         }
     }
 
@@ -98,15 +108,14 @@ public class FFMPEGService {
      */
     private void executeFfmpegCommand(List<String> command) throws IOException, InterruptedException {
         ProcessBuilder processBuilder = new ProcessBuilder(command);
-        processBuilder.redirectErrorStream(true); // Gộp Error stream vào Input stream
+        processBuilder.redirectErrorStream(true);
 
         Process process = processBuilder.start();
 
-        // Đọc log để tránh buffer overflow (treo tiến trình)
+        // Đọc log để tránh buffer overflow
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                // Chỉ log debug để tránh spam console production
                 log.debug("[FFmpeg]: {}", line);
             }
         }
@@ -121,9 +130,7 @@ public class FFMPEGService {
 
     private List<String> buildAudioCommand(String inputPath, String outputPath) {
         return List.of(
-                FFMPEG_CMD,
-                "-y",
-                "-i", inputPath,
+                FFMPEG_CMD, "-y", "-i", inputPath,
                 "-b:a", AUDIO_BITRATE,
                 "-map", "0:a:0",
                 outputPath
@@ -132,14 +139,9 @@ public class FFMPEGService {
 
     private List<String> buildVideoCommand(String inputPath, String outputPath) {
         return List.of(
-                FFMPEG_CMD,
-                "-y",
-                "-i", inputPath,
-                "-c:v", VIDEO_CODEC,
-                "-crf", VIDEO_CRF,
-                "-preset", VIDEO_PRESET,
-                "-c:a", AUDIO_CODEC_AAC,
-                "-b:a", AUDIO_BITRATE,
+                FFMPEG_CMD, "-y", "-i", inputPath,
+                "-c:v", VIDEO_CODEC, "-crf", VIDEO_CRF, "-preset", VIDEO_PRESET,
+                "-c:a", AUDIO_CODEC_AAC, "-b:a", AUDIO_BITRATE,
                 "-movflags", "+faststart",
                 outputPath
         );
@@ -153,4 +155,39 @@ public class FFMPEGService {
         }
     }
 
+    /**
+     * Tạo thư mục tạm an toàn, chỉ Owner mới có quyền truy cập
+     */
+    private File getSecureTempDir() throws IOException {
+        String systemTemp = System.getProperty("java.io.tmpdir");
+        Path path = Paths.get(systemTemp, "pingme-ffmpeg-temp");
+
+        // Chỉ tạo mới nếu chưa tồn tại
+        if (!Files.exists(path)) {
+            Files.createDirectories(path);
+            File file = path.toFile();
+
+            // Thực hiện set quyền và lấy kết quả trả về
+            boolean r = file.setReadable(true, true);
+            boolean w = file.setWritable(true, true);
+            boolean x = file.setExecutable(true, true);
+
+            // Nếu bất kỳ quyền nào set thất bại
+            if (!r || !w || !x) {
+                // 1. Cố gắng xóa thư mục vừa tạo để không để lại rác không an toàn
+                if (file.exists() && !file.delete()) {
+                    log.warn(
+                            "CẢNH BÁO: Không thể xóa thư mục tạm không an toàn: {}",
+                            file.getAbsolutePath()
+                    );
+                }
+
+                // 2. Ném lỗi để dừng quy trình
+                throw new IOException(
+                        "Lỗi bảo mật: Không thể thiết lập quyền hạn chế (700) cho thư mục tạm: " + file.getAbsolutePath()
+                );
+            }
+        }
+        return path.toFile();
+    }
 }
