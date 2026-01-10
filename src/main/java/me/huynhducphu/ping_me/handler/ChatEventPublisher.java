@@ -1,4 +1,4 @@
-package me.huynhducphu.ping_me.service.chat.publisher;
+package me.huynhducphu.ping_me.handler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
