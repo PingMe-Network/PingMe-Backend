@@ -1,4 +1,4 @@
-package me.huynhducphu.ping_me.service.friendship.impl;
+package me.huynhducphu.ping_me.handler;
 
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.ping_me.dto.response.user.UserSummaryResponse;
@@ -16,7 +16,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
  **/
 @Component
 @RequiredArgsConstructor
-public class FriendshipEventListener {
+public class FriendshipEventPublisher {
 
     private final SimpMessagingTemplate messagingTemplate;
 

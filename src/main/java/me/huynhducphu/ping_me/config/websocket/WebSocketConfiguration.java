@@ -1,9 +1,10 @@
 package me.huynhducphu.ping_me.config.websocket;
 
 import lombok.RequiredArgsConstructor;
-import me.huynhducphu.ping_me.config.websocket.auth.CustomHandshakeHandler;
+import me.huynhducphu.ping_me.config.websocket.auth.StompAuthInterceptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -18,7 +19,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @RequiredArgsConstructor
 public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer {
 
-    private final CustomHandshakeHandler customHandshakeHandler;
+    private final StompAuthInterceptor stompAuthInterceptor;
 
     @Value("${app.websocket.heartbeat.server-send-interval}")
     private long serverSendInterval;
@@ -35,7 +36,6 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
         registry
                 // Đăng ký endpoint cho client kết nối STOMP qua WebSocket
                 .addEndpoint("/ws")
-                .setHandshakeHandler(customHandshakeHandler)
                 .setAllowedOrigins(allowedOrigins.split(","))
                 .withSockJS();
     }
@@ -63,6 +63,10 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
 
         // Prefix khi FE muốn gửi message lên BE (MessageMapping)
         registry.setApplicationDestinationPrefixes("/app");
+    }
 
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(stompAuthInterceptor);
     }
 }
