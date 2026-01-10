@@ -20,13 +20,13 @@ import org.springframework.web.bind.annotation.*;
  * Admin 8/4/2025
  **/
 @Tag(
-        name = "Authentication & User Account",
+        name = "Default Authentication",
         description = "Các API đăng ký, đăng nhập, xác thực phiên và quản lý tài khoản người dùng"
 )
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-public class AuthenticationController {
+public class DefaultAuthenticationController {
 
     private final AuthenticationService authenticationService;
 
@@ -67,28 +67,6 @@ public class AuthenticationController {
                 .body(new ApiResponse<>(payload));
     }
 
-    @Operation(
-            summary = "Đăng nhập qua thiết bị di động",
-            description = "Đăng nhập và khởi tạo phiên làm việc mới qua thiết bị di động"
-    )
-    @PostMapping("/mobile/login")
-    public ResponseEntity<ApiResponse<MobileAuthResponse>> loginMobile(
-            @Parameter(description = "Thông tin đăng nhập", required = true)
-            @RequestBody @Valid LoginRequest loginRequest
-    ) {
-        var authResultWrapper = authenticationService.login(loginRequest);
-        var payload = new MobileAuthResponse(
-                authResultWrapper.getUserSession(),
-                authResultWrapper.getAccessToken(),
-                authResultWrapper.getRefreshTokenCookie().getValue()
-        );
-
-
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(new ApiResponse<>(payload));
-    }
-
     // ================= LOGOUT =================
     @Operation(
             summary = "Đăng xuất",
@@ -107,7 +85,7 @@ public class AuthenticationController {
 
     // ================= REFRESH =================
     @Operation(
-            summary = "Refresh session",
+            summary = "Làm mới phiên",
             description = "Làm mới access token bằng refresh token"
     )
     @PostMapping("/refresh")
