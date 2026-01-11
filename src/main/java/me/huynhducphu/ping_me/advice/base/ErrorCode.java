@@ -10,12 +10,7 @@ import org.springframework.http.HttpStatusCode;
  **/
 @Getter
 public enum ErrorCode {
-    // 200 - 299
-    OK(200, "Thành công.", HttpStatus.OK),
-
-    // 400-499
-    UNAUTHORIZED(403, "Bạn không có quyền truy cập tài nguyên này!", HttpStatus.FORBIDDEN),
-
+    
     // ===== System & Common (1000 - 1099) =====
     UNCATEGORIZED_EXCEPTION(1099, "Lỗi hệ thống không xác định", HttpStatus.INTERNAL_SERVER_ERROR),
     METHOD_NOT_ALLOWED(1001, "API không hỗ trợ phương thức này", HttpStatus.METHOD_NOT_ALLOWED),
@@ -23,6 +18,7 @@ public enum ErrorCode {
     INVALID_ARGUMENT(1005, "Đối số truyền vào không hợp lệ", HttpStatus.BAD_REQUEST),
 
     // ===== Security & Authentication (1100 - 1199) =====
+    UNAUTHORIZED(1199, "Bạn không có quyền truy cập tài nguyên này!", HttpStatus.FORBIDDEN),
     INVALID_TOKEN(1102, "Token không hợp lệ hoặc đã hết hạn", HttpStatus.UNAUTHORIZED),
     INVALID_CREDENTIALS(1103, "Tài khoản hoặc mật khẩu không hợp lệ", HttpStatus.UNAUTHORIZED),
     ACCESS_DENIED(1101, "Bạn không có quyền truy cập", HttpStatus.FORBIDDEN),
@@ -43,12 +39,5 @@ public enum ErrorCode {
         this.code = code;
         this.message = message;
         this.statusCode = statusCode;
-    }
-
-    public static ErrorCode fromCode(int code) {
-        for (ErrorCode ec : values()) {
-            if (ec.code == code) return ec;
-        }
-        return UNCATEGORIZED_EXCEPTION;
     }
 }
