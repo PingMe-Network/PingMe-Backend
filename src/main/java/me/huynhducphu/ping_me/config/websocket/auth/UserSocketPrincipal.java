@@ -16,7 +16,6 @@ public class UserSocketPrincipal implements Principal {
 
     private Long id;
     private String email;
-    private String name;
 
     @Override
     public String getName() {

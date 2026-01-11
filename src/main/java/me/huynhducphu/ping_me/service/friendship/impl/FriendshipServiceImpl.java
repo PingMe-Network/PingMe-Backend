@@ -350,7 +350,7 @@ public class FriendshipServiceImpl implements me.huynhducphu.ping_me.service.fri
         // Lấy thông tin người dùng hiện tại
         var currentUser = userRepository
                 .getUserByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("Khong tim thay nguoi dung"));
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng"));
 
         return friendshipRepository.findAllByStatusAndUserWithoutBeforeId(
                 FriendshipStatus.ACCEPTED, currentUser.getId()
