@@ -30,10 +30,14 @@ public class StompAuthInterceptor implements ChannelInterceptor {
     private final JwtDecoder jwtDecoder;
 
     @Override
-    public Message<?> preSend(Message<?> message, MessageChannel channel) {
+    public Message<?> preSend(
+            Message<?> message,
+            MessageChannel channel
+    ) {
         StompHeaderAccessor accessor =
                 MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
+        assert accessor != null;
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
             String authHeader = accessor.getFirstNativeHeader("Authorization");
 
@@ -64,7 +68,6 @@ public class StompAuthInterceptor implements ChannelInterceptor {
         UserSocketPrincipal user = new UserSocketPrincipal();
         user.setId(jwt.getClaim("id"));
         user.setEmail(jwt.getSubject());
-        user.setName(jwt.getClaim("name"));
         return user;
     }
 }
