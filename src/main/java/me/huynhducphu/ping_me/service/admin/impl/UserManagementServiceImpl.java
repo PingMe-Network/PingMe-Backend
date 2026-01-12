@@ -5,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import me.huynhducphu.ping_me.dto.admin.request.user.CreateUserRequest;
+import me.huynhducphu.ping_me.dto.admin.request.user.UpdateAccountStatusRequest;
 import me.huynhducphu.ping_me.dto.admin.response.user.DefaultUserResponse;
 import me.huynhducphu.ping_me.model.User;
 import me.huynhducphu.ping_me.model.constant.AccountStatus;
@@ -20,6 +21,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Objects;
 
 /**
  * Admin 8/3/2025
@@ -48,9 +51,11 @@ public class UserManagementServiceImpl implements UserManagementService {
     }
 
     @Override
-    public Page<DefaultUserResponse> getAllUsers(Pageable pageable) {
-        return userRepository
-                .findAll(pageable)
+    public Page<DefaultUserResponse> getAllUsers(Pageable pageable, AccountStatus accountStatus) {
+        if (accountStatus == null)
+            return userRepository.findAll(pageable)
+                    .map(user -> modelMapper.map(user, DefaultUserResponse.class));
+        return userRepository.findByAccountStatus(accountStatus, pageable)
                 .map(user -> modelMapper.map(user, DefaultUserResponse.class));
     }
 
@@ -64,11 +69,15 @@ public class UserManagementServiceImpl implements UserManagementService {
 
     @PreAuthorize("hasRole('ADMIN')")
     @Override
-    public boolean deleteUserById(Long id) {
+    public boolean updateAccountStatusById(Long id, UpdateAccountStatusRequest request) {
         try {
             User user = userRepository.findById(id)
                     .orElseThrow(() -> new NullPointerException("Không tìm thấy tài khoản!"));
-            user.setAccountStatus(AccountStatus.DEACTIVATED);
+            if (Objects.equals(user.getId(), currentUserProvider.get().getId()))
+                throw new IllegalArgumentException("Không thể thay đổi trạng thái tài khoản của chính mình!");
+
+            user.setAccountStatus(request.getAccountStatus());
+
             userRepository.save(user);
             return true;
         } catch (Exception e) {

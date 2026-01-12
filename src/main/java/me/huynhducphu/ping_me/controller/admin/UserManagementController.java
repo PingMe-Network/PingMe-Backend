@@ -5,11 +5,12 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import me.huynhducphu.ping_me.advice.base.ErrorCode;
 import me.huynhducphu.ping_me.dto.admin.request.user.CreateUserRequest;
+import me.huynhducphu.ping_me.dto.admin.request.user.UpdateAccountStatusRequest;
 import me.huynhducphu.ping_me.dto.admin.response.user.DefaultUserResponse;
 import me.huynhducphu.ping_me.dto.base.ApiResponse;
 import me.huynhducphu.ping_me.dto.base.PageResponse;
+import me.huynhducphu.ping_me.model.constant.AccountStatus;
 import me.huynhducphu.ping_me.service.admin.UserManagementService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -53,10 +54,11 @@ public class UserManagementController {
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<DefaultUserResponse>>> getAllUsers(
             @Parameter(description = "Thông tin phân trang")
-            @PageableDefault(size = 5) Pageable pageable
+            @PageableDefault(size = 5) Pageable pageable,
+            @RequestParam(required = false) AccountStatus accountStatus
     ) {
         Page<DefaultUserResponse> defaultUserResponseDtoPage =
-                userManagementService.getAllUsers(pageable);
+                userManagementService.getAllUsers(pageable, accountStatus);
 
         PageResponse<DefaultUserResponse> pageResponse =
                 new PageResponse<>(defaultUserResponseDtoPage);
@@ -80,13 +82,15 @@ public class UserManagementController {
                 .body(new ApiResponse<>(userManagementService.getUserById(id)));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Boolean>> deleteUserById(@PathVariable Long id) {
-        boolean isDeleted = userManagementService.deleteUserById(id);
+    @PostMapping("/{id}")
+    public ResponseEntity<ApiResponse<Boolean>> updateAccountStatusById(
+            @PathVariable Long id,
+            @RequestBody UpdateAccountStatusRequest request
+    ) {
+        boolean isDeleted = userManagementService.updateAccountStatusById(id, request);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new ApiResponse<>(isDeleted));
     }
-
 }
