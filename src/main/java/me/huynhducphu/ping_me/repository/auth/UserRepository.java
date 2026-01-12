@@ -1,6 +1,9 @@
 package me.huynhducphu.ping_me.repository.auth;
 
 import me.huynhducphu.ping_me.model.User;
+import me.huynhducphu.ping_me.model.constant.AccountStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -9,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Admin 8/3/2025
@@ -30,4 +34,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("UPDATE User u SET u.status = 'OFFLINE' WHERE u.id = :userId")
     void disconnect(@Param("userId") Long userId);
 
+    @Transactional
+    @Query("SELECT u FROM User u WHERE u.accountStatus = :accountStatus")
+    Page<User> findByAccountStatus(@Param("accountStatus") AccountStatus accountStatus, Pageable pageable);
 }
