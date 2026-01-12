@@ -10,6 +10,7 @@ import me.huynhducphu.ping_me.dto.admin.request.user.UpdateAccountStatusRequest;
 import me.huynhducphu.ping_me.dto.admin.response.user.DefaultUserResponse;
 import me.huynhducphu.ping_me.dto.base.ApiResponse;
 import me.huynhducphu.ping_me.dto.base.PageResponse;
+import me.huynhducphu.ping_me.model.constant.AccountStatus;
 import me.huynhducphu.ping_me.service.admin.UserManagementService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -53,10 +54,11 @@ public class UserManagementController {
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<DefaultUserResponse>>> getAllUsers(
             @Parameter(description = "Thông tin phân trang")
-            @PageableDefault(size = 5) Pageable pageable
+            @PageableDefault(size = 5) Pageable pageable,
+            @RequestParam(required = false) AccountStatus accountStatus
     ) {
         Page<DefaultUserResponse> defaultUserResponseDtoPage =
-                userManagementService.getAllUsers(pageable);
+                userManagementService.getAllUsers(pageable, accountStatus);
 
         PageResponse<DefaultUserResponse> pageResponse =
                 new PageResponse<>(defaultUserResponseDtoPage);
@@ -91,5 +93,4 @@ public class UserManagementController {
                 .status(HttpStatus.OK)
                 .body(new ApiResponse<>(isDeleted));
     }
-
 }

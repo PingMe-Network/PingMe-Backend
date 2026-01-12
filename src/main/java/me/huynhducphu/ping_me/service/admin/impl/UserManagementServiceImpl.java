@@ -51,9 +51,11 @@ public class UserManagementServiceImpl implements UserManagementService {
     }
 
     @Override
-    public Page<DefaultUserResponse> getAllUsers(Pageable pageable) {
-        return userRepository
-                .findAll(pageable)
+    public Page<DefaultUserResponse> getAllUsers(Pageable pageable, AccountStatus accountStatus) {
+        if (accountStatus == null)
+            return userRepository.findAll(pageable)
+                    .map(user -> modelMapper.map(user, DefaultUserResponse.class));
+        return userRepository.findByAccountStatus(accountStatus, pageable)
                 .map(user -> modelMapper.map(user, DefaultUserResponse.class));
     }
 
@@ -71,7 +73,7 @@ public class UserManagementServiceImpl implements UserManagementService {
         try {
             User user = userRepository.findById(id)
                     .orElseThrow(() -> new NullPointerException("Không tìm thấy tài khoản!"));
-            if(Objects.equals(user.getId(), currentUserProvider.get().getId()))
+            if (Objects.equals(user.getId(), currentUserProvider.get().getId()))
                 throw new IllegalArgumentException("Không thể thay đổi trạng thái tài khoản của chính mình!");
 
             user.setAccountStatus(request.getAccountStatus());
