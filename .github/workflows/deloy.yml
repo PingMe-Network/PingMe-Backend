@@ -21,7 +21,7 @@ jobs:
 
       - name: Build & Push Docker Image with Jib
         run: |
-          mvn jib:build \
+          mvn clean compile jib:build \
             -DskipTests \
             -Djib.to.image=${{ secrets.DOCKER_USERNAME }}/pingme-backend:latest \
             -Djib.to.auth.username=${{ secrets.DOCKER_USERNAME }} \
