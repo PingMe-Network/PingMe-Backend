@@ -10,7 +10,7 @@ import me.huynhducphu.ping_me.dto.admin.response.user.DefaultUserResponse;
 import me.huynhducphu.ping_me.model.User;
 import me.huynhducphu.ping_me.model.constant.AccountStatus;
 import me.huynhducphu.ping_me.model.constant.AuthProvider;
-import me.huynhducphu.ping_me.repository.auth.UserRepository;
+import me.huynhducphu.ping_me.repository.jpa.auth.UserRepository;
 import me.huynhducphu.ping_me.service.admin.UserManagementService;
 import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
 import org.modelmapper.ModelMapper;

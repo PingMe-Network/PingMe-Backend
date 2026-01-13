@@ -2,7 +2,7 @@ package me.huynhducphu.ping_me.service.music.impl;
 
 
 import me.huynhducphu.ping_me.dto.response.music.misc.TopSongPlayCounterDto;
-import me.huynhducphu.ping_me.repository.music.SongPlayHistoryRepository;
+import me.huynhducphu.ping_me.repository.jpa.music.SongPlayHistoryRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.redis.core.RedisTemplate;

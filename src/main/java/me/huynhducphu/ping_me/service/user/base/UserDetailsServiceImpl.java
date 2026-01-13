@@ -1,7 +1,7 @@
 package me.huynhducphu.ping_me.service.user.base;
 
 import lombok.RequiredArgsConstructor;
-import me.huynhducphu.ping_me.repository.auth.UserRepository;
+import me.huynhducphu.ping_me.repository.jpa.auth.UserRepository;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

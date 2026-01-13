@@ -8,7 +8,7 @@ import me.huynhducphu.ping_me.dto.response.chat.room.RoomResponse;
 import me.huynhducphu.ping_me.model.chat.Message;
 import me.huynhducphu.ping_me.model.chat.Room;
 import me.huynhducphu.ping_me.model.chat.RoomParticipant;
-import me.huynhducphu.ping_me.repository.chat.MessageRepository;
+import me.huynhducphu.ping_me.repository.mongodb.chat.MessageRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

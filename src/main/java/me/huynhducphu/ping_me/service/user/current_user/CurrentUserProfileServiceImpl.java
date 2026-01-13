@@ -5,7 +5,7 @@ import me.huynhducphu.ping_me.dto.request.authentication.ChangePasswordRequest;
 import me.huynhducphu.ping_me.dto.request.authentication.ChangeProfileRequest;
 import me.huynhducphu.ping_me.dto.response.authentication.CurrentUserProfileResponse;
 import me.huynhducphu.ping_me.dto.response.authentication.CurrentUserSessionResponse;
-import me.huynhducphu.ping_me.repository.auth.UserRepository;
+import me.huynhducphu.ping_me.repository.jpa.auth.UserRepository;
 import me.huynhducphu.ping_me.service.s3.S3Service;
 import me.huynhducphu.ping_me.service.user.CurrentUserProfileService;
 import me.huynhducphu.ping_me.service.user.CurrentUserProvider;

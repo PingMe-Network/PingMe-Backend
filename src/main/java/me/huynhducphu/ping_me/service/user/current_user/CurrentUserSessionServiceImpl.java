@@ -3,7 +3,7 @@ package me.huynhducphu.ping_me.service.user.current_user;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.ping_me.dto.response.authentication.CurrentUserDeviceMetaResponse;
-import me.huynhducphu.ping_me.repository.auth.UserRepository;
+import me.huynhducphu.ping_me.repository.jpa.auth.UserRepository;
 import me.huynhducphu.ping_me.service.authentication.JwtService;
 import me.huynhducphu.ping_me.service.authentication.RefreshTokenRedisService;
 import me.huynhducphu.ping_me.service.user.CurrentUserProvider;

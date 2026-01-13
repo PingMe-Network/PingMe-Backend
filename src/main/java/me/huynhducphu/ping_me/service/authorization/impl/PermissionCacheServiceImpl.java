@@ -2,7 +2,7 @@ package me.huynhducphu.ping_me.service.authorization.impl;
 
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.ping_me.model.authorization.Permission;
-import me.huynhducphu.ping_me.repository.auth.PermissionRepository;
+import me.huynhducphu.ping_me.repository.jpa.auth.PermissionRepository;
 import me.huynhducphu.ping_me.service.authorization.PermissionCacheService;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;

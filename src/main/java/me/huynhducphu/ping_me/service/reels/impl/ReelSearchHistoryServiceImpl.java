@@ -4,7 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.ping_me.dto.response.reels.ReelSearchHistoryResponse;
 import me.huynhducphu.ping_me.model.reels.ReelSearchHistory;
-import me.huynhducphu.ping_me.repository.auth.ReelSearchHistoryRepository;
+import me.huynhducphu.ping_me.repository.jpa.auth.ReelSearchHistoryRepository;
 import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
 import me.huynhducphu.ping_me.service.reels.ReelSearchHistoryService;
 import org.springframework.data.domain.Page;
