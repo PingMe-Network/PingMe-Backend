@@ -3,6 +3,7 @@ package me.huynhducphu.ping_me.service.authentication.impl;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.ping_me.dto.request.authentication.*;
+import me.huynhducphu.ping_me.model.constant.AccountStatus;
 import me.huynhducphu.ping_me.service.authentication.model.AuthResultWrapper;
 import me.huynhducphu.ping_me.dto.response.authentication.CurrentUserSessionResponse;
 import me.huynhducphu.ping_me.model.User;
@@ -71,6 +72,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         user.setAuthProvider(AuthProvider.LOCAL);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setAccountStatus(AccountStatus.ACTIVE);
         var savedUser = userRepository.save(user);
 
         return userMapper.mapToCurrentUserSessionResponse(savedUser);
