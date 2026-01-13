@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.huynhducphu.ping_me.dto.request.music.ArtistRequest;
 import me.huynhducphu.ping_me.dto.response.music.ArtistResponse;
 import me.huynhducphu.ping_me.model.music.Artist;
-import me.huynhducphu.ping_me.repository.music.ArtistRepository;
+import me.huynhducphu.ping_me.repository.jpa.music.ArtistRepository;
 import me.huynhducphu.ping_me.service.music.ArtistService;
 import me.huynhducphu.ping_me.service.s3.S3Service;
 import org.springframework.stereotype.Service;

@@ -5,7 +5,7 @@ import me.huynhducphu.ping_me.dto.request.music.GenreRequest;
 import me.huynhducphu.ping_me.dto.response.music.GenreResponse;
 import me.huynhducphu.ping_me.dto.response.music.misc.GenreDto;
 import me.huynhducphu.ping_me.model.music.Genre;
-import me.huynhducphu.ping_me.repository.music.GenreRepository;
+import me.huynhducphu.ping_me.repository.jpa.music.GenreRepository;
 import me.huynhducphu.ping_me.service.music.GenreService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
