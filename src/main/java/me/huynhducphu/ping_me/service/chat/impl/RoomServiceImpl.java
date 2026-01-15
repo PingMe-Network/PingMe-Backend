@@ -15,7 +15,7 @@ import me.huynhducphu.ping_me.model.constant.RoomType;
 import me.huynhducphu.ping_me.repository.jpa.chat.RoomParticipantRepository;
 import me.huynhducphu.ping_me.repository.jpa.chat.RoomRepository;
 import me.huynhducphu.ping_me.repository.jpa.auth.UserRepository;
-import me.huynhducphu.ping_me.service.chat.util.ChatDtoUtils;
+import me.huynhducphu.ping_me.utils.ChatMapper;
 import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
 import me.huynhducphu.ping_me.service.s3.S3Service;
 import org.springframework.context.ApplicationEventPublisher;
@@ -57,7 +57,7 @@ public class RoomServiceImpl implements me.huynhducphu.ping_me.service.chat.Room
     private final ApplicationEventPublisher eventPublisher;
 
     // UTILS
-    private final ChatDtoUtils chatDtoUtils;
+    private final ChatMapper chatMapper;
 
     private static final long MAX_IMAGE_SIZE = 10 * 1024 * 1024L;
 
@@ -80,7 +80,7 @@ public class RoomServiceImpl implements me.huynhducphu.ping_me.service.chat.Room
 
         if (room != null) {
             ensureParticipants(room, currentUser.getId(), createOrGetDirectRoomRequest.getTargetUserId());
-            return chatDtoUtils.toRoomResponseDto(
+            return chatMapper.toRoomResponseDto(
                     room,
                     roomParticipantRepository.findByRoom_Id(room.getId())
             );
@@ -108,14 +108,14 @@ public class RoomServiceImpl implements me.huynhducphu.ping_me.service.chat.Room
                     )
             );
 
-            return chatDtoUtils.toRoomResponseDto(
+            return chatMapper.toRoomResponseDto(
                     savedRoom,
                     roomParticipantRepository.findByRoom_Id(savedRoom.getId())
             );
         } catch (DataIntegrityViolationException ex) {
             Room existed = roomRepository.findByDirectKey(directKey).orElseThrow(() -> ex);
             ensureParticipants(existed, currentUser.getId(), createOrGetDirectRoomRequest.getTargetUserId());
-            return chatDtoUtils.toRoomResponseDto(existed, roomParticipantRepository.findByRoom_Id(existed.getId()));
+            return chatMapper.toRoomResponseDto(existed, roomParticipantRepository.findByRoom_Id(existed.getId()));
         }
     }
 
@@ -170,7 +170,7 @@ public class RoomServiceImpl implements me.huynhducphu.ping_me.service.chat.Room
                 )
         );
 
-        return chatDtoUtils.toRoomResponseDto(
+        return chatMapper.toRoomResponseDto(
                 savedRoom,
                 roomParticipantRepository.findByRoom_Id(savedRoom.getId())
         );
@@ -238,7 +238,7 @@ public class RoomServiceImpl implements me.huynhducphu.ping_me.service.chat.Room
             );
         }
 
-        return chatDtoUtils.toRoomResponseDto(
+        return chatMapper.toRoomResponseDto(
                 room,
                 roomParticipantRepository.findByRoom_Id(room.getId())
         );
@@ -309,7 +309,7 @@ public class RoomServiceImpl implements me.huynhducphu.ping_me.service.chat.Room
                 )
         );
 
-        return chatDtoUtils.toRoomResponseDto(
+        return chatMapper.toRoomResponseDto(
                 room,
                 members
         );
@@ -384,7 +384,7 @@ public class RoomServiceImpl implements me.huynhducphu.ping_me.service.chat.Room
                 )
         );
 
-        return chatDtoUtils.toRoomResponseDto(room, members);
+        return chatMapper.toRoomResponseDto(room, members);
     }
 
     @Override
@@ -434,7 +434,7 @@ public class RoomServiceImpl implements me.huynhducphu.ping_me.service.chat.Room
                 )
         );
 
-        return chatDtoUtils.toRoomResponseDto(room, members);
+        return chatMapper.toRoomResponseDto(room, members);
     }
 
     @Override
@@ -475,7 +475,7 @@ public class RoomServiceImpl implements me.huynhducphu.ping_me.service.chat.Room
 
             eventPublisher.publishEvent(new RoomUpdatedEvent(room, members, sysMsg));
 
-            return chatDtoUtils.toRoomResponseDto(room, members);
+            return chatMapper.toRoomResponseDto(room, members);
         }
 
         // ================================================
@@ -518,7 +518,7 @@ public class RoomServiceImpl implements me.huynhducphu.ping_me.service.chat.Room
 
         eventPublisher.publishEvent(new RoomUpdatedEvent(room, members, sysMsg));
 
-        return chatDtoUtils.toRoomResponseDto(room, members);
+        return chatMapper.toRoomResponseDto(room, members);
     }
 
     /* ========================================================================== */
@@ -546,7 +546,7 @@ public class RoomServiceImpl implements me.huynhducphu.ping_me.service.chat.Room
                     new RoomUpdatedEvent(room, members, null)
             );
 
-            return chatDtoUtils.toRoomResponseDto(room, members);
+            return chatMapper.toRoomResponseDto(room, members);
         }
 
         // ------------------------------------------------------
@@ -582,7 +582,7 @@ public class RoomServiceImpl implements me.huynhducphu.ping_me.service.chat.Room
                 new RoomUpdatedEvent(room, members, sysMsg)
         );
 
-        return chatDtoUtils.toRoomResponseDto(room, members);
+        return chatMapper.toRoomResponseDto(room, members);
     }
 
 
@@ -610,7 +610,7 @@ public class RoomServiceImpl implements me.huynhducphu.ping_me.service.chat.Room
                 .stream()
                 .map(room -> {
                     var members = participantsByRoom.getOrDefault(room.getId(), List.of());
-                    return chatDtoUtils.toRoomResponseDto(room, members);
+                    return chatMapper.toRoomResponseDto(room, members);
                 })
                 .toList();
 

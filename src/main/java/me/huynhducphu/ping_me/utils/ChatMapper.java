@@ -1,4 +1,4 @@
-package me.huynhducphu.ping_me.service.chat.util;
+package me.huynhducphu.ping_me.utils;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ import java.util.List;
  **/
 @Component
 @RequiredArgsConstructor
-public class ChatDtoUtils {
+public class ChatMapper {
 
     private final MessageRepository messageRepository;
 

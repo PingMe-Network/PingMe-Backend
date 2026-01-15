@@ -13,7 +13,7 @@ import me.huynhducphu.ping_me.service.authentication.AuthenticationService;
 import me.huynhducphu.ping_me.service.authentication.JwtService;
 import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
 import me.huynhducphu.ping_me.service.authentication.RefreshTokenRedisService;
-import me.huynhducphu.ping_me.utils.mapper.UserMapper;
+import me.huynhducphu.ping_me.utils.UserMapper;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
