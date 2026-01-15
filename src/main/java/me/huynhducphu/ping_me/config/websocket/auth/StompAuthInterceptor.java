@@ -68,6 +68,7 @@ public class StompAuthInterceptor implements ChannelInterceptor {
         UserSocketPrincipal user = new UserSocketPrincipal();
         user.setId(jwt.getClaim("id"));
         user.setEmail(jwt.getSubject());
+        user.setUsername(jwt.getClaim("name"));
         return user;
     }
 }

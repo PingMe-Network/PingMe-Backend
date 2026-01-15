@@ -60,7 +60,6 @@ public class AuthConfiguration {
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
             String role = jwt.getClaimAsString("role");
-            log.info("User role: " + role);
 
             if (role == null || role.isBlank())
                 return List.of();
@@ -68,7 +67,6 @@ public class AuthConfiguration {
             List<GrantedAuthority> authorities = new ArrayList<>();
             authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
 
-            log.info("User authorities: " + authorities);
             return authorities;
         });
         return jwtAuthenticationConverter;
