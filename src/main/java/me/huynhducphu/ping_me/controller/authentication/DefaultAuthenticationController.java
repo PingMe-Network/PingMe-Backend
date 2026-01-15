@@ -104,7 +104,7 @@ public class DefaultAuthenticationController {
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .header(HttpHeaders.SET_COOKIE, authResultWrapper.getRefreshTokenCookie().getValue())
+                .header(HttpHeaders.SET_COOKIE, authResultWrapper.getRefreshTokenCookie().toString())
                 .body(new ApiResponse<>(payload));
     }
 }
