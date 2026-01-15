@@ -25,7 +25,7 @@ import me.huynhducphu.ping_me.model.constant.MessageType;
 import me.huynhducphu.ping_me.repository.mongodb.chat.MessageRepository;
 import me.huynhducphu.ping_me.repository.jpa.chat.RoomParticipantRepository;
 import me.huynhducphu.ping_me.repository.jpa.chat.RoomRepository;
-import me.huynhducphu.ping_me.service.chat.util.ChatDtoUtils;
+import me.huynhducphu.ping_me.utils.ChatMapper;
 import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
 import me.huynhducphu.ping_me.service.s3.S3Service;
 import me.huynhducphu.ping_me.service.weather.WeatherService;
@@ -76,7 +76,7 @@ public class MessageServiceImpl implements MessageService {
 
     // UTILS
     private final ObjectMapper objectMapper;
-    private final ChatDtoUtils chatDtoUtils;
+    private final ChatMapper chatMapper;
 
     /* ========================================================================== */
     /*                         CÁC HÀM XỬ LÝ GỬI TIN NHẮN                         */
@@ -135,7 +135,7 @@ public class MessageServiceImpl implements MessageService {
         var existed = messageRepository
                 .findByRoomIdAndSenderIdAndClientMsgId(roomId, senderId, clientMsgId)
                 .orElse(null);
-        if (existed != null) return chatDtoUtils.toMessageResponseDto(existed);
+        if (existed != null) return chatMapper.toMessageResponseDto(existed);
 
         // Nếu chưa tồn tại, tạo tin nhắn mới
         Message message = new Message();
@@ -194,7 +194,7 @@ public class MessageServiceImpl implements MessageService {
         eventPublisher.publishEvent(roomUpdatedEvent);
         // --------------------------------------------------------------------------------
 
-        var dto = chatDtoUtils.toMessageResponseDto(message);
+        var dto = chatMapper.toMessageResponseDto(message);
 
         // Caching Message
         if (cacheEnabled)
@@ -318,7 +318,7 @@ public class MessageServiceImpl implements MessageService {
         // UPDATE CACHE
         // ---------------------------
         Long roomId = messageToRecall.getRoomId();
-        var dto = chatDtoUtils.toMessageResponseDto(messageToRecall);
+        var dto = chatMapper.toMessageResponseDto(messageToRecall);
 
         if (cacheEnabled)
             messageRedisService.updateMessage(roomId, messageId, dto);
@@ -505,7 +505,7 @@ public class MessageServiceImpl implements MessageService {
 
         // Convert sang DTO
         List<MessageResponse> responses = new ArrayList<>(
-                trimmedMessages.stream().map(chatDtoUtils::toMessageResponseDto).toList()
+                trimmedMessages.stream().map(chatMapper::toMessageResponseDto).toList()
         );
 
         // Tính nextBeforeId dựa trên tin nhắn CŨ NHẤT (tin cuối cùng của list giảm dần)
@@ -536,7 +536,7 @@ public class MessageServiceImpl implements MessageService {
 
 
         var saved = messageRepository.save(msg);
-        var dto = chatDtoUtils.toMessageResponseDto(saved);
+        var dto = chatMapper.toMessageResponseDto(saved);
 
         if (cacheEnabled)
             messageRedisService.cacheNewMessage(room.getId(), dto);

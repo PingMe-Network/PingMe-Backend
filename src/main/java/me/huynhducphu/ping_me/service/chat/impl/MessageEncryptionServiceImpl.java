@@ -1,6 +1,6 @@
 package me.huynhducphu.ping_me.service.chat.impl;
 
-import me.huynhducphu.ping_me.service.chat.util.AesGcmUtil;
+import me.huynhducphu.ping_me.utils.AesGcmUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

@@ -1,11 +1,13 @@
-package me.huynhducphu.ping_me.handler;
+package me.huynhducphu.ping_me.handler.chat;
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import me.huynhducphu.ping_me.dto.response.chat.message.MessageRecalledResponse;
 import me.huynhducphu.ping_me.dto.ws.chat.*;
 import me.huynhducphu.ping_me.service.chat.event.*;
-import me.huynhducphu.ping_me.service.chat.util.ChatDtoUtils;
+import me.huynhducphu.ping_me.utils.ChatMapper;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -16,19 +18,23 @@ import org.springframework.transaction.event.TransactionalEventListener;
  *
  **/
 @Component
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 @Slf4j
-public class ChatEventPublisher {
+public class ChatSyncHandler {
 
-    private final SimpMessagingTemplate messagingTemplate;
-    private final ChatDtoUtils chatDtoUtils;
+    // Websocket
+    SimpMessagingTemplate messagingTemplate;
+
+    // Mapper
+    ChatMapper chatMapper;
 
     /* ========================================================================== */
     /*                           MESSAGE CREATED                                  */
     /* ========================================================================== */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onMessageCreated(MessageCreatedEvent event) {
-        var messageResponse = chatDtoUtils.toMessageResponseDto(event.getMessage());
+        var messageResponse = chatMapper.toMessageResponseDto(event.getMessage());
         var roomId = event.getMessage().getRoomId();
 
         String destination = "/topic/rooms/" + roomId + "/messages";
@@ -63,9 +69,9 @@ public class ChatEventPublisher {
 
         for (Long userId : participants.stream().map(p -> p.getUser().getId()).toList()) {
             var payload = new RoomUpdatedEventPayload(
-                    chatDtoUtils.toRoomResponseDto(room, participants),
+                    chatMapper.toRoomResponseDto(room, participants),
                     event.getSystemMessage() != null
-                            ? chatDtoUtils.toMessageResponseDto(event.getSystemMessage())
+                            ? chatMapper.toMessageResponseDto(event.getSystemMessage())
                             : null
             );
 
@@ -87,7 +93,7 @@ public class ChatEventPublisher {
 
         for (Long userId : participants.stream().map(p -> p.getUser().getId()).toList()) {
             var payload = new RoomCreatedEventPayload(
-                    chatDtoUtils.toRoomResponseDto(room, participants)
+                    chatMapper.toRoomResponseDto(room, participants)
             );
 
             messagingTemplate.convertAndSendToUser(
@@ -106,12 +112,12 @@ public class ChatEventPublisher {
 
         var room = event.getRoom();
         var participants = event.getRoomParticipants();
-        var sysMsgDto = chatDtoUtils.toMessageResponseDto(event.getSystemMessage());
+        var sysMsgDto = chatMapper.toMessageResponseDto(event.getSystemMessage());
 
         for (Long userId : participants.stream().map(p -> p.getUser().getId()).toList()) {
 
             var payload = new RoomMemberAddedEventPayload(
-                    chatDtoUtils.toRoomResponseDto(room, participants),
+                    chatMapper.toRoomResponseDto(room, participants),
                     event.getTargetUserId(),
                     event.getActorUserId(),
                     sysMsgDto
@@ -132,12 +138,12 @@ public class ChatEventPublisher {
     public void onMemberRemoved(RoomMemberRemovedEvent event) {
         var room = event.getRoom();
         var participants = event.getParticipants();
-        var sysMsgDto = chatDtoUtils.toMessageResponseDto(event.getSystemMessage());
+        var sysMsgDto = chatMapper.toMessageResponseDto(event.getSystemMessage());
 
         for (Long userId : participants.stream().map(p -> p.getUser().getId()).toList()) {
 
             var payload = new RoomMemberRemovedEventPayload(
-                    chatDtoUtils.toRoomResponseDto(room, participants),
+                    chatMapper.toRoomResponseDto(room, participants),
                     event.getTargetUserId(),
                     event.getActorUserId(),
                     sysMsgDto
@@ -154,7 +160,7 @@ public class ChatEventPublisher {
                 event.getTargetUserId().toString(),
                 "/queue/rooms",
                 new RoomMemberRemovedEventPayload(
-                        chatDtoUtils.toRoomResponseDto(room, participants),
+                        chatMapper.toRoomResponseDto(room, participants),
                         event.getTargetUserId(),
                         event.getActorUserId(),
                         sysMsgDto
@@ -170,11 +176,11 @@ public class ChatEventPublisher {
     public void onMemberRoleChanged(RoomMemberRoleChangedEvent event) {
         var room = event.getRoom();
         var participants = event.getParticipants();
-        var sysMsgDto = chatDtoUtils.toMessageResponseDto(event.getSystemMessage());
+        var sysMsgDto = chatMapper.toMessageResponseDto(event.getSystemMessage());
 
         for (Long userId : participants.stream().map(p -> p.getUser().getId()).toList()) {
             var payload = new RoomMemberRoleChangedEventPayload(
-                    chatDtoUtils.toRoomResponseDto(room, participants),
+                    chatMapper.toRoomResponseDto(room, participants),
                     event.getTargetUserId(),
                     event.getOldRole(),
                     event.getNewRole(),

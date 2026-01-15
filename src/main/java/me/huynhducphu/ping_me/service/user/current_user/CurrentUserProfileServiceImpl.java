@@ -9,7 +9,7 @@ import me.huynhducphu.ping_me.repository.jpa.auth.UserRepository;
 import me.huynhducphu.ping_me.service.s3.S3Service;
 import me.huynhducphu.ping_me.service.user.CurrentUserProfileService;
 import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
-import me.huynhducphu.ping_me.utils.mapper.UserMapper;
+import me.huynhducphu.ping_me.utils.UserMapper;
 import org.modelmapper.ModelMapper;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
