@@ -1,0 +1,39 @@
+package me.huynhducphu.ping_me.service.redis.impl;
+
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
+import me.huynhducphu.ping_me.service.redis.RedisService;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Service;
+
+import java.util.concurrent.TimeUnit;
+
+/**
+ * @author : user664dntp
+ * @mailto : phatdang19052004@gmail.com
+ * @created : 15/01/2026, Thursday
+ **/
+@Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+public class RedisServiceImpl implements RedisService {
+    StringRedisTemplate redisTemplate;
+
+    @Override
+    public void set(String key, String value, long timeout, TimeUnit timeUnit) {
+        redisTemplate.opsForValue().set(key, value, timeout, timeUnit);
+    }
+
+    @Override
+    public void get(String key) {
+
+    }
+
+    @Override
+    public void delete(String key) {
+
+    }
+}
