@@ -3,11 +3,12 @@ name: CI/CD Deploy to Elastic Beanstalk
 on:
   push:
     branches:
-      'main'
+      - 'main'
+      - 'dev'
 
 jobs:
   build:
-    name: Build & Push Docker Image
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
@@ -19,7 +20,14 @@ jobs:
           java-version: '21'
           distribution: 'corretto'
 
+      # 2a. Branch Dev: build
+      - name: Build Check (Dev Branch)
+        if: github.ref == 'refs/heads/dev'
+        run: mvn clean compile -DskipTests
+
+      # 2b. Branch Main: build + push docker
       - name: Build & Push Docker Image with Jib
+        if: github.ref == 'refs/heads/main'
         run: |
           mvn clean compile jib:build \
             -DskipTests \
@@ -28,9 +36,10 @@ jobs:
             -Djib.to.auth.password=${{ secrets.DOCKER_PASSWORD }}
 
   deploy:
-    name: Deploy to Elastic Beanstalk
+    name: Deploy
     needs: build
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
