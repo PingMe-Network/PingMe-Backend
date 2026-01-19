@@ -1,16 +1,20 @@
 package me.huynhducphu.ping_me.controller.chat;
 
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import me.huynhducphu.ping_me.dto.base.ApiResponse;
 import me.huynhducphu.ping_me.dto.request.chat.message.MarkReadRequest;
 import me.huynhducphu.ping_me.dto.request.chat.message.SendMessageRequest;
 import me.huynhducphu.ping_me.dto.request.chat.message.SendWeatherMessageRequest;
 import me.huynhducphu.ping_me.dto.response.chat.message.*;
 import me.huynhducphu.ping_me.service.chat.MessageService;
+import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 /**
  * Admin 8/26/2025
  */
+@Slf4j
 @Tag(
         name = "Messages",
         description = "Các endpoints xử lý tin nhắn trong phòng chat"
@@ -29,6 +34,8 @@ import org.springframework.web.multipart.MultipartFile;
 public class MessageController {
 
     private final MessageService messageService;
+    private final RateLimiterRegistry rateLimiterRegistry;
+    private final CurrentUserProvider currentUserProvider;
 
     // ================= SEND TEXT =================
     @Operation(
@@ -40,9 +47,14 @@ public class MessageController {
             @Parameter(description = "Payload gửi tin nhắn", required = true)
             @RequestBody @Valid SendMessageRequest sendMessageRequest
     ) {
-        return ResponseEntity
+        Long userId = currentUserProvider.get().getId();
+        var userLimiter = rateLimiterRegistry
+                .rateLimiter("chatSending:" + userId, "chatSending");
+
+        return userLimiter.executeSupplier(() -> ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(new ApiResponse<>(messageService.sendMessage(sendMessageRequest)));
+                .body(new ApiResponse<>(messageService.sendMessage(sendMessageRequest)))
+        );
     }
 
     // ================= SEND FILE =================
@@ -58,12 +70,18 @@ public class MessageController {
             @Parameter(description = "File đính kèm", required = true)
             @RequestPart(value = "file") MultipartFile file
     ) {
-        return ResponseEntity
+        Long userId = currentUserProvider.get().getId();
+        var userLimiter = rateLimiterRegistry
+                .rateLimiter("chatSending:" + userId, "chatSending");
+
+
+        return userLimiter.executeSupplier(() -> ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(messageService.sendFileMessage(
                         sendMessageRequest,
                         file
-                )));
+                )))
+        );
     }
 
     // ================= SEND WEATHER =================
@@ -76,11 +94,15 @@ public class MessageController {
             @Parameter(description = "Payload gửi tin nhắn thời tiết", required = true)
             @RequestBody @Valid SendWeatherMessageRequest sendWeatherMessageRequest
     ) {
-        return ResponseEntity
+        Long userId = currentUserProvider.get().getId();
+        var userLimiter = rateLimiterRegistry.rateLimiter("chatSending:" + userId, "chatSending");
+
+        return userLimiter.executeSupplier(() -> ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(messageService.sendWeatherMessage(
                         sendWeatherMessageRequest
-                )));
+                )))
+        );
     }
 
     // ================= RECALL =================
@@ -124,6 +146,7 @@ public class MessageController {
                     """
     )
     @GetMapping("/history")
+    @RateLimiter(name = "chatHistory")
     public ResponseEntity<ApiResponse<HistoryMessageResponse>> getHistoryMessages(
             @Parameter(description = "ID phòng chat", example = "1", required = true)
             @RequestParam Long roomId,
