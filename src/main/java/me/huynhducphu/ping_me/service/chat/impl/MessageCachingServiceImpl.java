@@ -2,7 +2,7 @@ package me.huynhducphu.ping_me.service.chat.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.huynhducphu.ping_me.dto.response.chat.message.MessageResponse;
-import me.huynhducphu.ping_me.service.chat.MessageRedisService;
+import me.huynhducphu.ping_me.service.chat.MessageCachingService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,7 @@ import java.util.List;
  * FIXED: 2026-01-02 (Sync with Ascending DB Logic)
  **/
 @Service
-public class MessageRedisServiceImpl implements MessageRedisService {
+public class MessageCachingServiceImpl implements MessageCachingService {
 
     private static final Long MAX_CACHE_MESSAGES = 60L;
     private static final Duration CACHE_TTL = Duration.ofHours(2);
@@ -25,7 +25,7 @@ public class MessageRedisServiceImpl implements MessageRedisService {
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
 
-    public MessageRedisServiceImpl(
+    public MessageCachingServiceImpl(
             @Qualifier("redisMessageStringTemplate")
             RedisTemplate<String, String> redisTemplate,
             ObjectMapper objectMapper) {
