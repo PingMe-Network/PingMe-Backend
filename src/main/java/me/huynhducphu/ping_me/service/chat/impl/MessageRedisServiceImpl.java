@@ -19,7 +19,7 @@ import java.util.List;
 @Service
 public class MessageRedisServiceImpl implements MessageRedisService {
 
-    private static final Long MAX_CACHE_MESSAGES = 200L;
+    private static final Long MAX_CACHE_MESSAGES = 60L;
     private static final Duration CACHE_TTL = Duration.ofHours(2);
 
     private final RedisTemplate<String, String> redisTemplate;
@@ -42,7 +42,6 @@ public class MessageRedisServiceImpl implements MessageRedisService {
         String key = buildKey(roomId);
         try {
             String json = objectMapper.writeValueAsString(message);
-            // Push tin mới nhất vào đầu (Left) -> Redis: [New, Old, Oldest...]
             redisTemplate.opsForList().leftPush(key, json);
             redisTemplate.opsForList().trim(key, 0, MAX_CACHE_MESSAGES - 1);
             touchTtl(key);
@@ -57,7 +56,10 @@ public class MessageRedisServiceImpl implements MessageRedisService {
         String key = buildKey(roomId);
 
         try {
-            for (MessageResponse m : messages) {
+            List<MessageResponse> copy = new ArrayList<>(messages);
+            Collections.reverse(copy);
+
+            for (MessageResponse m : copy) {
                 String json = objectMapper.writeValueAsString(m);
                 redisTemplate.opsForList().leftPush(key, json);
             }

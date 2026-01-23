@@ -79,6 +79,20 @@ public class MessageServiceImpl implements MessageService {
     private final ChatMapper chatMapper;
 
     /* ========================================================================== */
+    /*                         CACHING MESSAGE                                    */
+    /* ========================================================================== */
+    // Redis List Order:
+    // index 0        -> newest message
+    // index increase -> older messages
+    //
+    // API / FE Order:
+    // index 0        -> oldest message
+    // index increase -> newest messages
+    //
+    //
+    // Kkhông sửa cấu trúc này
+
+    /* ========================================================================== */
     /*                         CÁC HÀM XỬ LÝ GỬI TIN NHẮN                         */
     /* ========================================================================== */
 

@@ -34,28 +34,10 @@ public interface MessageRepository extends MongoRepository<Message, String> {
             Pageable pageable
     );
 
-    Optional<Message> findByIdAndRoomId(
-            String id,
-            Long roomId
-    );
-
-    List<Message> findByRoomIdOrderByCreatedAtDesc(
-            Long roomId,
-            Pageable pageable
-    );
-
-    List<Message> findByRoomIdAndCreatedAtLessThanOrderByCreatedAtDesc(
-            Long roomId,
-            LocalDateTime createdAtIsLessThan,
-            Pageable pageable
-    );
-
     long countByRoomIdAndCreatedAtGreaterThan(
             Long roomId,
             LocalDateTime createdAt
     );
-
-    long countByRoomId(Long roomId);
 
 
 }
