@@ -6,8 +6,9 @@ import lombok.experimental.FieldDefaults;
 /**
  * @author : user664dntp
  * @mailto : phatdang19052004@gmail.com
- * @created : 18/01/2026, Sunday
+ * @created : 22/01/2026, Thursday
  **/
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -15,7 +16,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class OtpVerificationResponse {
-    String otp;
-    String mailRecipient;
     Boolean isValid;
+    String resetPasswordToken;
 }

@@ -2,12 +2,14 @@ package me.huynhducphu.ping_me.dto.request.mail;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import me.huynhducphu.ping_me.model.constant.OtpType;
 
 /**
  * @author : user664dntp
  * @mailto : phatdang19052004@gmail.com
- * @created : 18/01/2026, Sunday
+ * @created : 22/01/2026, Thursday
  **/
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -15,5 +17,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class OtpVerificationRequest {
-    String email;
+    String otp;
+    String mailRecipient;
+    OtpType otpType;
 }
