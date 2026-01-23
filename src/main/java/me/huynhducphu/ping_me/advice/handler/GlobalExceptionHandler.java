@@ -108,6 +108,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(errorCode.getStatusCode()).body(apiResponse);
     }
 
+    @ExceptionHandler(value = RuntimeException.class)
+    public ResponseEntity<ApiResponse<Void>> handleRuntimeException(RuntimeException e) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse<>(e.getMessage(), HttpStatus.BAD_REQUEST.value()));
+    }
     // =========================================================================
     // GROUP 3: VALIDATION (12xx)
     // =========================================================================

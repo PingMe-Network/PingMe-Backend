@@ -4,13 +4,19 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import me.huynhducphu.ping_me.dto.base.ApiResponse;
-import me.huynhducphu.ping_me.dto.request.authentication.*;
-import me.huynhducphu.ping_me.dto.response.authentication.*;
+import me.huynhducphu.ping_me.dto.request.authentication.CreateNewPasswordRequest;
+import me.huynhducphu.ping_me.dto.request.authentication.LoginRequest;
+import me.huynhducphu.ping_me.dto.request.authentication.RegisterRequest;
+import me.huynhducphu.ping_me.dto.request.authentication.SubmitSessionMetaRequest;
+import me.huynhducphu.ping_me.dto.response.authentication.CreateNewPasswordResponse;
+import me.huynhducphu.ping_me.dto.response.authentication.CurrentUserSessionResponse;
 import me.huynhducphu.ping_me.dto.response.authentication.auth.DefaultAuthResponse;
-import me.huynhducphu.ping_me.dto.response.authentication.auth.MobileAuthResponse;
 import me.huynhducphu.ping_me.service.authentication.AuthenticationService;
+import me.huynhducphu.ping_me.service.user.CurrentUserProfileService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,9 +32,11 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class DefaultAuthenticationController {
 
-    private final AuthenticationService authenticationService;
+    AuthenticationService authenticationService;
+    CurrentUserProfileService currentUserProfileService;
 
     // ================= REGISTER =================
     @Operation(
@@ -106,5 +114,16 @@ public class DefaultAuthenticationController {
                 .status(HttpStatus.OK)
                 .header(HttpHeaders.SET_COOKIE, authResultWrapper.getRefreshTokenCookie().toString())
                 .body(new ApiResponse<>(payload));
+    }
+
+    @PostMapping("/forget-password")
+    ApiResponse<CreateNewPasswordResponse> forgetPassword(
+            @RequestBody @Valid CreateNewPasswordRequest request
+    ) {
+        return ApiResponse.<CreateNewPasswordResponse>builder()
+                .errorCode(HttpStatus.OK.value())
+                .errorMessage(HttpStatus.OK.name())
+                .data(currentUserProfileService.createNewPassword(request))
+                .build();
     }
 }

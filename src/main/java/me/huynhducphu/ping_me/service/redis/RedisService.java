@@ -9,6 +9,6 @@ import java.util.concurrent.TimeUnit;
  **/
 public interface RedisService {
     void set(String key, String value, long timeout, TimeUnit timeUnit);
-    void get(String key);
+    String get(String key);
     void delete(String key);
 }

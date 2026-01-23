@@ -1,4 +1,4 @@
-package me.huynhducphu.ping_me.dto.response.mail;
+package me.huynhducphu.ping_me.dto.request.authentication;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -15,7 +15,8 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class OtpVerificationResponse {
-    Boolean isValid;
+public class CreateNewPasswordRequest {
+    String newPassword;
+    String confirmNewPassword;
     String resetPasswordToken;
 }

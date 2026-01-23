@@ -26,12 +26,12 @@ public class RedisServiceImpl implements RedisService {
     }
 
     @Override
-    public void get(String key) {
-
+    public String get(String key) {
+        return mailRedisTemplate.opsForValue().get(key);
     }
 
     @Override
     public void delete(String key) {
-
+        mailRedisTemplate.delete(key);
     }
 }

@@ -1,6 +1,8 @@
 package me.huynhducphu.ping_me.service.mail;
 
+import me.huynhducphu.ping_me.dto.request.mail.GetOtpRequest;
 import me.huynhducphu.ping_me.dto.request.mail.OtpVerificationRequest;
+import me.huynhducphu.ping_me.dto.response.mail.GetOtpResponse;
 import me.huynhducphu.ping_me.dto.response.mail.OtpVerificationResponse;
 
 /**
@@ -9,5 +11,7 @@ import me.huynhducphu.ping_me.dto.response.mail.OtpVerificationResponse;
  * @created : 18/01/2026, Sunday
  **/
 public interface MailService {
-    OtpVerificationResponse sendMailToAdmin(OtpVerificationRequest request);
+    GetOtpResponse sendOtp(GetOtpRequest request);
+    OtpVerificationResponse verifyOtp(OtpVerificationRequest request);
+    boolean checkAdminIsVerified();
 }
