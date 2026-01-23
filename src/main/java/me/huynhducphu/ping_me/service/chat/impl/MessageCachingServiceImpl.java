@@ -56,10 +56,10 @@ public class MessageCachingServiceImpl implements MessageCachingService {
         String key = buildKey(roomId);
 
         try {
-            List<MessageResponse> copy = new ArrayList<>(messages);
-            Collections.reverse(copy);
+            List<MessageResponse> reversedMessagesOrder =
+                    copyAndReverseListMessageResponse(messages);
 
-            for (MessageResponse m : copy) {
+            for (MessageResponse m : reversedMessagesOrder) {
                 String json = objectMapper.writeValueAsString(m);
                 redisTemplate.opsForList().leftPush(key, json);
             }
@@ -77,10 +77,10 @@ public class MessageCachingServiceImpl implements MessageCachingService {
         String key = buildKey(roomId);
 
         try {
-            List<MessageResponse> copy = new ArrayList<>(messages);
-            Collections.reverse(copy);
+            List<MessageResponse> reversedMessagesOrder =
+                    copyAndReverseListMessageResponse(messages);
 
-            for (MessageResponse m : copy) {
+            for (MessageResponse m : reversedMessagesOrder) {
                 String json = objectMapper.writeValueAsString(m);
                 redisTemplate.opsForList().rightPush(key, json);
             }
@@ -142,9 +142,7 @@ public class MessageCachingServiceImpl implements MessageCachingService {
             result = new ArrayList<>(all.subList(startIdx, endIdx));
         }
 
-        Collections.reverse(result);
-
-        return result;
+        return copyAndReverseListMessageResponse(result);
     }
 
     /* ========================================================================== */
@@ -185,7 +183,9 @@ public class MessageCachingServiceImpl implements MessageCachingService {
         }
     }
 
-    //Utils
+    /* ========================================================================== */
+    /* UTILS                                                                      */
+    /* ========================================================================== */
     private String buildKey(Long roomId) {
         return "chat:room:" + roomId + ":messages";
     }
@@ -193,4 +193,13 @@ public class MessageCachingServiceImpl implements MessageCachingService {
     private void touchTtl(String key) {
         redisTemplate.expire(key, CACHE_TTL);
     }
+
+    private List<MessageResponse> copyAndReverseListMessageResponse(
+            List<MessageResponse> messages
+    ) {
+        var copy = new ArrayList<>(messages);
+        Collections.reverse(messages);
+        return copy;
+    }
+
 }
