@@ -1,7 +1,6 @@
 package me.huynhducphu.ping_me.model.constant;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
  * @author : user664dntp

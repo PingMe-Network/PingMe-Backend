@@ -69,7 +69,7 @@ public class MailServiceImpl implements MailService {
         String storedOtp = redisService.get(key);
         String resetPasswordToken = "";
 
-        if (storedOtp == null) throw new RuntimeException("OTP has expired or does not exist.");
+        if (storedOtp == null) throw new IllegalArgumentException("OTP has expired or does not exist.");
         boolean isValid = storedOtp.equalsIgnoreCase(request.getOtp());
 
         if (isValid) {
