@@ -37,6 +37,8 @@ public class MessageController {
     private final RateLimiterRegistry rateLimiterRegistry;
     private final CurrentUserProvider currentUserProvider;
 
+    private static final String CHAT_SENDING_RATE_LIMITER_KEY = "chatSending";
+
     // ================= SEND TEXT =================
     @Operation(
             summary = "Gửi tin nhắn văn bản",
@@ -49,7 +51,7 @@ public class MessageController {
     ) {
         Long userId = currentUserProvider.get().getId();
         var userLimiter = rateLimiterRegistry
-                .rateLimiter("chatSending:" + userId, "chatSending");
+                .rateLimiter("chatSending:" + userId, CHAT_SENDING_RATE_LIMITER_KEY);
 
         return userLimiter.executeSupplier(() -> ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -72,7 +74,7 @@ public class MessageController {
     ) {
         Long userId = currentUserProvider.get().getId();
         var userLimiter = rateLimiterRegistry
-                .rateLimiter("chatSending:" + userId, "chatSending");
+                .rateLimiter("chatSending:" + userId, CHAT_SENDING_RATE_LIMITER_KEY);
 
 
         return userLimiter.executeSupplier(() -> ResponseEntity
@@ -95,7 +97,7 @@ public class MessageController {
             @RequestBody @Valid SendWeatherMessageRequest sendWeatherMessageRequest
     ) {
         Long userId = currentUserProvider.get().getId();
-        var userLimiter = rateLimiterRegistry.rateLimiter("chatSending:" + userId, "chatSending");
+        var userLimiter = rateLimiterRegistry.rateLimiter("chatSending:" + userId, CHAT_SENDING_RATE_LIMITER_KEY);
 
         return userLimiter.executeSupplier(() -> ResponseEntity
                 .status(HttpStatus.CREATED)
