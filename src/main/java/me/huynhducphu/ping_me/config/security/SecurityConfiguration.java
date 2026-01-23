@@ -29,6 +29,9 @@ public class SecurityConfiguration {
             "/auth/register",
             "/auth/refresh",
 
+            // Forget password
+            "/auth/forget-password",
+
             // API DOCS
             "/swagger-ui/**",
             "/v3/api-docs/**",
