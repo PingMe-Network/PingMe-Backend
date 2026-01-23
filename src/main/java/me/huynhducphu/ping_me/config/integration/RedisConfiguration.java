@@ -93,6 +93,9 @@ public class RedisConfiguration {
         return tpl;
     }
 
+    // =========================================================
+    // RedisTemplate cho lượt nghe nhạc
+    // =========================================================
     @Bean(name = "redisSongHistoryTemplate")
     public RedisTemplate<String, Object> redisSongHistoryTemplate(RedisConnectionFactory cf, ObjectMapper om) {
         RedisTemplate<String, Object> tpl = new RedisTemplate<>();
