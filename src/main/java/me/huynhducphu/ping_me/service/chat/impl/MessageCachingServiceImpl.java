@@ -2,7 +2,7 @@ package me.huynhducphu.ping_me.service.chat.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.huynhducphu.ping_me.dto.response.chat.message.MessageResponse;
-import me.huynhducphu.ping_me.service.chat.MessageRedisService;
+import me.huynhducphu.ping_me.service.chat.MessageCachingService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -17,15 +17,15 @@ import java.util.List;
  * FIXED: 2026-01-02 (Sync with Ascending DB Logic)
  **/
 @Service
-public class MessageRedisServiceImpl implements MessageRedisService {
+public class MessageCachingServiceImpl implements MessageCachingService {
 
-    private static final Long MAX_CACHE_MESSAGES = 200L;
+    private static final Long MAX_CACHE_MESSAGES = 60L;
     private static final Duration CACHE_TTL = Duration.ofHours(2);
 
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
 
-    public MessageRedisServiceImpl(
+    public MessageCachingServiceImpl(
             @Qualifier("redisMessageStringTemplate")
             RedisTemplate<String, String> redisTemplate,
             ObjectMapper objectMapper) {
@@ -42,7 +42,6 @@ public class MessageRedisServiceImpl implements MessageRedisService {
         String key = buildKey(roomId);
         try {
             String json = objectMapper.writeValueAsString(message);
-            // Push tin mới nhất vào đầu (Left) -> Redis: [New, Old, Oldest...]
             redisTemplate.opsForList().leftPush(key, json);
             redisTemplate.opsForList().trim(key, 0, MAX_CACHE_MESSAGES - 1);
             touchTtl(key);
@@ -57,7 +56,10 @@ public class MessageRedisServiceImpl implements MessageRedisService {
         String key = buildKey(roomId);
 
         try {
-            for (MessageResponse m : messages) {
+            List<MessageResponse> reversedMessagesOrder =
+                    copyAndReverseListMessageResponse(messages);
+
+            for (MessageResponse m : reversedMessagesOrder) {
                 String json = objectMapper.writeValueAsString(m);
                 redisTemplate.opsForList().leftPush(key, json);
             }
@@ -75,10 +77,10 @@ public class MessageRedisServiceImpl implements MessageRedisService {
         String key = buildKey(roomId);
 
         try {
-            List<MessageResponse> copy = new ArrayList<>(messages);
-            Collections.reverse(copy);
+            List<MessageResponse> reversedMessagesOrder =
+                    copyAndReverseListMessageResponse(messages);
 
-            for (MessageResponse m : copy) {
+            for (MessageResponse m : reversedMessagesOrder) {
                 String json = objectMapper.writeValueAsString(m);
                 redisTemplate.opsForList().rightPush(key, json);
             }
@@ -140,9 +142,7 @@ public class MessageRedisServiceImpl implements MessageRedisService {
             result = new ArrayList<>(all.subList(startIdx, endIdx));
         }
 
-        Collections.reverse(result);
-
-        return result;
+        return copyAndReverseListMessageResponse(result);
     }
 
     /* ========================================================================== */
@@ -183,7 +183,9 @@ public class MessageRedisServiceImpl implements MessageRedisService {
         }
     }
 
-    //Utils
+    /* ========================================================================== */
+    /* UTILS                                                                      */
+    /* ========================================================================== */
     private String buildKey(Long roomId) {
         return "chat:room:" + roomId + ":messages";
     }
@@ -191,4 +193,13 @@ public class MessageRedisServiceImpl implements MessageRedisService {
     private void touchTtl(String key) {
         redisTemplate.expire(key, CACHE_TTL);
     }
+
+    private List<MessageResponse> copyAndReverseListMessageResponse(
+            List<MessageResponse> messages
+    ) {
+        var copy = new ArrayList<>(messages);
+        Collections.reverse(messages);
+        return copy;
+    }
+
 }

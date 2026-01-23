@@ -12,7 +12,7 @@ import me.huynhducphu.ping_me.dto.response.chat.message.ReadStateResponse;
 import me.huynhducphu.ping_me.dto.request.chat.message.SendMessageRequest;
 import me.huynhducphu.ping_me.dto.response.chat.message.MessageResponse;
 import me.huynhducphu.ping_me.model.User;
-import me.huynhducphu.ping_me.service.chat.MessageRedisService;
+import me.huynhducphu.ping_me.service.chat.MessageCachingService;
 import me.huynhducphu.ping_me.service.chat.MessageService;
 import me.huynhducphu.ping_me.service.chat.event.MessageCreatedEvent;
 import me.huynhducphu.ping_me.service.chat.event.MessageRecalledEvent;
@@ -60,7 +60,7 @@ public class MessageServiceImpl implements MessageService {
 
     // SERVICE
     private final S3Service s3Service;
-    private final MessageRedisService messageRedisService;
+    private final MessageCachingService messageCachingService;
     private final WeatherService weatherService;
 
     // PROVIDER
@@ -77,6 +77,20 @@ public class MessageServiceImpl implements MessageService {
     // UTILS
     private final ObjectMapper objectMapper;
     private final ChatMapper chatMapper;
+
+    /* ========================================================================== */
+    /*                         CACHING MESSAGE                                    */
+    /* ========================================================================== */
+    // Redis List Order:
+    // index 0        -> newest message
+    // index increase -> older messages
+    //
+    // API / FE Order:
+    // index 0        -> oldest message
+    // index increase -> newest messages
+    //
+    //
+    // Kkhông sửa cấu trúc này
 
     /* ========================================================================== */
     /*                         CÁC HÀM XỬ LÝ GỬI TIN NHẮN                         */
@@ -198,7 +212,7 @@ public class MessageServiceImpl implements MessageService {
 
         // Caching Message
         if (cacheEnabled)
-            messageRedisService.cacheNewMessage(roomId, dto);
+            messageCachingService.cacheNewMessage(roomId, dto);
 
         return dto;
     }
@@ -321,7 +335,7 @@ public class MessageServiceImpl implements MessageService {
         var dto = chatMapper.toMessageResponseDto(messageToRecall);
 
         if (cacheEnabled)
-            messageRedisService.updateMessage(roomId, messageId, dto);
+            messageCachingService.updateMessage(roomId, messageId, dto);
 
 
         // ---------------------------
@@ -434,7 +448,7 @@ public class MessageServiceImpl implements MessageService {
             // 1. Ưu tiên đọc cache
             // -----------------------------
             if (cacheEnabled) {
-                var cached = messageRedisService.getMessages(roomId, null, fixed);
+                var cached = messageCachingService.getMessages(roomId, null, fixed);
                 if (!cached.isEmpty()) {
                     String nextBeforeId = cached.getLast().getId();
                     return new HistoryMessageResponse(cached, true, nextBeforeId);
@@ -450,7 +464,7 @@ public class MessageServiceImpl implements MessageService {
             // 3. Cache lại (nếu bật cache)
             // -----------------------------
             if (cacheEnabled && !db.getMessageResponses().isEmpty()) {
-                messageRedisService.cacheMessages(roomId, db.getMessageResponses());
+                messageCachingService.cacheMessages(roomId, db.getMessageResponses());
             }
 
             return db;
@@ -462,7 +476,7 @@ public class MessageServiceImpl implements MessageService {
         // Nếu cache có → trả luôn, tránh hit DB
         // ----------------------------------------
         if (cacheEnabled) {
-            var older = messageRedisService.getMessages(roomId, beforeId, fixed);
+            var older = messageCachingService.getMessages(roomId, beforeId, fixed);
 
             if (!older.isEmpty()) {
                 String nextBeforeId = older.getLast().getId();
@@ -478,7 +492,7 @@ public class MessageServiceImpl implements MessageService {
         var db = loadFromDbCursor(roomId, beforeId, fixed);
 
         if (cacheEnabled && !db.getMessageResponses().isEmpty())
-            messageRedisService.appendOlderMessages(roomId, db.getMessageResponses());
+            messageCachingService.appendOlderMessages(roomId, db.getMessageResponses());
 
         return db;
     }
@@ -539,7 +553,7 @@ public class MessageServiceImpl implements MessageService {
         var dto = chatMapper.toMessageResponseDto(saved);
 
         if (cacheEnabled)
-            messageRedisService.cacheNewMessage(room.getId(), dto);
+            messageCachingService.cacheNewMessage(room.getId(), dto);
 
 
         return saved;
