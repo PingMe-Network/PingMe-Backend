@@ -36,4 +36,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Transactional
     @Query("SELECT u FROM User u WHERE u.accountStatus = :accountStatus")
     Page<User> findByAccountStatus(@Param("accountStatus") AccountStatus accountStatus, Pageable pageable);
+
+    @Transactional
+    User findByEmail(String email);
 }
