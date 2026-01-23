@@ -52,9 +52,9 @@ public class RedisConfiguration {
 
         return new LettuceConnectionFactory(serverConfig);
     }
-    
+
     // =========================================================
-    // RedisTemplate cho DeviceMeta (refresh token)
+    // RedisTemplate cho phiên đăng nhập
     // =========================================================
     @Bean
     public RedisTemplate<String, DeviceMeta> redisSessionMetaTemplate(
@@ -74,9 +74,7 @@ public class RedisConfiguration {
     }
 
     // =========================================================
-    // 4. RedisTemplate cho message cache
-    //    key:   String  (vd: chat:room:1:messages)
-    //    value: String  (JSON của MessageResponse)
+    // RedisTemplate cho message cache
     // =========================================================
     @Bean(name = "redisMessageStringTemplate")
     public RedisTemplate<String, String> redisMessageStringTemplate(

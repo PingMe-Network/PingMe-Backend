@@ -22,13 +22,20 @@ import java.util.Set;
  * Admin 8/16/2025
  **/
 @Service
-@RequiredArgsConstructor
 public class RefreshTokenRedisServiceImpl implements RefreshTokenRedisService {
 
-    @Qualifier("redisSessionMetaTemplate")
-    private final RedisTemplate<String, DeviceMeta> redisSessionMetaTemplate;
 
+    private final RedisTemplate<String, DeviceMeta> redisSessionMetaTemplate;
     private final ModelMapper modelMapper;
+
+    public RefreshTokenRedisServiceImpl(
+            @Qualifier("redisSessionMetaTemplate")
+            RedisTemplate<String, DeviceMeta> redisSessionMetaTemplate,
+            ModelMapper modelMapper
+    ) {
+        this.redisSessionMetaTemplate = redisSessionMetaTemplate;
+        this.modelMapper = modelMapper;
+    }
 
     @Override
     public void saveRefreshToken(
