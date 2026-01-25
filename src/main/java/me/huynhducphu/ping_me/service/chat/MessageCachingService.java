@@ -8,7 +8,7 @@ import java.util.List;
  * Admin 11/14/2025
  *
  **/
-public interface MessageRedisService {
+public interface MessageCachingService {
     void cacheNewMessage(Long roomId, MessageResponse message);
 
     void cacheMessages(Long roomId, List<MessageResponse> messages);

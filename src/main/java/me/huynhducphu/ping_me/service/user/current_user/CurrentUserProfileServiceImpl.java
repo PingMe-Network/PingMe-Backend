@@ -1,11 +1,17 @@
 package me.huynhducphu.ping_me.service.user.current_user;
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import me.huynhducphu.ping_me.dto.request.authentication.ChangePasswordRequest;
 import me.huynhducphu.ping_me.dto.request.authentication.ChangeProfileRequest;
+import me.huynhducphu.ping_me.dto.request.authentication.CreateNewPasswordRequest;
+import me.huynhducphu.ping_me.dto.response.authentication.CreateNewPasswordResponse;
 import me.huynhducphu.ping_me.dto.response.authentication.CurrentUserProfileResponse;
 import me.huynhducphu.ping_me.dto.response.authentication.CurrentUserSessionResponse;
+import me.huynhducphu.ping_me.model.User;
 import me.huynhducphu.ping_me.repository.jpa.auth.UserRepository;
+import me.huynhducphu.ping_me.service.authentication.JwtService;
 import me.huynhducphu.ping_me.service.s3.S3Service;
 import me.huynhducphu.ping_me.service.user.CurrentUserProfileService;
 import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
@@ -21,24 +27,26 @@ import java.time.LocalDateTime;
 
 /**
  * Admin 1/9/2026
- *
  **/
 @Service
 @RequiredArgsConstructor
 @Transactional
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CurrentUserProfileServiceImpl implements CurrentUserProfileService {
 
-    private final PasswordEncoder passwordEncoder;
+    PasswordEncoder passwordEncoder;
 
-    private final S3Service s3Service;
+    S3Service s3Service;
 
-    private final UserMapper userMapper;
-    private final ModelMapper modelMapper;
+    UserMapper userMapper;
+    ModelMapper modelMapper;
 
-    private final UserRepository userRepository;
+    UserRepository userRepository;
 
-    private final CurrentUserProvider currentUserProvider;
-    private static final Long MAX_AVATAR_FILE_SIZE = 2 * 1024 * 1024L;
+    CurrentUserProvider currentUserProvider;
+
+    JwtService jwtService;
+    static Long MAX_AVATAR_FILE_SIZE = 2 * 1024 * 1024L;
 
     @Override
     public CurrentUserProfileResponse getCurrentUserInfo() {
@@ -111,6 +119,32 @@ public class CurrentUserProfileServiceImpl implements CurrentUserProfileService 
     @Override
     public void disconnect(Long userId) {
         userRepository.disconnect(userId);
+    }
+
+    @Override
+    public CreateNewPasswordResponse createNewPassword(CreateNewPasswordRequest request) {
+        String email = jwtService.decodeJwt(request.getResetPasswordToken()).getSubject();
+        User currentUser = userRepository.findByEmail(email);
+
+        if(currentUser == null) throw new NullPointerException("User not found!");
+
+        boolean isMatch = request.getNewPassword()
+                .equalsIgnoreCase(request.getConfirmNewPassword());
+        if (!isMatch) throw new IllegalArgumentException("New password and confirm new password do not match!");
+
+        try {
+            currentUser.setPassword(passwordEncoder.encode(request.getNewPassword()));
+            userRepository.save(currentUser);
+
+            return CreateNewPasswordResponse.builder()
+                    .isPasswordChanged(true)
+                    .build();
+        } catch (Exception e) {
+            return CreateNewPasswordResponse.builder()
+                    .isPasswordChanged(false)
+                    .build();
+        }
+
     }
 
 }
