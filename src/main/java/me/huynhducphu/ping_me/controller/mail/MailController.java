@@ -32,7 +32,7 @@ public class MailController {
                 .build();
     }
 
-    @GetMapping("/send-otp")
+    @PostMapping("/send-otp")
     ApiResponse<GetOtpResponse> sendOtpToAdmin(@RequestBody GetOtpRequest request) {
         GetOtpResponse res = mailService.sendOtp(request);
         HttpStatus httpStatus = res.getIsSent() ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
