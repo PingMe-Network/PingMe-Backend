@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 /**
  * @author Le Tran Gia Huy
  * @created 27/11/2025 - 6:11 PM
@@ -30,7 +32,7 @@ public class CommonController {
             description = "Lấy toàn bộ các vai trò của nghệ sĩ (ArtistRole enum)"
     )
     @GetMapping("/roles")
-    public ResponseEntity<ApiResponse<ArtistRole[]>> getArtistRoles() {
-        return ResponseEntity.ok(new ApiResponse<>(ArtistRole.values()));
+    public ResponseEntity<ApiResponse<List<ArtistRole>>> getArtistRoles() {
+        return ResponseEntity.ok(new ApiResponse<>(List.of(ArtistRole.values())));
     }
 }

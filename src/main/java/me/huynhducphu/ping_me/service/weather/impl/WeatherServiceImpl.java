@@ -26,7 +26,7 @@ public class WeatherServiceImpl implements WeatherService {
     @Override
     public WeatherResponse getWeather(double lat, double lon) {
 
-        String url = UriComponentsBuilder.fromHttpUrl(baseUrl)
+        String url = UriComponentsBuilder.fromUriString(baseUrl)
                 .queryParam("lat", lat)
                 .queryParam("lon", lon)
                 .queryParam("appid", apiKey)

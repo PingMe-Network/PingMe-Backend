@@ -42,7 +42,7 @@ public class S3Service {
             if (file.getSize() > maxFileSize)
                 throw new S3UploadException(
                         "Tệp quá lớn (> " + maxFileSize + " bytes)",
-                        HttpStatus.PAYLOAD_TOO_LARGE
+                        HttpStatus.CONTENT_TOO_LARGE
                 );
 
             PutObjectRequest putRequest = PutObjectRequest.builder()
