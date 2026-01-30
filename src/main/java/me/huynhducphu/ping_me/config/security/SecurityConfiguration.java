@@ -28,11 +28,11 @@ public class SecurityConfiguration {
             "/auth/logout",
             "/auth/register",
             "/auth/refresh",
-
-            // Forget password
             "/auth/forget-password",
-            "/mail-management/api/v1/mails/send-otp",
-            "/mail-management/api/v1/mails/otp-verification",
+
+            // OTP
+            "/otp/send",
+            "/otp/verify",
 
             // API DOCS
             "/swagger-ui/**",
