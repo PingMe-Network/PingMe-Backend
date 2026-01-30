@@ -162,7 +162,6 @@ public class SongServiceImpl implements SongService {
             }
             if (finalDuration <= 0) {
                 finalDuration = 0;
-                throw new RuntimeException("Không xác định được thời lượng bài hát (cả từ file và request)");
             }
             song.setDuration(finalDuration);
             // C. Tạo tên file mới (Luôn là .mp3 vì mình nén sang mp3)
