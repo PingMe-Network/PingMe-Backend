@@ -1,5 +1,8 @@
 package me.huynhducphu.ping_me.service.music.impl;
 
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import me.huynhducphu.ping_me.dto.request.music.SongRequest;
 import me.huynhducphu.ping_me.dto.request.music.misc.SongArtistRequest;
@@ -11,7 +14,6 @@ import me.huynhducphu.ping_me.dto.response.music.misc.GenreDto;
 import me.huynhducphu.ping_me.model.constant.ArtistRole;
 import me.huynhducphu.ping_me.model.music.*;
 import me.huynhducphu.ping_me.repository.jpa.music.*;
-import me.huynhducphu.ping_me.service.ffmpeg.constants.MediaType;
 import me.huynhducphu.ping_me.service.music.SongService;
 import me.huynhducphu.ping_me.service.music.util.AudioUtil;
 import me.huynhducphu.ping_me.service.s3.S3Service;
@@ -35,18 +37,29 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class SongServiceImpl implements SongService {
 
-    private final SongRepository songRepository;
-    private final ArtistRepository artistRepository;
-    private final AlbumRepository albumRepository;
-    private final GenreRepository genreRepository;
-    private final SongArtistRoleRepository songArtistRoleRepository;
-    private final AudioUtil audioUtil;
-    private final SongPlayHistoryRepository songPlayHistoryRepository;
-    private final RedisTemplate<String, String> redis;
-    private final S3Service s3Service;
-    private final CurrentUserProvider currentUserProvider;
+    // Repository
+    SongRepository songRepository;
+    ArtistRepository artistRepository;
+    AlbumRepository albumRepository;
+    GenreRepository genreRepository;
+    SongArtistRoleRepository songArtistRoleRepository;
+    SongPlayHistoryRepository songPlayHistoryRepository;
+
+    // Utils
+    AudioUtil audioUtil;
+
+    // Service
+    S3Service s3Service;
+
+    // Provider
+    CurrentUserProvider currentUserProvider;
+
+    // Redis
+    RedisTemplate<String, String> redis;
+
 
     public SongServiceImpl(
             SongRepository songRepository, ArtistRepository artistRepository,
@@ -178,13 +191,12 @@ public class SongServiceImpl implements SongService {
             String audioFileName = UUID.randomUUID() + ".mp3";
 
             // E. Upload lên S3 (S3Service không biết đây là file fake, nó cứ upload thôi)
-            String songUrl = s3Service.uploadCompressedFile(
+            String songUrl = s3Service.uploadFile(
                     musicFile,
                     "music/song",
                     audioFileName,
                     false,
-                    MAX_AUDIO_SIZE,
-                    MediaType.AUDIO
+                    MAX_AUDIO_SIZE
             );
             song.setSongUrl(songUrl);
 
@@ -324,7 +336,12 @@ public class SongServiceImpl implements SongService {
             } catch (Exception e) { /* Log warning */ }
 
             String audioName = generateFileName(musicFile);
-            String newUrl = s3Service.uploadCompressedFile(musicFile, "music/song", audioName, true, MAX_AUDIO_SIZE, MediaType.AUDIO);
+            String newUrl = s3Service.uploadFile(
+                    musicFile,
+                    "music/song",
+                    audioName,
+                    true, MAX_AUDIO_SIZE
+            );
             song.setSongUrl(newUrl);
 
             int newDuration = audioUtil.getDurationFromMusicFile(musicFile);
