@@ -20,8 +20,6 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString
-@RequiredArgsConstructor
 public class User extends BaseEntity {
 
     @Id
