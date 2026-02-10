@@ -1,4 +1,4 @@
-package me.huynhducphu.ping_me.service.mail.client;
+package me.huynhducphu.ping_me.client;
 
 import me.huynhducphu.ping_me.dto.base.ApiResponse;
 import me.huynhducphu.ping_me.dto.request.mail.SendOtpRequest;
@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
  **/
 @FeignClient(name = "mail-service", url = "${app.mail-service.url}")
 public interface MailClient {
+
     @PostMapping("/mail-management/api/v1/mails/admin-otp-verification")
     ApiResponse<Boolean> sendOtpToAdmin(@RequestBody SendOtpRequest request);
 }
