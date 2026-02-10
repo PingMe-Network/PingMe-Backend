@@ -2,10 +2,7 @@
 package me.huynhducphu.ping_me.model.reels;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import me.huynhducphu.ping_me.model.User;
 import me.huynhducphu.ping_me.model.common.BaseEntity;
 import me.huynhducphu.ping_me.model.constant.ReactionType;
@@ -17,8 +14,8 @@ import me.huynhducphu.ping_me.model.constant.ReactionType;
 )
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
-@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
+@Getter
+@Setter
 public class ReelCommentReaction extends BaseEntity {
 
     @Id
