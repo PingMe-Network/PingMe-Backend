@@ -16,6 +16,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 @EnableMongoAuditing
 @EnableWebSocketMessageBroker
 @EnableCaching
+@EnableAsync
 @EnableJpaRepositories(basePackages = "me.huynhducphu.ping_me.repository.jpa")
 @EnableMongoRepositories(basePackages = "me.huynhducphu.ping_me.repository.mongodb")
 @EnableFeignClients
