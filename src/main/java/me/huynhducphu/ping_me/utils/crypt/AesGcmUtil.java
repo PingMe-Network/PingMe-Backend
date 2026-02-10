@@ -1,4 +1,4 @@
-package me.huynhducphu.ping_me.utils;
+package me.huynhducphu.ping_me.utils.crypt;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;

@@ -1,4 +1,4 @@
-package me.huynhducphu.ping_me.utils;
+package me.huynhducphu.ping_me.utils.mapper;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -58,9 +58,7 @@ public class ChatMapper {
                 ))
                 .toList();
 
-        RoomResponse res = toRoomResponse(room, roomParticipantResponses);
-
-        return res;
+        return toRoomResponse(room, roomParticipantResponses);
     }
 
     private RoomResponse toRoomResponse(
