@@ -7,11 +7,11 @@ import me.huynhducphu.ping_me.model.common.BaseEntity;
 
 @Entity
 @Table(name = "reel_search_histories")
-@Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
 @Builder
-@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
 public class ReelSearchHistory extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -17,7 +17,7 @@ import me.huynhducphu.ping_me.service.authentication.JwtService;
 import me.huynhducphu.ping_me.service.s3.S3Service;
 import me.huynhducphu.ping_me.service.user.CurrentUserProfileService;
 import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
-import me.huynhducphu.ping_me.utils.UserMapper;
+import me.huynhducphu.ping_me.utils.mapper.UserMapper;
 import org.modelmapper.ModelMapper;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -128,7 +128,7 @@ public class CurrentUserProfileServiceImpl implements CurrentUserProfileService 
         String email = jwtService.decodeJwt(request.getResetPasswordToken()).getSubject();
         User currentUser = userRepository.findByEmail(email);
 
-        if(currentUser == null) throw new NullPointerException("User not found!");
+        if (currentUser == null) throw new NullPointerException("User not found!");
 
         boolean isMatch = request.getNewPassword()
                 .equalsIgnoreCase(request.getConfirmNewPassword());
@@ -152,7 +152,7 @@ public class CurrentUserProfileServiceImpl implements CurrentUserProfileService 
     @Override
     public ActiveAccountResponse activateAccount() {
         User currentUser = currentUserProvider.get();
-        if(currentUser.getAccountStatus() != AccountStatus.NON_ACTIVATED)
+        if (currentUser.getAccountStatus() != AccountStatus.NON_ACTIVATED)
             throw new IllegalArgumentException("Account is already activated!");
         try {
             currentUser.setAccountStatus(AccountStatus.ACTIVE);
@@ -160,7 +160,7 @@ public class CurrentUserProfileServiceImpl implements CurrentUserProfileService 
             return ActiveAccountResponse.builder()
                     .isActivated(true)
                     .build();
-        }catch (Exception e){
+        } catch (Exception e) {
             return ActiveAccountResponse.builder()
                     .isActivated(false)
                     .build();

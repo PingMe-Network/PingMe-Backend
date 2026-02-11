@@ -28,7 +28,7 @@ import me.huynhducphu.ping_me.service.chat.event.RoomUpdatedEvent;
 import me.huynhducphu.ping_me.service.s3.S3Service;
 import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
 import me.huynhducphu.ping_me.service.weather.WeatherService;
-import me.huynhducphu.ping_me.utils.ChatMapper;
+import me.huynhducphu.ping_me.utils.mapper.ChatMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;

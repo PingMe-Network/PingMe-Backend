@@ -1,4 +1,4 @@
-package me.huynhducphu.ping_me.utils;
+package me.huynhducphu.ping_me.utils.mapper;
 
 import lombok.RequiredArgsConstructor;
 import me.huynhducphu.ping_me.config.websocket.auth.UserSocketPrincipal;
