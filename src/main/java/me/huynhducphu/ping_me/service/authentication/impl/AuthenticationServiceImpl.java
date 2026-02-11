@@ -5,21 +5,18 @@ import lombok.RequiredArgsConstructor;
 import me.huynhducphu.ping_me.dto.request.authentication.LoginRequest;
 import me.huynhducphu.ping_me.dto.request.authentication.RegisterRequest;
 import me.huynhducphu.ping_me.dto.request.authentication.SubmitSessionMetaRequest;
-import me.huynhducphu.ping_me.dto.request.authentication.*;
 import me.huynhducphu.ping_me.dto.response.authentication.AdminLoginResponse;
 import me.huynhducphu.ping_me.model.constant.AccountStatus;
 import me.huynhducphu.ping_me.service.authentication.model.AuthResultWrapper;
 import me.huynhducphu.ping_me.dto.response.authentication.CurrentUserSessionResponse;
 import me.huynhducphu.ping_me.model.User;
-import me.huynhducphu.ping_me.model.constant.AccountStatus;
 import me.huynhducphu.ping_me.model.constant.AuthProvider;
 import me.huynhducphu.ping_me.repository.jpa.auth.UserRepository;
 import me.huynhducphu.ping_me.service.authentication.AuthenticationService;
 import me.huynhducphu.ping_me.service.authentication.JwtService;
 import me.huynhducphu.ping_me.service.authentication.RefreshTokenRedisService;
-import me.huynhducphu.ping_me.service.authentication.model.AuthResultWrapper;
 import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
-import me.huynhducphu.ping_me.utils.UserMapper;
+import me.huynhducphu.ping_me.utils.mapper.UserMapper;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -140,9 +137,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String email = loginRequest.getEmail();
         User user = userRepository.findByEmail(email);
 
-        if(user == null) throw new NullPointerException("Không tìm thấy người dùng với email: " + email);
+        if (user == null) throw new NullPointerException("Không tìm thấy người dùng với email: " + email);
 
-        if(!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword()))
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword()))
             throw new IllegalArgumentException("Mật khẩu không đúng");
 
         if (!user.getRole().getName().equals("ADMIN"))
