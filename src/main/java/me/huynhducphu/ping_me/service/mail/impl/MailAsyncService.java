@@ -4,8 +4,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import me.huynhducphu.ping_me.dto.request.mail.SendOtpRequest;
 import me.huynhducphu.ping_me.client.MailClient;
+import me.huynhducphu.ping_me.dto.request.mail.SendOtpRequest;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
