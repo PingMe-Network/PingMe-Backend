@@ -1,7 +1,10 @@
 package me.huynhducphu.ping_me.service.authentication.impl;
 
 import jakarta.persistence.EntityNotFoundException;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import me.huynhducphu.ping_me.dto.request.authentication.LoginRequest;
 import me.huynhducphu.ping_me.dto.request.authentication.RegisterRequest;
 import me.huynhducphu.ping_me.dto.request.authentication.SubmitSessionMetaRequest;
@@ -37,32 +40,38 @@ import java.time.Duration;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationServiceImpl implements AuthenticationService {
 
-    private final AuthenticationManager authenticationManager;
-    private final PasswordEncoder passwordEncoder;
+    AuthenticationManager authenticationManager;
+    PasswordEncoder passwordEncoder;
 
-    private final JwtService jwtService;
-    private final RefreshTokenRedisService refreshTokenRedisService;
+    JwtService jwtService;
+    RefreshTokenRedisService refreshTokenRedisService;
 
-    private final ModelMapper modelMapper;
-    private final UserMapper userMapper;
+    ModelMapper modelMapper;
+    UserMapper userMapper;
 
-    private final UserRepository userRepository;
+    UserRepository userRepository;
 
-    private final CurrentUserProvider currentUserProvider;
-    private static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
+    CurrentUserProvider currentUserProvider;
+
+    static String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
 
     @Value("${app.jwt.access-token-expiration}")
+    @NonFinal
     private Long accessTokenExpiration;
 
     @Value("${app.jwt.refresh-token-expiration}")
+    @NonFinal
     private Long refreshTokenExpiration;
 
     @Value("${cookie.sameSite}")
+    @NonFinal
     private String sameSite;
 
     @Value("${cookie.secure}")
+    @NonFinal
     private boolean secure;
 
     @Override
