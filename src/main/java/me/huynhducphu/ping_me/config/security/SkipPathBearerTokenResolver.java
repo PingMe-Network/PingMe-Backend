@@ -1,10 +1,10 @@
 package me.huynhducphu.ping_me.config.security;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -13,21 +13,21 @@ import java.util.List;
  * Admin 8/9/2025
  **/
 @Component
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class SkipPathBearerTokenResolver implements BearerTokenResolver {
 
-    private final BearerTokenResolver delegate = new DefaultBearerTokenResolver();
-
-    private final List<RequestMatcher> skipPathMatchers = List.of(
-            new AntPathRequestMatcher("/auth/logout"),
-            new AntPathRequestMatcher("/auth/register"),
-            new AntPathRequestMatcher("/actuator/health"),
-            new AntPathRequestMatcher("/actuator/health/**")
+    BearerTokenResolver delegate = new DefaultBearerTokenResolver();
+    static final List<String> SKIP_PATHS = List.of(
+            "/auth/logout",
+            "/auth/register"
     );
 
     @Override
     public String resolve(HttpServletRequest request) {
-        for (RequestMatcher skipPathMatcher : skipPathMatchers) {
-            if (skipPathMatcher.matches(request)) {
+        String path = request.getRequestURI();
+
+        for (String skip : SKIP_PATHS) {
+            if (path.contains(skip)) {
                 return null;
             }
         }

@@ -1,20 +1,23 @@
 package me.huynhducphu.ping_me.service.authentication.impl;
 
 import jakarta.persistence.EntityNotFoundException;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import me.huynhducphu.ping_me.dto.request.authentication.LoginRequest;
 import me.huynhducphu.ping_me.dto.request.authentication.RegisterRequest;
 import me.huynhducphu.ping_me.dto.request.authentication.SubmitSessionMetaRequest;
 import me.huynhducphu.ping_me.dto.response.authentication.AdminLoginResponse;
-import me.huynhducphu.ping_me.model.constant.AccountStatus;
-import me.huynhducphu.ping_me.service.authentication.model.AuthResultWrapper;
 import me.huynhducphu.ping_me.dto.response.authentication.CurrentUserSessionResponse;
 import me.huynhducphu.ping_me.model.User;
+import me.huynhducphu.ping_me.model.constant.AccountStatus;
 import me.huynhducphu.ping_me.model.constant.AuthProvider;
 import me.huynhducphu.ping_me.repository.jpa.auth.UserRepository;
 import me.huynhducphu.ping_me.service.authentication.AuthenticationService;
 import me.huynhducphu.ping_me.service.authentication.JwtService;
 import me.huynhducphu.ping_me.service.authentication.RefreshTokenRedisService;
+import me.huynhducphu.ping_me.service.authentication.model.AuthResultWrapper;
 import me.huynhducphu.ping_me.service.user.CurrentUserProvider;
 import me.huynhducphu.ping_me.utils.mapper.UserMapper;
 import org.modelmapper.ModelMapper;
@@ -37,33 +40,39 @@ import java.time.Duration;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationServiceImpl implements AuthenticationService {
 
-    private final AuthenticationManager authenticationManager;
-    private final PasswordEncoder passwordEncoder;
+    AuthenticationManager authenticationManager;
+    PasswordEncoder passwordEncoder;
 
-    private final JwtService jwtService;
-    private final RefreshTokenRedisService refreshTokenRedisService;
+    JwtService jwtService;
+    RefreshTokenRedisService refreshTokenRedisService;
 
-    private final ModelMapper modelMapper;
-    private final UserMapper userMapper;
+    ModelMapper modelMapper;
+    UserMapper userMapper;
 
-    private final UserRepository userRepository;
+    UserRepository userRepository;
 
-    private final CurrentUserProvider currentUserProvider;
-    private static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
+    CurrentUserProvider currentUserProvider;
+
+    static String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
 
     @Value("${app.jwt.access-token-expiration}")
-    private Long accessTokenExpiration;
+    @NonFinal
+    Long accessTokenExpiration;
 
     @Value("${app.jwt.refresh-token-expiration}")
-    private Long refreshTokenExpiration;
+    @NonFinal
+    Long refreshTokenExpiration;
 
     @Value("${cookie.sameSite}")
-    private String sameSite;
+    @NonFinal
+    String sameSite;
 
     @Value("${cookie.secure}")
-    private boolean secure;
+    @NonFinal
+    boolean secure;
 
     @Override
     public CurrentUserSessionResponse register(
