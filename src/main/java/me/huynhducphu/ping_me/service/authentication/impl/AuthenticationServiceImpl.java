@@ -60,19 +60,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Value("${app.jwt.access-token-expiration}")
     @NonFinal
-    private Long accessTokenExpiration;
+    Long accessTokenExpiration;
 
     @Value("${app.jwt.refresh-token-expiration}")
     @NonFinal
-    private Long refreshTokenExpiration;
+    Long refreshTokenExpiration;
 
     @Value("${cookie.sameSite}")
     @NonFinal
-    private String sameSite;
+    String sameSite;
 
     @Value("${cookie.secure}")
     @NonFinal
-    private boolean secure;
+    boolean secure;
 
     @Override
     public CurrentUserSessionResponse register(
