@@ -6,6 +6,7 @@ import me.huynhducphu.pingme_message_reactive.dto.MessageResponse;
 import me.huynhducphu.pingme_message_reactive.dto.SendMessageRequest;
 import me.huynhducphu.pingme_message_reactive.model.MessageDocument;
 import me.huynhducphu.pingme_message_reactive.repository.ReactiveMessageRepository;
+import me.huynhducphu.pingme_message_reactive.security.CurrentUserProvider;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -21,36 +22,38 @@ import java.util.UUID;
 public class ReactiveMessageService {
 
     private final ReactiveMessageRepository messageRepository;
+    private final CurrentUserProvider currentUserProvider;
 
     public Mono<MessageResponse> sendMessage(SendMessageRequest request) {
         UUID clientMsgId = UUID.fromString(request.getClientMsgId());
 
-        return messageRepository.findByRoomIdAndSenderIdAndClientMsgId(
-                        request.getRoomId(),
-                        request.getSenderId(),
-                        clientMsgId
-                )
-                .map(this::toResponse)
-                .switchIfEmpty(
-                        messageRepository.save(MessageDocument.builder()
-                                        .roomId(request.getRoomId())
-                                        .senderId(request.getSenderId())
-                                        .content(request.getContent())
-                                        .type(request.getType())
-                                        .clientMsgId(clientMsgId)
-                                        .createdAt(LocalDateTime.now())
-                                        .recalled(false)
-                                        .build())
-                                .map(this::toResponse)
-                                .onErrorResume(DuplicateKeyException.class, ex ->
-                                        messageRepository.findByRoomIdAndSenderIdAndClientMsgId(
-                                                        request.getRoomId(),
-                                                        request.getSenderId(),
-                                                        clientMsgId
-                                                )
-                                                .map(this::toResponse)
-                                )
-                );
+        return currentUserProvider.getCurrentUserId()
+                .flatMap(senderId -> messageRepository.findByRoomIdAndSenderIdAndClientMsgId(
+                                request.getRoomId(),
+                                senderId,
+                                clientMsgId
+                        )
+                        .map(this::toResponse)
+                        .switchIfEmpty(
+                                messageRepository.save(MessageDocument.builder()
+                                                .roomId(request.getRoomId())
+                                                .senderId(senderId)
+                                                .content(request.getContent())
+                                                .type(request.getType())
+                                                .clientMsgId(clientMsgId)
+                                                .createdAt(LocalDateTime.now())
+                                                .recalled(false)
+                                                .build())
+                                        .map(this::toResponse)
+                                        .onErrorResume(DuplicateKeyException.class, ex ->
+                                                messageRepository.findByRoomIdAndSenderIdAndClientMsgId(
+                                                                request.getRoomId(),
+                                                                senderId,
+                                                                clientMsgId
+                                                        )
+                                                        .map(this::toResponse)
+                                        )
+                        ));
     }
 
     public Mono<HistoryMessageResponse> getHistory(Long roomId, String beforeId, Integer size) {

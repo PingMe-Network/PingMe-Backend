@@ -11,9 +11,6 @@ public class SendMessageRequest {
     @NotNull
     private Long roomId;
 
-    @NotNull
-    private Long senderId;
-
     @NotBlank
     private String content;
 
