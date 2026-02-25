@@ -1,10 +1,16 @@
 # PingMe Core Service
 
-Core backend service for the PingMe Network. Built with Spring Boot and provides REST APIs, WebSocket messaging, data persistence (MariaDB + MongoDB), caching (Redis), and integrations like S3 and AI providers.
+`PingMe Core Service` là backend chính của hệ thống PingMe, xây dựng bằng Spring Boot.
+Service cung cấp:
+- REST API
+- WebSocket (STOMP) cho realtime
+- Lưu trữ dữ liệu với MariaDB + MongoDB
+- Cache với Redis
+- Tích hợp S3, AI và các dịch vụ ngoài qua OpenFeign
 
-## Tech Stack
+## Công nghệ sử dụng
 - Java 21, Spring Boot 4
-- Spring Web MVC, Security (OAuth2 Resource Server), Validation
+- Spring Web MVC, Validation, Security (OAuth2 Resource Server)
 - Spring Data JPA (MariaDB), Spring Data MongoDB
 - Spring Cache + Redis
 - WebSocket (STOMP)
@@ -12,16 +18,18 @@ Core backend service for the PingMe Network. Built with Spring Boot and provides
 - Spring AI (OpenAI), Groq AI
 - AWS SDK (S3)
 
-## Requirements
+## Yêu cầu môi trường
 - JDK 21
 - Maven 3.9+
-- MariaDB, MongoDB, Redis
-- Optional: AWS credentials for S3
+- MariaDB
+- MongoDB
+- Redis
+- (Tuỳ chọn) AWS credentials để upload file lên S3
 
-## Configuration
-The app uses environment variables via `application.properties`. At minimum you need database and security settings.
+## Cấu hình
+Ứng dụng đọc cấu hình từ `application.properties` và biến môi trường.
 
-Example `.env` (values are placeholders):
+Biến môi trường tối thiểu:
 ```env
 SPRING_DATASOURCE_URL=jdbc:mariadb://localhost:3306/pingme
 SPRING_DATASOURCE_USERNAME=pingme
@@ -33,8 +41,8 @@ REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_PASSWORD=
 
-JWT_SECRET=change-org
-MESSAGES_AES_KEY=change-org
+JWT_SECRET=change-me
+MESSAGES_AES_KEY=change-me
 CORS_ALLOWED_ORIGINS=http://localhost:3000
 
 AWS_ACCESS_KEY=...
@@ -43,7 +51,7 @@ AWS_REGION=ap-southeast-1
 AWS_S3_BUCKET_NAME=...
 AWS_S3_DOMAIN=...
 
-WEATHER_API_BASE_URL=...
+WEATHER_API_BASE_URL=https://api.openweathermap.org/data/2.5/weather
 WEATHER_API_KEY=...
 
 SPRING_AI_OPENAI_API_KEY=...
@@ -54,21 +62,22 @@ GROQ_AI_API_URL=...
 MAIL_SERVICE_URL=http://localhost:8081
 MAIL_DEFAULT_OTP=000000
 
-APP_REELS_MAX_VIDEO_SIZE=...
-APP_REELS_FOLDER=...
+APP_REELS_MAX_VIDEO_SIZE=20MB
+APP_REELS_FOLDER=reels
 APP_MESSAGES_CACHE_ENABLED=true
 APP_INTERNAL_SECRET=...
 ```
 
-## Run Locally
+## Chạy local
+Chạy với profile `dev`:
 ```bash
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-Default port: `8080`.
+Port mặc định: `8080`
 
-Health check:
-```
+Kiểm tra health:
+```http
 GET /actuator/health
 ```
 
@@ -77,13 +86,12 @@ GET /actuator/health
 ./mvnw -DskipTests package
 ```
 
-Run the jar:
+Chạy file jar:
 ```bash
-java -jar target/pingme-core-service-0.0.1-SNAPSHOT.jar
+java -jar target/pingme-core-service-1.0.0.jar
 ```
 
-## Docker Image (Jib)
-Build and push to Docker Hub:
+## Build/PUSH Docker image với Jib
 ```bash
 ./mvnw -DskipTests clean compile jib:build \
   -Djib.to.auth.username=YOUR_DOCKER_USERNAME \
@@ -91,5 +99,6 @@ Build and push to Docker Hub:
 ```
 
 ## CI/CD
-GitHub Actions builds and pushes a Docker image using Jib, then deploys to AWS Elastic Beanstalk. See `.github/workflows/deploy.yml` for details.
+GitHub Actions build và đẩy Docker image bằng Jib, sau đó deploy lên AWS Elastic Beanstalk.
+Xem chi tiết tại `.github/workflows/deploy.yml`.
 
