@@ -97,11 +97,17 @@ public class SongServiceImpl implements SongService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<SongResponse> getSongByTitle(String title, Pageable pageable) {
-        Page<Song> songs = songRepository.findSongsByTitleContainingIgnoreCase(title, pageable);
+        List<Song> songs = songRepository.findSongsWithAlbumsByTitle(title);
+        List<SongResponse> flattened = flattenSongsWithAlbums(songs);
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), flattened.size());
 
-        List<SongResponse> content = flattenSongsWithAlbums(songs.getContent());
-        return new PageImpl<>(content, pageable, songs.getTotalElements());
+        List<SongResponse> pagedContent = start >= flattened.size()
+            ? Collections.emptyList()
+            : flattened.subList(start, end);
+        return new PageImpl<>(pagedContent, pageable, flattened.size());
     }
 
 
@@ -313,8 +319,11 @@ public class SongServiceImpl implements SongService {
         }
 
         // 9. Map sang Response và trả về
+        Song savedSongWithDetails = songRepository.findByIdWithDetails(savedSong.getId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bài hát vừa lưu"));
+
         List<Song> songs = new ArrayList<>();
-        songs.add(savedSong);
+        songs.add(savedSongWithDetails);
         return flattenSongsWithAlbums(songs);
     }
 
@@ -443,8 +452,12 @@ public class SongServiceImpl implements SongService {
         // 8. Save & Return
         Song updatedSong = songRepository.save(song);
 
+        // Reload với FETCH JOIN để tránh N+1
+        Song updatedSongWithDetails = songRepository.findByIdWithDetails(updatedSong.getId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bài hát vừa cập nhật"));
+
         List<Song> songs = new ArrayList<>();
-        songs.add(updatedSong);
+        songs.add(updatedSongWithDetails);
         return flattenSongsWithAlbums(songs);
     }
 
