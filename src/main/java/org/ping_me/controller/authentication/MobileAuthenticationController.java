@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.ping_me.dto.base.ApiResponse;
-import org.ping_me.dto.request.authentication.LoginRequest;
+import org.ping_me.dto.request.authentication.MobileLoginRequest;
 import org.ping_me.dto.request.authentication.RefreshMobileRequest;
 import org.ping_me.dto.response.authentication.auth.MobileAuthResponse;
 import org.ping_me.service.authentication.AuthenticationService;
@@ -40,9 +40,9 @@ public class MobileAuthenticationController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<MobileAuthResponse>> loginMobile(
             @Parameter(description = "Thông tin đăng nhập", required = true)
-            @RequestBody @Valid LoginRequest loginRequest
+            @RequestBody @Valid MobileLoginRequest mobileLoginRequest
     ) {
-        var authResultWrapper = authenticationService.login(loginRequest);
+        var authResultWrapper = authenticationService.mobileLogin(mobileLoginRequest);
         var payload = new MobileAuthResponse(
                 authResultWrapper.getUserSession(),
                 authResultWrapper.getAccessToken(),
