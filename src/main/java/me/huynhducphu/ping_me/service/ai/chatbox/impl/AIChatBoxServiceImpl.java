@@ -72,6 +72,19 @@ public class AIChatBoxServiceImpl implements AIChatBoxService {
         return chatRoomsSlice.map(this::mappingFromAIChatRoomToAIChatRoomInformationResponse);
     }
 
+    public void deleteChatRoom(UUID chatRoomId) {
+        Long userId = currentUserProvider.get().getId();
+        AIChatRoom room = aiChatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new EntityNotFoundException("Phòng chat không tồn tại!"));
+        if (!room.getUserId().equals(userId)) {
+            throw new AccessDeniedException("Bạn không có quyền xóa phòng chat này!");
+        }
+        // Xóa tất cả tin nhắn trong phòng trước
+        aiMessageRepository.deleteAllByChatRoomId(chatRoomId);
+        // Sau đó xóa phòng chat
+        aiChatRoomRepository.deleteById(chatRoomId);
+    }
+
     public AIChatResponseDTO sendMessageToAI(UUID chatRoomId, String prompt, List<MultipartFile> files) {
         //Kiểm tra tính hợp lệ của file
         validateFiles(files);
@@ -149,7 +162,7 @@ public class AIChatBoxServiceImpl implements AIChatBoxService {
                 otherRoomsMsgs,
                 combinedSummary
         );
-        return aiChatHelper.useAiWithContext(prompt, context, files,"gpt-4o-mini", 1000);
+        return aiChatHelper.useAiWithContext(prompt, context, files,"gpt-4o-mini", 10000, 0.7);
     }
 
     private List<AIMessage> getOtherMessageHistoryFromAnotherRooms(
@@ -201,7 +214,6 @@ public class AIChatBoxServiceImpl implements AIChatBoxService {
         // Gom hết các lời dặn dò vào đây và chốt hạ bằng lệnh "Trả lời ngay"
         prompt.append("\nLƯU Ý CUỐI CÙNG: Tuyệt đối không lặp lại các câu trả lời rập khuôn từ lịch sử.\n");
         prompt.append("HÃY TRẢ LỜI NGAY BÂY GIỜ dựa trên input mới nhất. Nếu có ảnh, hãy mô tả chi tiết.");
-        log.info("B5 : Built Prompt for AI:\n" + prompt);
         return prompt.toString();
     }
 
