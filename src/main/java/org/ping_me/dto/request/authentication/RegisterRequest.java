@@ -35,4 +35,6 @@ public class RegisterRequest {
 
     private LocalDate dob;
 
+    private String turnstileToken;
+
 }
