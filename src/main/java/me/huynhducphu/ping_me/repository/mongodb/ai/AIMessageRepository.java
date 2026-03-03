@@ -50,5 +50,5 @@ public interface AIMessageRepository extends MongoRepository<AIMessage, UUID> {
     @Override
     <S extends AIMessage> S save(@NotNull S entity);
 
-
+    void deleteAllByChatRoomId(UUID chatRoomId);
 }

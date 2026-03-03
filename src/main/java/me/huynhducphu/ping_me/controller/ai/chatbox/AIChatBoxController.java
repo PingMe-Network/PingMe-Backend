@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import me.huynhducphu.ping_me.dto.base.ApiResponse;
 import me.huynhducphu.ping_me.dto.response.ai.AIChatResponseDTO;
 import me.huynhducphu.ping_me.dto.response.ai.AIChatRoomInformationDTO;
-import me.huynhducphu.ping_me.model.ai.AIChatRoom;
 import me.huynhducphu.ping_me.model.ai.AIMessage;
 import me.huynhducphu.ping_me.service.ai.chatbox.AIChatBoxService;
 import org.springframework.data.domain.Slice;
@@ -69,4 +68,15 @@ public class AIChatBoxController {
         AIChatResponseDTO response = service.sendMessageToAI(chatRoomId, prompt, files);
         return ResponseEntity.ok(new ApiResponse<>(response));
     }
+
+    @Operation(
+            summary = "Xóa phòng chat",
+            description = "Xóa phòng chat sẽ xóa toàn bộ lịch sử tin nhắn trong phòng đó. Hành động này không thể hoàn tác"
+    )
+    @DeleteMapping("/room/{chatRoomId}")
+    public ResponseEntity<ApiResponse<Void>> deleteChatRoom(@PathVariable UUID chatRoomId) {
+        service.deleteChatRoom(chatRoomId);
+        return ResponseEntity.ok(new ApiResponse<>(null));
+    }
+
 }

@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import me.huynhducphu.ping_me.model.ai.AIMessage;
 import me.huynhducphu.ping_me.repository.mongodb.ai.AIMessageRepository;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.content.Media;
@@ -26,6 +25,7 @@ import java.util.*;
  * @project PingMe-Backend
  * @package me.huynhducphu.ping_me.utils
  */
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -62,10 +62,11 @@ public class AIChatHelper {
         }
     }
 
-    public String useAiWithContext(String actualPrompt, String context, List<MultipartFile> files, String model, int maxTokens) {
+    public String useAiWithContext(String actualPrompt, String context, List<MultipartFile> files, String model, int maxTokens, double temperature) {
         try {
             var options = OpenAiChatOptions.builder()
                     .model(model)
+                    .temperature(0.7)
                     .maxCompletionTokens(maxTokens)
                     .build();
             ChatResponse response = chatClient.prompt()
