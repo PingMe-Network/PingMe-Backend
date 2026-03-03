@@ -84,6 +84,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public CurrentUserSessionResponse register(
             RegisterRequest registerRequest) {
+        validateTurnstile(registerRequest.getTurnstileToken());
+
         var user = User
                 .builder()
                 .email(registerRequest.getEmail())
@@ -106,13 +108,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public AuthResultWrapper defaultLogin(DefaultLoginRequest defaultLoginRequest) {
-        TurnstileResponse response = turnstileClient
-                .verifyToken(secretKey, defaultLoginRequest.getTurnstileToken());
-
-        if (!response.success()) {
-            String errors = String.join(",", response.errorCodes());
-            throw new AccessDeniedException(errors);
-        }
+        validateTurnstile(defaultLoginRequest.getTurnstileToken());
 
         var authenticationToken = new UsernamePasswordAuthenticationToken(
                 defaultLoginRequest.getEmail(),
@@ -202,6 +198,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     // =====================================
     // Utilities methods
     // =====================================
+    public void validateTurnstile(String token) {
+        TurnstileResponse response = turnstileClient
+                .verifyToken(secretKey, token);
+
+        if (!response.success()) {
+            String errors = String.join(",", response.errorCodes());
+            throw new AccessDeniedException(errors);
+        }
+    }
 
     private AuthResultWrapper buildAuthResultWrapper(
             User user,

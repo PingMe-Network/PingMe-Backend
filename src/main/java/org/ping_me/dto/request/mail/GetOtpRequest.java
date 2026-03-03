@@ -18,4 +18,5 @@ import org.ping_me.model.constant.OtpType;
 public class GetOtpRequest {
     String email;
     OtpType otpType;
+    String turnstileToken;
 }
