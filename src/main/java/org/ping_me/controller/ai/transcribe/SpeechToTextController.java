@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.ping_me.dto.base.ApiResponse;
 import org.ping_me.service.ai.transcribe.SpeechToTextService;
+import org.ping_me.dto.response.ai.AudioTranscribeDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,10 +32,12 @@ public class SpeechToTextController {
     private final SpeechToTextService groqService;
 
     @PostMapping(value = "/audio", consumes = "multipart/form-data")
-    public ResponseEntity<ApiResponse<String>> transcribe(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<ApiResponse<AudioTranscribeDTO>> transcribe(@RequestParam("file") MultipartFile file) {
         try {
             String text = groqService.transcribeAudio(file);
-            return ResponseEntity.ok(new ApiResponse<>(text));
+            AudioTranscribeDTO responseDTO = new AudioTranscribeDTO();
+            responseDTO.setContent(text);
+            return ResponseEntity.ok(new ApiResponse<>(responseDTO));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(new ApiResponse<>(UNCATEGORIZED_EXCEPTION.getMessage(), UNCATEGORIZED_EXCEPTION.getCode()));
         }

@@ -21,4 +21,5 @@ public interface AIChatBoxService {
     Slice<AIChatRoomInformationDTO> getUserChatRooms(int pageNumber, int pageSize);
 
     AIChatResponseDTO sendMessageToAI(UUID chatRoomId, String prompt, List<MultipartFile> files);
+    void deleteChatRoom(UUID chatRoomId);
 }

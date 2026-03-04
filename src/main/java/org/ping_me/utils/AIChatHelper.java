@@ -25,6 +25,7 @@ import java.util.*;
  * @project PingMe-Backend
  * @package me.huynhducphu.ping_me.utils
  */
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -61,10 +62,11 @@ public class AIChatHelper {
         }
     }
 
-    public String useAiWithContext(String actualPrompt, String context, List<MultipartFile> files, String model, int maxTokens) {
+    public String useAiWithContext(String actualPrompt, String context, List<MultipartFile> files, String model, int maxTokens, double temperature) {
         try {
             var options = OpenAiChatOptions.builder()
                     .model(model)
+                    .temperature(0.7)
                     .maxCompletionTokens(maxTokens)
                     .build();
             ChatResponse response = chatClient.prompt()
