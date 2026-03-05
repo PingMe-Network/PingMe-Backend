@@ -1,6 +1,7 @@
 package org.ping_me.service.authentication;
 
-import org.ping_me.dto.request.authentication.LoginRequest;
+import org.ping_me.dto.request.authentication.DefaultLoginRequest;
+import org.ping_me.dto.request.authentication.MobileLoginRequest;
 import org.ping_me.dto.request.authentication.RegisterRequest;
 import org.ping_me.dto.request.authentication.SubmitSessionMetaRequest;
 import org.ping_me.dto.response.authentication.AdminLoginResponse;
@@ -15,11 +16,13 @@ public interface AuthenticationService {
     CurrentUserSessionResponse register(
             RegisterRequest registerRequest);
 
-    AuthResultWrapper login(LoginRequest loginRequest);
+    AuthResultWrapper defaultLogin(DefaultLoginRequest defaultLoginRequest);
+
+    AuthResultWrapper mobileLogin(MobileLoginRequest mobileLoginRequest);
 
     ResponseCookie logout(String refreshToken);
 
     AuthResultWrapper refreshSession(String refreshToken, SubmitSessionMetaRequest submitSessionMetaRequest);
 
-    AdminLoginResponse adminLogin(LoginRequest loginRequest);
+    AdminLoginResponse adminLogin(DefaultLoginRequest defaultLoginRequest);
 }

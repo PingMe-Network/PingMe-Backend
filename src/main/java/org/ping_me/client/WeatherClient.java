@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @FeignClient(
-        name = "weather-api",
+        name = "weather-service",
         url = "${weather.api.base-url}"
 )
 public interface WeatherClient {

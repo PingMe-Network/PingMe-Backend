@@ -5,8 +5,11 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
+import org.ping_me.client.TurnstileClient;
+import org.ping_me.client.dto.TurnstileResponse;
 import org.ping_me.config.auth.JwtBuilder;
-import org.ping_me.dto.request.authentication.LoginRequest;
+import org.ping_me.dto.request.authentication.DefaultLoginRequest;
+import org.ping_me.dto.request.authentication.MobileLoginRequest;
 import org.ping_me.dto.request.authentication.RegisterRequest;
 import org.ping_me.dto.request.authentication.SubmitSessionMetaRequest;
 import org.ping_me.dto.response.authentication.AdminLoginResponse;
@@ -54,6 +57,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     CurrentUserProvider currentUserProvider;
 
+    TurnstileClient turnstileClient;
+
+    @Value("${cloudflare.turnstile.secret-key}")
+    @NonFinal
+    String secretKey;
+
     static String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
 
     @Value("${app.jwt.access-token-expiration}")
@@ -75,6 +84,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public CurrentUserSessionResponse register(
             RegisterRequest registerRequest) {
+        validateTurnstile(registerRequest.getTurnstileToken());
+
         var user = User
                 .builder()
                 .email(registerRequest.getEmail())
@@ -96,16 +107,31 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public AuthResultWrapper login(LoginRequest loginRequest) {
+    public AuthResultWrapper defaultLogin(DefaultLoginRequest defaultLoginRequest) {
+        validateTurnstile(defaultLoginRequest.getTurnstileToken());
+
         var authenticationToken = new UsernamePasswordAuthenticationToken(
-                loginRequest.getEmail(),
-                loginRequest.getPassword()
+                defaultLoginRequest.getEmail(),
+                defaultLoginRequest.getPassword()
         );
 
         var authentication = authenticationManager.authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        return buildAuthResultWrapper(currentUserProvider.get(), loginRequest.getSubmitSessionMetaRequest());
+        return buildAuthResultWrapper(currentUserProvider.get(), defaultLoginRequest.getSubmitSessionMetaRequest());
+    }
+
+    @Override
+    public AuthResultWrapper mobileLogin(MobileLoginRequest mobileLoginRequest) {
+        var authenticationToken = new UsernamePasswordAuthenticationToken(
+                mobileLoginRequest.getEmail(),
+                mobileLoginRequest.getPassword()
+        );
+
+        var authentication = authenticationManager.authenticate(authenticationToken);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        return buildAuthResultWrapper(currentUserProvider.get(), mobileLoginRequest.getSubmitSessionMetaRequest());
     }
 
     @Override
@@ -147,13 +173,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public AdminLoginResponse adminLogin(LoginRequest loginRequest) {
-        String email = loginRequest.getEmail();
+    public AdminLoginResponse adminLogin(DefaultLoginRequest defaultLoginRequest) {
+        String email = defaultLoginRequest.getEmail();
         User user = userRepository.findByEmail(email);
 
         if (user == null) throw new NullPointerException("Không tìm thấy người dùng với email: " + email);
 
-        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword()))
+        if (!passwordEncoder.matches(defaultLoginRequest.getPassword(), user.getPassword()))
             throw new IllegalArgumentException("Mật khẩu không đúng");
 
         if (user.getRole() == null || !user.getRole().getName().equals("ADMIN"))
@@ -172,6 +198,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     // =====================================
     // Utilities methods
     // =====================================
+    public void validateTurnstile(String token) {
+        TurnstileResponse response = turnstileClient
+                .verifyToken(secretKey, token);
+
+        if (!response.success()) {
+            String errors = String.join(",", response.errorCodes());
+            throw new AccessDeniedException(errors);
+        }
+    }
 
     private AuthResultWrapper buildAuthResultWrapper(
             User user,

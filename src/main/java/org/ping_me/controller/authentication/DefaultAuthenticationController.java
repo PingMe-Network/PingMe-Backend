@@ -8,7 +8,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.ping_me.dto.base.ApiResponse;
-import org.ping_me.dto.request.authentication.LoginRequest;
+import org.ping_me.dto.request.authentication.DefaultLoginRequest;
 import org.ping_me.dto.request.authentication.RegisterRequest;
 import org.ping_me.dto.request.authentication.SubmitSessionMetaRequest;
 import org.ping_me.dto.request.user.CreateNewPasswordRequest;
@@ -61,9 +61,9 @@ public class DefaultAuthenticationController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<DefaultAuthResponse>> login(
             @Parameter(description = "Thông tin đăng nhập", required = true)
-            @RequestBody @Valid LoginRequest loginRequest
+            @RequestBody @Valid DefaultLoginRequest defaultLoginRequest
     ) {
-        var authResultWrapper = authenticationService.login(loginRequest);
+        var authResultWrapper = authenticationService.defaultLogin(defaultLoginRequest);
         var payload = new DefaultAuthResponse(
                 authResultWrapper.getUserSession(),
                 authResultWrapper.getAccessToken()
