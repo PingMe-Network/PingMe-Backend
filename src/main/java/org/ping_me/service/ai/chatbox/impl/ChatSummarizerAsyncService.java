@@ -39,7 +39,6 @@ public class ChatSummarizerAsyncService {
         if (room.getInteractCountSinceLastSummary() < 20) {
             return;
         }
-        log.info("Triggering summary for Room: {}", chatRoomId);
 
         try {
             // 3. Lấy 20 tin nhắn gần nhất (10 cặp hội thoại)
@@ -51,12 +50,11 @@ public class ChatSummarizerAsyncService {
                     recentMessages
             );
             // 5. Gọi AI để tạo Summary Mới
-            String newSummary = aiChatHelper.useAi(prompt, List.of(),"gpt-4o-mini", 100);
+            String newSummary = aiChatHelper.useAi(prompt, List.of(),"gpt-4o-mini", 500);
             // 6. Cập nhật và Lưu vào DB
             room.setLatestSummary(newSummary);
             room.setInteractCountSinceLastSummary(0); // Reset bộ đếm về 0
             aiChatRoomRepository.save(room);
-            log.info("Summary updated successfully for Room: {}", chatRoomId);
         } catch (Exception e) {
             log.error("Failed to summarize chat room: {}", chatRoomId, e);
             // Lưu ý: Nếu lỗi thì KHÔNG reset msgCount để lần sau thử lại
