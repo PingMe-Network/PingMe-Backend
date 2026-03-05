@@ -10,6 +10,7 @@ import java.io.IOException;
  * @project PingMe-Backend
  * @package me.huynhducphu.ping_me.service.ai.transcribe.impl
  */
+
 public interface SpeechToTextService {
     String transcribeAudio(MultipartFile audioFile) throws IOException;
 }
