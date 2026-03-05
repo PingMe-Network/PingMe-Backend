@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class LoginRequest {
+public class DefaultLoginRequest {
 
     @NotBlank(message = "Email người dùng không được để trống")
     @Email(message = "Định dạng email không hợp lệ")
@@ -20,6 +20,8 @@ public class LoginRequest {
 
     @NotBlank(message = "Mật khẩu người dùng không được để trống")
     private String password;
+
+    private String turnstileToken;
 
     private SubmitSessionMetaRequest submitSessionMetaRequest;
 

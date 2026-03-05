@@ -5,7 +5,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.ping_me.dto.base.ApiResponse;
-import org.ping_me.dto.request.authentication.LoginRequest;
+import org.ping_me.dto.request.authentication.DefaultLoginRequest;
+import org.ping_me.dto.request.authentication.MobileLoginRequest;
 import org.ping_me.dto.response.authentication.AdminLoginResponse;
 import org.ping_me.service.authentication.AuthenticationService;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,7 +28,7 @@ public class AdminWebAuthenticationController {
     AuthenticationService authenticationService;
 
     @PostMapping("/login")
-    ApiResponse<AdminLoginResponse> login(@Valid @RequestBody LoginRequest request){
+    ApiResponse<AdminLoginResponse> login(@Valid @RequestBody DefaultLoginRequest request) {
         return new ApiResponse<>(authenticationService.adminLogin(request));
     }
 }
