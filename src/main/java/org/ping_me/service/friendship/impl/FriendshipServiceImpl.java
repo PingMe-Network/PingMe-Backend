@@ -338,6 +338,7 @@ public class FriendshipServiceImpl implements FriendshipService {
                 .id(user.getId())
                 .email(user.getEmail())
                 .name(user.getName())
+                .avatarUrl(user.getAvatarUrl())
                 .status(user.getStatus())
                 .build();
 
