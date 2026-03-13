@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '21'
           distribution: 'corretto'
@@ -34,43 +34,43 @@ jobs:
             -Djib.to.auth.username=${{ secrets.DOCKER_USERNAME }} \
             -Djib.to.auth.password=${{ secrets.DOCKER_PASSWORD }}
 
-  deploy:
-    name: Deploy
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
-
-      - name: Generate Dockerrun.aws.json
-        run: |
-          cat > Dockerrun.aws.json <<EOF
-          {
-            "AWSEBDockerrunVersion": "1",
-            "Image": {
-              "Name": "${{ secrets.DOCKER_USERNAME }}/pingme-core-service:latest",
-              "Update": "true"
-            },
-            "Ports": [
-              {
-                "ContainerPort": "8080"
-              }
-            ]
-          }
-          EOF
-
-      - name: Zip Dockerrun.aws.json
-        run: zip -r deploy.zip Dockerrun.aws.json
-
-      - name: Deploy to Elastic Beanstalk
-        uses: einaregilsson/beanstalk-deploy@v20
-        with:
-          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          application_name: "PingMe Core Service"
-          environment_name: PingMe-Core-Env
-          version_label: v-${{ github.run_id }}-${{ github.run_attempt }}
-          region: ap-southeast-1
-          deployment_package: deploy.zip
+#  deploy:
+#    name: Deploy
+#    needs: build
+#    runs-on: ubuntu-latest
+#    if: github.ref == 'refs/heads/main'
+#    steps:
+#      - name: Checkout source code
+#        uses: actions/checkout@v4
+#
+#      - name: Generate Dockerrun.aws.json
+#        run: |
+#          cat > Dockerrun.aws.json <<EOF
+#          {
+#            "AWSEBDockerrunVersion": "1",
+#            "Image": {
+#              "Name": "${{ secrets.DOCKER_USERNAME }}/pingme-core-service:latest",
+#              "Update": "true"
+#            },
+#            "Ports": [
+#              {
+#                "ContainerPort": "8080"
+#              }
+#            ]
+#          }
+#          EOF
+#
+#      - name: Zip Dockerrun.aws.json
+#        run: zip -r deploy.zip Dockerrun.aws.json
+#
+#      - name: Deploy to Elastic Beanstalk
+#        uses: einaregilsson/beanstalk-deploy@v20
+#        with:
+#          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#          application_name: "PingMe Core Service"
+#          environment_name: PingMe-Core-Env
+#          version_label: v-${{ github.run_id }}-${{ github.run_attempt }}
+#          region: ap-southeast-1
+#          deployment_package: deploy.zip
 
