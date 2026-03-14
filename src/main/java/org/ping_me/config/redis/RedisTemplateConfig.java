@@ -59,48 +59,6 @@ public class RedisTemplateConfig {
     }
 
     // =========================================================
-    // RedisTemplate cho caching lượt nghe nhạc
-    // =========================================================
-    @Bean(name = "redisPlayCountTemplate")
-    public RedisTemplate<String, String> redisPlayCountTemplate(RedisConnectionFactory cf) {
-        RedisTemplate<String, String> tpl = new RedisTemplate<>();
-        tpl.setConnectionFactory(cf);
-
-        var stringSer = new StringRedisSerializer();
-
-        tpl.setKeySerializer(stringSer);
-        tpl.setHashKeySerializer(stringSer);
-        tpl.setValueSerializer(stringSer);
-        tpl.setHashValueSerializer(stringSer);
-
-        tpl.afterPropertiesSet();
-        return tpl;
-    }
-
-    // =========================================================
-    // RedisTemplate cho caching những bài nhạc
-    // =========================================================
-    @Bean(name = "redisSongHistoryTemplate")
-    public RedisTemplate<String, Object> redisSongHistoryTemplate(
-            RedisConnectionFactory cf,
-            ObjectMapper om
-    ) {
-        RedisTemplate<String, Object> tpl = new RedisTemplate<>();
-        tpl.setConnectionFactory(cf);
-
-        var keySer = new StringRedisSerializer();
-        var valSer = new GenericJacksonJsonRedisSerializer(om);
-
-        tpl.setKeySerializer(keySer);
-        tpl.setHashKeySerializer(keySer);
-        tpl.setValueSerializer(valSer);
-        tpl.setHashValueSerializer(valSer);
-
-        tpl.afterPropertiesSet();
-        return tpl;
-    }
-
-    // =========================================================
     // RedisTemplate dành riêng cho đồng bộ WebSocket (Pub/Sub)
     // =========================================================
     @Bean(name = "redisWsSyncTemplate")
