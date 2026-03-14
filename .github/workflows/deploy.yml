@@ -1,4 +1,4 @@
-name: CI/CD Deploy to Elastic Beanstalk
+name: CI/CD Build Docker Image
 
 on:
   push:
