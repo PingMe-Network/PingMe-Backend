@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.ping_me.dto.base.ApiResponse;
 import org.ping_me.dto.request.authentication.DefaultLoginRequest;
-import org.ping_me.dto.request.authentication.MobileLoginRequest;
 import org.ping_me.dto.response.authentication.AdminLoginResponse;
 import org.ping_me.service.authentication.AuthenticationService;
 import org.springframework.web.bind.annotation.PostMapping;
