@@ -2,7 +2,6 @@ package org.ping_me.utils.mapper;
 
 import lombok.RequiredArgsConstructor;
 import org.ping_me.config.websocket.auth.UserSocketPrincipal;
-import org.ping_me.dto.response.authentication.CurrentUserSessionResponse;
 import org.ping_me.dto.response.user.DefaultUserResponse;
 import org.ping_me.model.User;
 import org.springframework.security.core.Authentication;
@@ -17,22 +16,6 @@ import java.security.Principal;
 @Component
 @RequiredArgsConstructor
 public class UserMapper {
-
-
-    public CurrentUserSessionResponse mapToCurrentUserSessionResponse(User user) {
-        var res = new CurrentUserSessionResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getName(),
-                user.getAvatarUrl(),
-                user.getUpdatedAt().toString(),
-                null
-        );
-
-        var roleName = user.getRole() != null ? user.getRole().getName() : "";
-        res.setRoleName(roleName);
-        return res;
-    }
 
     public UserSocketPrincipal extractUserPrincipal(Principal principal) {
         if (principal instanceof Authentication auth) {
