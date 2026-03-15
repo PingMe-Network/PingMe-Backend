@@ -14,29 +14,6 @@ import tools.jackson.databind.ObjectMapper;
 public class RedisTemplateConfig {
 
     // =========================================================
-    // RedisTemplate cho caching phiên đăng nhập
-    // =========================================================
-    @Bean(name = "redisDeviceMetaTemplate")
-    public RedisTemplate<String, DeviceMeta> redisDeviceMetaTemplate(
-            RedisConnectionFactory cf,
-            ObjectMapper om
-    ) {
-        RedisTemplate<String, DeviceMeta> tpl = new RedisTemplate<>();
-        tpl.setConnectionFactory(cf);
-
-        var keySer = new StringRedisSerializer();
-        var valSer = new JacksonJsonRedisSerializer<>(om, DeviceMeta.class);
-
-        tpl.setKeySerializer(keySer);
-        tpl.setHashKeySerializer(keySer);
-        tpl.setValueSerializer(valSer);
-        tpl.setHashValueSerializer(valSer);
-
-        tpl.afterPropertiesSet();
-        return tpl;
-    }
-
-    // =========================================================
     // RedisTemplate cho caching tin nhắn
     // =========================================================
     @Bean(name = "redisMessageStringTemplate")

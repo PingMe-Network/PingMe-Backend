@@ -11,8 +11,6 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Admin 2/17/2026
@@ -56,13 +54,8 @@ public class RedisCacheConfig {
     // =====================================================================
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory factory, RedisCacheConfiguration baseCfg) {
-        Map<String, RedisCacheConfiguration> configs = new HashMap<>();
-
-        configs.put("role_permissions", baseCfg.entryTtl(Duration.ofHours(2)));
-
         return RedisCacheManager.builder(factory)
                 .cacheDefaults(baseCfg)
-                .withInitialCacheConfigurations(configs)
                 .transactionAware()
                 .build();
     }
