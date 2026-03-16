@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ping_me.service.ai.transcribe.SpeechToTextService;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -40,7 +40,7 @@ public class SpeechToTextServiceImpl implements SpeechToTextService {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
 
         // Resource từ file upload
-        ByteArrayResource fileResource = new ByteArrayResource(audioFile.getBytes()) {
+        InputStreamResource fileResource = new InputStreamResource(audioFile.getInputStream()) {
             @Override
             public String getFilename() {
                 return audioFile.getOriginalFilename() != null ? audioFile.getOriginalFilename() : "audio.webm";
