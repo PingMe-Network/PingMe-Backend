@@ -131,11 +131,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
-        <!-- ===================== Serialization / Mapping ===================== -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jsr310</artifactId>
-        </dependency>
         <!-- ===================== AWS ===================== -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
