@@ -4,9 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ping_me.service.ai.transcribe.SpeechToTextService;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
@@ -29,6 +30,8 @@ public class SpeechToTextServiceImpl implements SpeechToTextService {
     private String apiKey;
     @Value("${groq.ai.api.url}")
     private String apiUrl;
+    @Value("${app.ai.transcribe.max-audio-size}")
+    private long maxAudioSize;
     private final RestClient restClient;
 
     public SpeechToTextServiceImpl() {
@@ -36,11 +39,13 @@ public class SpeechToTextServiceImpl implements SpeechToTextService {
     }
 
     public String transcribeAudio(MultipartFile audioFile) throws IOException {
+        validateAudioFile(audioFile);
+
         // 1. Chuẩn bị Body (Multipart)
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
 
         // Resource từ file upload
-        ByteArrayResource fileResource = new ByteArrayResource(audioFile.getBytes()) {
+        InputStreamResource fileResource = new InputStreamResource(audioFile.getInputStream()) {
             @Override
             public String getFilename() {
                 return audioFile.getOriginalFilename() != null ? audioFile.getOriginalFilename() : "audio.webm";
@@ -61,6 +66,25 @@ public class SpeechToTextServiceImpl implements SpeechToTextService {
                 .body(GroqResponse.class);
 
         return response != null ? response.text() : "";
+    }
+
+    private void validateAudioFile(MultipartFile audioFile) {
+        if (audioFile == null || audioFile.isEmpty()) {
+            throw new IllegalArgumentException("File audio không hợp lệ");
+        }
+
+        if (audioFile.getSize() > maxAudioSize) {
+            throw new IllegalArgumentException("File audio vượt quá giới hạn cho phép");
+        }
+
+        String contentType = audioFile.getContentType();
+        if (!StringUtils.hasText(contentType)) {
+            return;
+        }
+
+        if (!contentType.startsWith("audio/") && !"video/webm".equalsIgnoreCase(contentType)) {
+            throw new IllegalArgumentException("Định dạng file audio không được hỗ trợ");
+        }
     }
 
     // Record class để map response JSON
