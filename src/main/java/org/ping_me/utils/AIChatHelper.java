@@ -9,7 +9,7 @@ import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.content.Media;
 import org.springframework.ai.openai.OpenAiChatOptions;
-import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -79,7 +79,12 @@ public class AIChatHelper {
                                 try {
                                     u.media(
                                             MimeTypeUtils.parseMimeType(Objects.requireNonNull(file.getContentType())),
-                                            new InputStreamResource(file.getInputStream())
+                                            new ByteArrayResource(file.getBytes()) {
+                                                @Override
+                                                public String getFilename() {
+                                                    return file.getOriginalFilename();
+                                                }
+                                            }
                                     );
                                 } catch (IOException e) {
                                     throw new RuntimeException(e);
