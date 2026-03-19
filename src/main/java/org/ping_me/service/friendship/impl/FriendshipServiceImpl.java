@@ -93,7 +93,7 @@ public class FriendshipServiceImpl implements FriendshipService {
 
         // Tìm kiếm friendship dựa vào id
         var friendship = friendshipRepository
-                .findById(friendRequestId)
+                .findByIdForUpdate(friendRequestId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy lời mời kết bạn này"));
 
         // Kiểm tra trạng thái friendship phải là PENDING mới được chấp nhận
@@ -121,7 +121,7 @@ public class FriendshipServiceImpl implements FriendshipService {
 
         // Tìm kiếm friendship dựa vào id
         var friendship = friendshipRepository
-                .findById(friendRequestId)
+                .findByIdForUpdate(friendRequestId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy lời mời kết bạn này"));
 
         // Kiểm tra trạng thái friendship phải là PENDING mới được chấp nhận
@@ -150,7 +150,7 @@ public class FriendshipServiceImpl implements FriendshipService {
 
         // Tìm kiếm friendship dựa vào id
         var friendship = friendshipRepository
-                .findById(friendRequestId)
+                .findByIdForUpdate(friendRequestId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy lời mời kết bạn này"));
 
         // Kiểm tra trạng thái friendship phải là PENDING mới được chấp nhận
@@ -179,7 +179,7 @@ public class FriendshipServiceImpl implements FriendshipService {
 
         // Tìm kiếm friendship dựa vào id
         var friendship = friendshipRepository
-                .findById(friendRequestId)
+                .findByIdForUpdate(friendRequestId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy mối quan hệ"));
 
         // Kiểm tra trạng thái friendship phải là ACCEPTED mới được chấp nhận
