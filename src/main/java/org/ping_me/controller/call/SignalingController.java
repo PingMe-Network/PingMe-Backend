@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
         description = "Các endpoints xử lý tín hiệu cuộc gọi (WebRTC / Call realtime)"
 )
 @RestController
-@RequestMapping("/chat/signaling")
+@RequestMapping("/core-service/chat/signaling")
 @RequiredArgsConstructor
 public class SignalingController {
 

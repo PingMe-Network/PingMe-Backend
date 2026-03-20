@@ -27,7 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
         description = "Các endpoints xử lý phòng chat (direct & group)"
 )
 @RestController
-@RequestMapping("/rooms")
+@RequestMapping("/core-service/rooms")
 @RequiredArgsConstructor
 public class RoomController {
 

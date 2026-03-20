@@ -27,7 +27,7 @@ public class SecurityConfiguration {
             // WebSocket
             // Bỏ qua kiểm tra tại lớp BearerTokenFilter
             // Kiểm tra tại lớp HandShakeInterceptor
-            "/ws/**",
+            "/core-service/ws/**",
 
             // Health check - Kiểm tra nhịp tim
             "/actuator/health",
