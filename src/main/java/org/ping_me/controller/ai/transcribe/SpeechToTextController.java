@@ -3,8 +3,8 @@ package org.ping_me.controller.ai.transcribe;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.ping_me.dto.base.ApiResponse;
-import org.ping_me.service.ai.transcribe.SpeechToTextService;
 import org.ping_me.dto.response.ai.AudioTranscribeDTO;
+import org.ping_me.service.ai.transcribe.SpeechToTextService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,7 +26,7 @@ import static org.ping_me.advice.base.ErrorCode.UNCATEGORIZED_EXCEPTION;
         description = "Quản lý các chức năng liên quan đến chuyển đổi giọng nói thành văn bản - Sử dụng model AI của OpenAI để thực hiện chức năng này"
 )
 @RestController
-@RequestMapping("/transcribe")
+@RequestMapping("/core-service/transcribe")
 @RequiredArgsConstructor
 public class SpeechToTextController {
     private final SpeechToTextService groqService;

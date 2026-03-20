@@ -35,7 +35,7 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry
                 // Đăng ký endpoint cho client kết nối STOMP qua WebSocket
-                .addEndpoint("/ws")
+                .addEndpoint("/core-service/ws")
                 .setAllowedOrigins(allowedOrigins.split(","))
                 .withSockJS();
     }
@@ -60,9 +60,6 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
 
         // Prefix để Spring map các message riêng theo user
         registry.setUserDestinationPrefix("/user");
-
-        // Prefix khi FE muốn gửi message lên BE (MessageMapping)
-        registry.setApplicationDestinationPrefixes("/app");
     }
 
     @Override
