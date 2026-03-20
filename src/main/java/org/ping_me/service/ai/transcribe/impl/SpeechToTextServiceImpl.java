@@ -9,7 +9,6 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,8 +29,6 @@ public class SpeechToTextServiceImpl implements SpeechToTextService {
     private String apiKey;
     @Value("${groq.ai.api.url}")
     private String apiUrl;
-    @Value("${app.ai.transcribe.max-audio-size}")
-    private long maxAudioSize;
     private final RestClient restClient;
 
     public SpeechToTextServiceImpl() {
@@ -39,8 +36,6 @@ public class SpeechToTextServiceImpl implements SpeechToTextService {
     }
 
     public String transcribeAudio(MultipartFile audioFile) throws IOException {
-        validateAudioFile(audioFile);
-
         // 1. Chuẩn bị Body (Multipart)
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
 
@@ -68,26 +63,6 @@ public class SpeechToTextServiceImpl implements SpeechToTextService {
         return response != null ? response.text() : "";
     }
 
-    private void validateAudioFile(MultipartFile audioFile) {
-        if (audioFile == null || audioFile.isEmpty()) {
-            throw new IllegalArgumentException("File audio không hợp lệ");
-        }
-
-        if (audioFile.getSize() > maxAudioSize) {
-            throw new IllegalArgumentException("File audio vượt quá giới hạn cho phép");
-        }
-
-        String contentType = audioFile.getContentType();
-        if (!StringUtils.hasText(contentType)) {
-            return;
-        }
-
-        if (!contentType.startsWith("audio/") && !"video/webm".equalsIgnoreCase(contentType)) {
-            throw new IllegalArgumentException("Định dạng file audio không được hỗ trợ");
-        }
-    }
-
     // Record class để map response JSON
-    public record GroqResponse(String text) {
-    }
+    public record GroqResponse(String text) {}
 }

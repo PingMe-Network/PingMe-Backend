@@ -1,4 +1,8 @@
+<<<<<<<< HEAD:src/main/java/org/ping_me/service/user/impl/UserLookupServiceImpl.java
 package org.ping_me.service.user.impl;
+========
+package org.ping_me.service.user.base;
+>>>>>>>> main:src/main/java/org/ping_me/service/user/base/UserLookupServiceImpl.java
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;

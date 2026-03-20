@@ -74,9 +74,7 @@ public class MessageCachingServiceImpl implements MessageCachingService {
     @Override
     public List<MessageResponse> getMessages(Long roomId, String beforeId, int size) {
         String key = buildKey(roomId);
-        List<String> jsonList = beforeId == null
-                ? redisTemplate.opsForList().range(key, 0, Math.max(0, size - 1))
-                : redisTemplate.opsForList().range(key, 0, -1);
+        List<String> jsonList = redisTemplate.opsForList().range(key, 0, -1);
         if (isEmpty(jsonList)) return List.of();
 
         List<MessageResponse> all = new ArrayList<>(jsonList.size());

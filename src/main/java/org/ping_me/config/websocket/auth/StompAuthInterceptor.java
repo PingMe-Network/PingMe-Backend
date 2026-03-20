@@ -15,7 +15,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -62,11 +61,8 @@ public class StompAuthInterceptor implements ChannelInterceptor {
                         userPrincipal, null, Collections.emptyList()
                 );
                 accessor.setUser(auth);
-            } catch (JwtException e) {
-                log.debug("WebSocket CONNECT bị từ chối do JWT không hợp lệ hoặc đã hết hạn");
-                throw new AccessDeniedException("Token không hợp lệ");
             } catch (Exception e) {
-                log.warn("Xác thực WebSocket thất bại: {}", e.getMessage());
+                log.error("Xác thực WebSocket thất bại: {}", e.getMessage());
                 throw new AccessDeniedException("Token không hợp lệ");
             }
         }

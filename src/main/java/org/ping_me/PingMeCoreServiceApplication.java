@@ -2,6 +2,7 @@ package org.ping_me;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -15,6 +16,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 @EnableJpaAuditing(auditorAwareRef = "auditorProvider")
 @EnableMongoAuditing
 @EnableWebSocketMessageBroker
+@EnableCaching
 @EnableJpaRepositories(basePackages = "org.ping_me.repository.jpa")
 @EnableMongoRepositories(basePackages = "org.ping_me.repository.mongodb")
 @EnableFeignClients
