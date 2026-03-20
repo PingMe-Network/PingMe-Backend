@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
         description = "Các API gửi/nhận lời mời kết bạn và quản lý danh sách bạn bè"
 )
 @RestController
-@RequestMapping("/friendships")
+@RequestMapping("/core-service/friendships")
 @RequiredArgsConstructor
 public class FriendshipController {
 
