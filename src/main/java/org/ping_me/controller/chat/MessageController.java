@@ -32,9 +32,9 @@ import org.springframework.web.multipart.MultipartFile;
         description = "Các endpoints xử lý tin nhắn trong phòng chat"
 )
 @RestController
-@RequestMapping("/messages")
+@RequestMapping("/core-service/messages")
 @RequiredArgsConstructor
-public class MessageController {
+public class    MessageController {
 
     private final MessageService messageService;
     private final RateLimiterRegistry rateLimiterRegistry;

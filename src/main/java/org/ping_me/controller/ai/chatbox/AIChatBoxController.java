@@ -29,7 +29,7 @@ import java.util.UUID;
         description = "Quản lý các chức năng liên quan đến hộp trò chuyện AI - Sử dụng model AI GPT của OpenAI"
 )
 @RestController
-@RequestMapping("/ai-chatbox")
+@RequestMapping("/core-service/ai-chatbox")
 @RequiredArgsConstructor
 public class AIChatBoxController {
 

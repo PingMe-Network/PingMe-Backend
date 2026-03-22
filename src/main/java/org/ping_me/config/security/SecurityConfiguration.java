@@ -25,18 +25,12 @@ public class SecurityConfiguration {
             "/v3/api-docs/**",
 
             // WebSocket
-            // Bỏ qua kiểm tra tại lớp BearerTokenFilter
-            // Kiểm tra tại lớp HandShakeInterceptor
-            "/ws/**",
+            "/core-service/ws/**",
 
-            // Health check - Kiểm tra nhịp tim
+            // Health check
             "/actuator/health",
-            "/actuator/health/**",
-
+            "/actuator/health/**"
     };
-
-    @Value("${app.cors.allowed-origins}")
-    private String allowedOrigins;
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -44,39 +38,28 @@ public class SecurityConfiguration {
             CustomAuthenticationEntryPoint customAuthenticationEntryPoint
     ) throws Exception {
         httpSecurity
+                // 1. TẮT CORS (Gateway đã thầu vụ này rồi)
+                .cors(AbstractHttpConfigurer::disable)
+
+                .csrf(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(WHITELIST).permitAll()
                         .anyRequest().authenticated()
                 )
+
+                // 2. Cấu hình JWT mặc định
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(Customizer.withDefaults())
                         .authenticationEntryPoint(customAuthenticationEntryPoint)
-                )
-                .cors(Customizer.withDefaults())
-                .csrf(AbstractHttpConfigurer::disable)
-                .formLogin(AbstractHttpConfigurer::disable)
-                .httpBasic(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
 
         return httpSecurity.build();
     }
-
-    @Bean
-    public UrlBasedCorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
-        configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-
-    }
-
-
 }

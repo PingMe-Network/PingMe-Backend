@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
         description = "Các endpoints tra cứu thông tin người dùng"
 )
 @RestController
-@RequestMapping("/users/lookup")
+@RequestMapping("/core-service/users/lookup")
 @RequiredArgsConstructor
 public class UserLookupController {
 

@@ -26,7 +26,7 @@ import static org.ping_me.advice.base.ErrorCode.UNCATEGORIZED_EXCEPTION;
         description = "Quản lý các chức năng liên quan đến chuyển đổi giọng nói thành văn bản - Sử dụng model AI của OpenAI để thực hiện chức năng này"
 )
 @RestController
-@RequestMapping("/transcribe")
+@RequestMapping("/core-service/transcribe")
 @RequiredArgsConstructor
 public class SpeechToTextController {
     private final SpeechToTextService groqService;
