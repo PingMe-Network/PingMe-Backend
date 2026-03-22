@@ -27,16 +27,12 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
     @Value("${app.websocket.heartbeat.server-receive-interval}")
     private long serverReceiveInterval;
 
-    @Value("${app.cors.allowed-origins}")
-    private String allowedOrigins;
-
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry
-                // Đăng ký endpoint cho client kết nối STOMP qua WebSocket
                 .addEndpoint("/core-service/ws")
-                .setAllowedOrigins(allowedOrigins.split(","))
+                .setAllowedOriginPatterns("*")
                 .withSockJS();
     }
 
@@ -46,19 +42,10 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
         scheduler.setPoolSize(4);
         scheduler.setThreadNamePrefix("pingme-wss-");
         scheduler.initialize();
-
-        // /topic/... → broadcast cho nhiều người (kênh công khai)
-        // /queue/... → hàng đợi point-to-point hoặc riêng tư (thường kết hợp với /user)
-        //
-        // Heartbeat:
-        // serverSendInterval    = khoảng thời gian BE gửi heartbeat xuống FE (BE → FE)
-        // serverReceiveInterval = khoảng thời gian BE mong đợi nhận heartbeat từ FE (FE → BE)
         registry
                 .enableSimpleBroker("/topic", "/queue")
                 .setHeartbeatValue(new long[]{serverSendInterval, serverReceiveInterval})
                 .setTaskScheduler(scheduler);
-
-        // Prefix để Spring map các message riêng theo user
         registry.setUserDestinationPrefix("/user");
     }
 
