@@ -1,5 +1,6 @@
 package org.ping_me.config.redis;
 
+import org.ping_me.websocket.sync.RedisWsReceiver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;

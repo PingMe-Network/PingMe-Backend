@@ -1,7 +1,7 @@
 package org.ping_me.utils.mapper;
 
 import lombok.RequiredArgsConstructor;
-import org.ping_me.config.websocket.auth.UserSocketPrincipal;
+import org.ping_me.websocket.auth.UserSocketPrincipal;
 import org.ping_me.dto.response.user.DefaultUserResponse;
 import org.ping_me.model.User;
 import org.springframework.security.core.Authentication;
