@@ -2,8 +2,13 @@ package org.ping_me.service.chat.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
 import org.ping_me.config.s3.S3Service;
+import org.ping_me.dto.event.UserChatEvent;
 import org.ping_me.dto.request.chat.message.MarkReadRequest;
 import org.ping_me.dto.request.chat.message.SendMessageRequest;
 import org.ping_me.dto.request.chat.message.SendWeatherMessageRequest;
@@ -29,12 +34,15 @@ import org.ping_me.service.chat.event.room.RoomUpdatedEvent;
 import org.ping_me.service.user.CurrentUserProvider;
 import org.ping_me.service.weather.WeatherService;
 import org.ping_me.utils.mapper.ChatMapper;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -51,6 +59,7 @@ import java.util.*;
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class MessageServiceImpl implements MessageService {
 
     private static final long MAX_IMAGE_SIZE = 10 * 1024 * 1024L;
@@ -77,6 +86,13 @@ public class MessageServiceImpl implements MessageService {
     // UTILS
     private final ObjectMapper objectMapper;
     private final ChatMapper chatMapper;
+
+    @NonFinal
+    @Value("${spring.kafka.topic.user-chat-dev}")
+    String userChatTopic;
+
+    @Qualifier("kafkaObjectTemplate")
+    private final KafkaTemplate<String, Object> kafkaObjectTemplate;
 
     /* ========================================================================== */
     /*                         CACHING MESSAGE                                    */
@@ -214,6 +230,9 @@ public class MessageServiceImpl implements MessageService {
             // Caching Message
             if (cacheEnabled)
                 messageCachingService.cacheNewMessage(roomId, dto);
+
+            // send chat event kafka
+            publishUserChatAudit(senderId, sendMessageRequest.getContent());
 
             return dto;
         } catch (RuntimeException ex) {
@@ -541,4 +560,25 @@ public class MessageServiceImpl implements MessageService {
         }
     }
 
+    private void publishUserChatAudit(long senderId, String message) {
+        try {
+            UserChatEvent event = new UserChatEvent(
+                    senderId,
+                    message,
+                    System.currentTimeMillis()
+            );
+
+            kafkaObjectTemplate.send(userChatTopic, event)
+                    .whenComplete((result, ex) -> {
+                        if (ex == null) {
+                            log.info("Kafka: Send event senderId {} send message {}", senderId, message);
+                        } else {
+                            log.error("Kafka: Send event failed: {}", ex.getMessage());
+                        }
+                    });
+
+        } catch (Exception ex) {
+            log.error("Error Kafka event: {}", ex.getMessage());
+        }
+    }
 }
