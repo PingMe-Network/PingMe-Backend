@@ -334,6 +334,9 @@ public class MessageServiceImpl implements MessageService {
         // Xóa content
         messageToRecall.setContent("");
 
+        // Mongo document does not use JPA dirty checking, so persist the recall explicitly.
+        messageRepository.save(messageToRecall);
+
         // ---------------------------
         // UPDATE CACHE
         // ---------------------------
