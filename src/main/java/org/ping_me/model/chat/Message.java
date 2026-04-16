@@ -76,6 +76,9 @@ public class Message {
     @Field("forwarded_from_sender_id")
     Long forwardedFromSenderId;
 
+    @Field("replied_message_id")
+    String repliedMessageId;
+
     @CreatedDate
     @Field("created_at")
     LocalDateTime createdAt;

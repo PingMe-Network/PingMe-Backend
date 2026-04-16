@@ -168,6 +168,7 @@ public class MessageServiceImpl implements MessageService {
         var roomParticipant = roomParticipantRepository
                 .findById(roomMemberId)
                 .orElseThrow(() -> new AccessDeniedException("Bạn không phải thành viên của phòng chat này"));
+        validateReplyMessage(sendMessageRequest.getRepliedMessageId(), roomId);
 
         // Kiểm tra tin nhắn người dùng gửi đã tồn tại chưa, Kiểm tra bằng mã clientMsgId
         // Nếu tìm thấy thì trả về tin nhắn đã tồn tại trong cơ sở dữ liệu
@@ -183,6 +184,7 @@ public class MessageServiceImpl implements MessageService {
         message.setContent(sendMessageRequest.getContent());
         message.setType(sendMessageRequest.getType());
         message.setFileFormat(sendMessageRequest.getFileFormat());
+        message.setRepliedMessageId(sendMessageRequest.getRepliedMessageId());
         message.setClientMsgId(clientMsgId);
         message.setCreatedAt(LocalDateTime.now());
 
@@ -371,6 +373,7 @@ public class MessageServiceImpl implements MessageService {
         sendReq.setContent(contentJson);
         sendReq.setType(MessageType.WEATHER);
         sendReq.setClientMsgId(req.getClientMsgId());
+        sendReq.setRepliedMessageId(null);
 
         // ============================
         // 4) Gọi lại pipeline chuẩn
@@ -852,6 +855,20 @@ public class MessageServiceImpl implements MessageService {
             throw ex;
         } catch (Exception ex) {
             throw new IllegalArgumentException("Dữ liệu phải là URL hợp lệ");
+        }
+    }
+
+    private void validateReplyMessage(String repliedMessageId, Long roomId) {
+        if (repliedMessageId == null || repliedMessageId.isBlank()) {
+            return;
+        }
+
+        Message repliedMessage = messageRepository
+                .findById(repliedMessageId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tin nhắn được trả lời"));
+
+        if (!Objects.equals(repliedMessage.getRoomId(), roomId)) {
+            throw new IllegalArgumentException("Tin nhắn trả lời không thuộc phòng này");
         }
     }
 

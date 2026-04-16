@@ -5,32 +5,17 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.ping_me.model.constant.MessageType;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Admin 8/26/2025
- *
- **/
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class MessageResponse {
+public class RepliedMessageResponse {
     private String id;
-
-    private Long roomId;
-    private String clientMsgId;
-
     private Long senderId;
-
     private String content;
     private MessageType type;
+    private Boolean isActive;
     private String fileFormat;
     private List<String> mediaUrls;
-    private LocalDateTime createdAt;
-
-    private Boolean isActive;
-    private Boolean isForwarded;
-    private ForwardMetadataResponse forwardMetadata;
-    private RepliedMessageResponse repliedMessage;
 }

@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.ping_me.dto.response.chat.message.ForwardMetadataResponse;
 import org.ping_me.dto.response.chat.message.MessageResponse;
+import org.ping_me.dto.response.chat.message.RepliedMessageResponse;
 import org.ping_me.dto.response.chat.room.RoomParticipantResponse;
 import org.ping_me.dto.response.chat.room.RoomResponse;
 import org.ping_me.model.chat.Message;
@@ -32,6 +33,7 @@ public class ChatMapper {
         String content = message.isActive() ? message.getContent() : null;
         List<String> mediaUrls = extractMediaUrls(message.getType(), content);
         ForwardMetadataResponse forwardMetadata = null;
+        RepliedMessageResponse repliedMessage = mapRepliedMessage(message.getRepliedMessageId());
 
         if (message.isForwarded()) {
             forwardMetadata = new ForwardMetadataResponse(
@@ -53,7 +55,8 @@ public class ChatMapper {
                 message.getCreatedAt(),
                 message.isActive(),
                 message.isForwarded(),
-                forwardMetadata
+                forwardMetadata,
+                repliedMessage
         );
     }
 
@@ -129,6 +132,24 @@ public class ChatMapper {
         } catch (Exception ex) {
             return List.of(content);
         }
+    }
+
+    private RepliedMessageResponse mapRepliedMessage(String repliedMessageId) {
+        if (repliedMessageId == null || repliedMessageId.isBlank()) {
+            return null;
+        }
+
+        return messageRepository.findById(repliedMessageId)
+                .map(message -> new RepliedMessageResponse(
+                        message.getId(),
+                        message.getSenderId(),
+                        message.isActive() ? message.getContent() : null,
+                        message.getType(),
+                        message.isActive(),
+                        message.getFileFormat(),
+                        extractMediaUrls(message.getType(), message.isActive() ? message.getContent() : null)
+                ))
+                .orElse(null);
     }
 
 }

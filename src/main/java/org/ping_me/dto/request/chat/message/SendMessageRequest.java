@@ -28,6 +28,7 @@ public class SendMessageRequest {
     private MessageType type;
 
     private String fileFormat;
+    private String repliedMessageId;
 
     @NotNull(message = "Mã phòng không được để trống")
     private Long roomId;
