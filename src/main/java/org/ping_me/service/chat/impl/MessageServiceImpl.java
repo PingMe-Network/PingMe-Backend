@@ -14,17 +14,21 @@ import org.ping_me.dto.request.chat.message.ForwardMessagesRequest;
 import org.ping_me.dto.request.chat.message.MarkReadRequest;
 import org.ping_me.dto.request.chat.message.SendMessageRequest;
 import org.ping_me.dto.request.chat.message.SendWeatherMessageRequest;
+import org.ping_me.dto.response.chat.message.DeletedMessageResponse;
 import org.ping_me.dto.response.chat.message.HistoryMessageResponse;
 import org.ping_me.dto.response.chat.message.MessageRecalledResponse;
 import org.ping_me.dto.response.chat.message.MessageResponse;
 import org.ping_me.dto.response.chat.message.ReadStateResponse;
 import org.ping_me.dto.response.weather.WeatherResponse;
 import org.ping_me.model.User;
+import org.ping_me.model.chat.DeletedMessage;
 import org.ping_me.model.chat.Message;
 import org.ping_me.model.chat.Room;
 import org.ping_me.model.chat.RoomParticipant;
+import org.ping_me.model.common.DeletedMessageId;
 import org.ping_me.model.common.RoomMemberId;
 import org.ping_me.model.constant.MessageType;
+import org.ping_me.repository.jpa.chat.DeletedMessageRepository;
 import org.ping_me.repository.jpa.chat.RoomParticipantRepository;
 import org.ping_me.repository.jpa.chat.RoomRepository;
 import org.ping_me.repository.mongodb.chat.MessageRepository;
@@ -53,6 +57,7 @@ import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Admin 8/26/2025
@@ -80,6 +85,7 @@ public class MessageServiceImpl implements MessageService {
     // REPOSITORY
     private final RoomRepository roomRepository;
     private final RoomParticipantRepository roomParticipantRepository;
+    private final DeletedMessageRepository deletedMessageRepository;
     private final MessageRepository messageRepository;
 
     // PUBLISHER
@@ -136,8 +142,9 @@ public class MessageServiceImpl implements MessageService {
 
         // Nếu file này một dạng file thì
         // validate url hợp l
-        if (sendMessageRequest.getType() == MessageType.IMAGE
-                || sendMessageRequest.getType() == MessageType.VIDEO
+        if (sendMessageRequest.getType() == MessageType.IMAGE) {
+            validateImageContent(sendMessageRequest.getContent());
+        } else if (sendMessageRequest.getType() == MessageType.VIDEO
                 || sendMessageRequest.getType() == MessageType.FILE) {
             validateUrl(sendMessageRequest.getContent());
         }
@@ -161,6 +168,7 @@ public class MessageServiceImpl implements MessageService {
         var roomParticipant = roomParticipantRepository
                 .findById(roomMemberId)
                 .orElseThrow(() -> new AccessDeniedException("Bạn không phải thành viên của phòng chat này"));
+        validateReplyMessage(sendMessageRequest.getRepliedMessageId(), roomId);
 
         // Kiểm tra tin nhắn người dùng gửi đã tồn tại chưa, Kiểm tra bằng mã clientMsgId
         // Nếu tìm thấy thì trả về tin nhắn đã tồn tại trong cơ sở dữ liệu
@@ -175,6 +183,8 @@ public class MessageServiceImpl implements MessageService {
         message.setSenderId(senderId);
         message.setContent(sendMessageRequest.getContent());
         message.setType(sendMessageRequest.getType());
+        message.setFileFormat(sendMessageRequest.getFileFormat());
+        message.setRepliedMessageId(sendMessageRequest.getRepliedMessageId());
         message.setClientMsgId(clientMsgId);
         message.setCreatedAt(LocalDateTime.now());
 
@@ -277,11 +287,57 @@ public class MessageServiceImpl implements MessageService {
                     MAX_IMAGE_SIZE
             );
             sendMessageRequest.setContent(url);
+            sendMessageRequest.setFileFormat(extractFileFormat(file));
 
             return sendMessage(sendMessageRequest);
         } catch (Exception ex) {
             if (url != null) s3Service.deleteFileByUrl(url);
             throw ex;
+        }
+    }
+
+    @Override
+    public MessageResponse sendImageBatchMessage(
+            SendMessageRequest sendMessageRequest,
+            List<MultipartFile> files
+    ) {
+        if (files == null || files.isEmpty()) {
+            throw new IllegalArgumentException("Danh sách ảnh không được để trống");
+        }
+
+        if (sendMessageRequest.getType() != MessageType.IMAGE) {
+            throw new IllegalArgumentException("Chỉ hỗ trợ nhiều ảnh cho tin nhắn IMAGE");
+        }
+
+        List<String> uploadedUrls = new ArrayList<>();
+        try {
+            for (MultipartFile file : files) {
+                if (file == null || file.isEmpty()) {
+                    throw new IllegalArgumentException("Ảnh không hợp lệ");
+                }
+
+                String contentType = file.getContentType();
+                if (contentType == null || !contentType.startsWith("image/")) {
+                    throw new IllegalArgumentException("Chỉ hỗ trợ upload nhiều ảnh");
+                }
+
+                String url = s3Service.uploadFile(
+                        file,
+                        "chats",
+                        UUID.randomUUID().toString(),
+                        true,
+                        MAX_IMAGE_SIZE
+                );
+                uploadedUrls.add(url);
+            }
+
+            sendMessageRequest.setContent(objectMapper.writeValueAsString(uploadedUrls));
+            sendMessageRequest.setFileFormat(files.size() > 1 ? "image-batch" : extractFileFormat(files.getFirst()));
+
+            return sendMessage(sendMessageRequest);
+        } catch (Exception ex) {
+            uploadedUrls.forEach(s3Service::deleteFileByUrl);
+            throw new RuntimeException(ex.getMessage(), ex);
         }
     }
 
@@ -317,6 +373,7 @@ public class MessageServiceImpl implements MessageService {
         sendReq.setContent(contentJson);
         sendReq.setType(MessageType.WEATHER);
         sendReq.setClientMsgId(req.getClientMsgId());
+        sendReq.setRepliedMessageId(null);
 
         // ============================
         // 4) Gọi lại pipeline chuẩn
@@ -357,6 +414,41 @@ public class MessageServiceImpl implements MessageService {
         }
 
         return responses;
+    }
+
+    @Override
+    public DeletedMessageResponse deleteMessageForMe(String messageId) {
+        var currentUser = currentUserProvider.get();
+
+        Message message = messageRepository
+                .findById(messageId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tin nhắn"));
+
+        var memberId = new RoomMemberId(message.getRoomId(), currentUser.getId());
+        var roomParticipant = roomParticipantRepository
+                .findById(memberId)
+                .orElseThrow(() -> new AccessDeniedException("Bạn không phải thành viên của phòng chat này"));
+
+        var deletedMessageId = new DeletedMessageId(
+                message.getRoomId(),
+                currentUser.getId(),
+                messageId
+        );
+
+        if (!deletedMessageRepository.existsById(deletedMessageId)) {
+            DeletedMessage deletedMessage = new DeletedMessage();
+            deletedMessage.setId(deletedMessageId);
+            deletedMessage.setRoom(roomParticipant.getRoom());
+            deletedMessage.setUser(currentUser);
+            deletedMessageRepository.save(deletedMessage);
+        }
+
+        if (messageId.equals(roomParticipant.getLastReadMessageId())) {
+            roomParticipant.setLastReadMessageId(null);
+            roomParticipant.setLastReadAt(null);
+        }
+
+        return new DeletedMessageResponse(messageId);
     }
 
     private Message validateForwardSourceMessage(String sourceMessageId, Long senderId) {
@@ -412,6 +504,7 @@ public class MessageServiceImpl implements MessageService {
         forwardedMessage.setSenderId(senderId);
         forwardedMessage.setContent(sourceMessage.getContent());
         forwardedMessage.setType(sourceMessage.getType());
+        forwardedMessage.setFileFormat(sourceMessage.getFileFormat());
         forwardedMessage.setClientMsgId(clientMsgId);
         forwardedMessage.setCreatedAt(LocalDateTime.now());
         forwardedMessage.setIsForwarded(true);
@@ -585,12 +678,18 @@ public class MessageServiceImpl implements MessageService {
             throw new RuntimeException("Not a room member");
 
         int fixed = Math.max(1, Math.min(size, 20));
+        var deletedMessageIds = getDeletedMessageIds(roomId, currentUser.getId());
+        boolean hasDeletedMessages = !deletedMessageIds.isEmpty();
 
-        var cached = loadFromCache(roomId, beforeId, fixed);
-        if (cached != null) return cached;
+        if (!hasDeletedMessages) {
+            var cached = loadFromCache(roomId, beforeId, fixed);
+            if (cached != null) return cached;
+        }
 
-        var db = loadFromDbCursor(roomId, beforeId, fixed);
-        cacheHistoryPage(roomId, beforeId, db);
+        var db = loadFromDbCursor(roomId, beforeId, fixed, deletedMessageIds);
+        if (!hasDeletedMessages) {
+            cacheHistoryPage(roomId, beforeId, db);
+        }
 
         return db;
     }
@@ -625,38 +724,67 @@ public class MessageServiceImpl implements MessageService {
     private HistoryMessageResponse loadFromDbCursor(
             Long roomId,
             String beforeId,
-            int size
+            int size,
+            Set<String> deletedMessageIds
     ) {
-        // Query size + 1 để biết còn trang sau không
-        Pageable limit = PageRequest.of(0, size + 1);
-        List<Message> res;
+        List<Message> selectedMessages = new ArrayList<>();
+        String cursor = beforeId;
+        boolean hasMore = false;
 
-        if (beforeId == null)
-            res = messageRepository
-                    .findByRoomIdOrderByIdDesc(roomId, limit);
-        else
-            res = messageRepository
-                    .findByRoomIdAndIdLessThanOrderByIdDesc(roomId, beforeId, limit);
+        while (selectedMessages.size() < size) {
+            Pageable limit = PageRequest.of(0, size + 1);
+            List<Message> fetched;
 
-        // Kiểm tra hasMore và Cắt bớt phần tử thừa (QUAN TRỌNG)
-        boolean hasMore = res.size() > size;
-        List<Message> trimmedMessages = hasMore ? res.subList(0, size) : res;
+            if (cursor == null) {
+                fetched = messageRepository.findByRoomIdOrderByIdDesc(roomId, limit);
+            } else {
+                fetched = messageRepository.findByRoomIdAndIdLessThanOrderByIdDesc(roomId, cursor, limit);
+            }
 
-        // Convert sang DTO
+            if (fetched.isEmpty()) {
+                hasMore = false;
+                break;
+            }
+
+            hasMore = fetched.size() > size;
+            List<Message> trimmed = hasMore ? fetched.subList(0, size) : fetched;
+
+            for (Message message : trimmed) {
+                if (!deletedMessageIds.contains(message.getId())) {
+                    selectedMessages.add(message);
+                    if (selectedMessages.size() == size) break;
+                }
+            }
+
+            if (!hasMore || trimmed.isEmpty()) {
+                break;
+            }
+
+            cursor = trimmed.getLast().getId();
+        }
+
         List<MessageResponse> responses = new ArrayList<>(
-                trimmedMessages.stream().map(chatMapper::toMessageResponseDto).toList()
+                selectedMessages.stream()
+                        .limit(size)
+                        .map(chatMapper::toMessageResponseDto)
+                        .toList()
         );
 
-        // Tính nextBeforeId dựa trên tin nhắn CŨ NHẤT (tin cuối cùng của list giảm dần)
         String nextBeforeId = null;
-        if (!responses.isEmpty())
+        if (!responses.isEmpty()) {
             nextBeforeId = responses.getLast().getId();
+        }
 
-
-        // Đảo ngược lại thành Tăng Dần (Cũ -> Mới) để khớp với UI Chat
         Collections.reverse(responses);
 
         return new HistoryMessageResponse(responses, hasMore, nextBeforeId);
+    }
+
+    private Set<String> getDeletedMessageIds(Long roomId, Long userId) {
+        return deletedMessageRepository.findByIdRoomIdAndIdUserId(roomId, userId)
+                .stream()
+                .map(entry -> entry.getId().getMessageId())
+                .collect(Collectors.toSet());
     }
 
     /* ========================================================================== */
@@ -696,6 +824,72 @@ public class MessageServiceImpl implements MessageService {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Dữ liệu phải là URL hợp lệ");
         }
+    }
+
+    private void validateImageContent(String content) {
+        if (content == null || content.isBlank()) {
+            throw new IllegalArgumentException("Dữ liệu phải là URL hợp lệ");
+        }
+
+        String trimmed = content.trim();
+        if (!trimmed.startsWith("[")) {
+            validateUrl(content);
+            return;
+        }
+
+        try {
+            List<String> urls = objectMapper.readValue(
+                    trimmed,
+                    new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {
+                    }
+            );
+
+            if (urls.isEmpty()) {
+                throw new IllegalArgumentException("Dữ liệu phải là URL hợp lệ");
+            }
+
+            for (String url : urls) {
+                validateUrl(url);
+            }
+        } catch (IllegalArgumentException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Dữ liệu phải là URL hợp lệ");
+        }
+    }
+
+    private void validateReplyMessage(String repliedMessageId, Long roomId) {
+        if (repliedMessageId == null || repliedMessageId.isBlank()) {
+            return;
+        }
+
+        Message repliedMessage = messageRepository
+                .findById(repliedMessageId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tin nhắn được trả lời"));
+
+        if (!Objects.equals(repliedMessage.getRoomId(), roomId)) {
+            throw new IllegalArgumentException("Tin nhắn trả lời không thuộc phòng này");
+        }
+    }
+
+    private static String extractFileFormat(MultipartFile file) {
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename != null) {
+            int dotIndex = originalFilename.lastIndexOf('.');
+            if (dotIndex >= 0 && dotIndex < originalFilename.length() - 1) {
+                return originalFilename.substring(dotIndex + 1).toLowerCase(Locale.ROOT);
+            }
+        }
+
+        String contentType = file.getContentType();
+        if (contentType != null) {
+            int slashIndex = contentType.lastIndexOf('/');
+            if (slashIndex >= 0 && slashIndex < contentType.length() - 1) {
+                return contentType.substring(slashIndex + 1).toLowerCase(Locale.ROOT);
+            }
+        }
+
+        return null;
     }
 
     private void publishUserChatAudit(long senderId, String message) {

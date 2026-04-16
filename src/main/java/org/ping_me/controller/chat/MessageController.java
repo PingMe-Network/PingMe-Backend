@@ -12,6 +12,7 @@ import org.ping_me.dto.base.ApiResponse;
 import org.ping_me.dto.request.chat.message.ForwardMessageRequest;
 import org.ping_me.dto.request.chat.message.ForwardMessagesRequest;
 import org.ping_me.dto.request.chat.message.MarkReadRequest;
+import org.ping_me.dto.response.chat.message.DeletedMessageResponse;
 import org.ping_me.dto.request.chat.message.SendMessageRequest;
 import org.ping_me.dto.request.chat.message.SendWeatherMessageRequest;
 import org.ping_me.dto.response.chat.message.HistoryMessageResponse;
@@ -93,6 +94,31 @@ public class    MessageController {
         );
     }
 
+    @Operation(
+            summary = "Gửi nhiều ảnh trong một tin nhắn",
+            description = "Upload nhiều ảnh và tạo một bubble chat IMAGE duy nhất"
+    )
+    @PostMapping("/files/images")
+    public ResponseEntity<ApiResponse<MessageResponse>> sendImageBatchMessage(
+            @Parameter(description = "Payload tin nhắn", required = true)
+            @Valid @RequestPart(value = "message") SendMessageRequest sendMessageRequest,
+
+            @Parameter(description = "Danh sách ảnh", required = true)
+            @RequestPart(value = "files") List<MultipartFile> files
+    ) {
+        Long userId = currentUserProvider.get().getId();
+        var userLimiter = rateLimiterRegistry
+                .rateLimiter("chatSending:" + userId, CHAT_SENDING_RATE_LIMITER_KEY);
+
+        return userLimiter.executeSupplier(() -> ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(messageService.sendImageBatchMessage(
+                        sendMessageRequest,
+                        files
+                )))
+        );
+    }
+
     // ================= SEND WEATHER =================
     @Operation(
             summary = "Gửi tin nhắn thời tiết",
@@ -166,6 +192,20 @@ public class    MessageController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new ApiResponse<>(messageService.recallMessage(id)));
+    }
+
+    @Operation(
+            summary = "Xóa tin nhắn phía mình",
+            description = "Ẩn tin nhắn khỏi lịch sử chat của riêng user hiện tại"
+    )
+    @DeleteMapping("/{id}/delete-for-me")
+    public ResponseEntity<ApiResponse<DeletedMessageResponse>> deleteMessageForMe(
+            @Parameter(description = "ID tin nhắn", example = "msg_123", required = true)
+            @PathVariable String id
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new ApiResponse<>(messageService.deleteMessageForMe(id)));
     }
 
     // ================= MARK READ =================

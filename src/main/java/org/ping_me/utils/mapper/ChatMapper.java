@@ -4,14 +4,17 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.ping_me.dto.response.chat.message.ForwardMetadataResponse;
 import org.ping_me.dto.response.chat.message.MessageResponse;
+import org.ping_me.dto.response.chat.message.RepliedMessageResponse;
 import org.ping_me.dto.response.chat.room.RoomParticipantResponse;
 import org.ping_me.dto.response.chat.room.RoomResponse;
 import org.ping_me.model.chat.Message;
 import org.ping_me.model.chat.Room;
 import org.ping_me.model.chat.RoomParticipant;
+import org.ping_me.model.constant.MessageType;
 import org.ping_me.repository.mongodb.chat.MessageRepository;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -28,7 +31,9 @@ public class ChatMapper {
 
         String clientMsgId = message.getClientMsgId() == null ? null : message.getClientMsgId().toString();
         String content = message.isActive() ? message.getContent() : null;
+        List<String> mediaUrls = extractMediaUrls(message.getType(), content);
         ForwardMetadataResponse forwardMetadata = null;
+        RepliedMessageResponse repliedMessage = mapRepliedMessage(message.getRepliedMessageId());
 
         if (message.isForwarded()) {
             forwardMetadata = new ForwardMetadataResponse(
@@ -45,10 +50,13 @@ public class ChatMapper {
                 message.getSenderId(),
                 content,
                 message.getType(),
+                message.getFileFormat(),
+                mediaUrls,
                 message.getCreatedAt(),
                 message.isActive(),
                 message.isForwarded(),
-                forwardMetadata
+                forwardMetadata,
+                repliedMessage
         );
     }
 
@@ -103,6 +111,45 @@ public class ChatMapper {
         res.setRoomImgUrl(room.getRoomImgUrl());
         res.setTheme(room.getTheme());
         return res;
+    }
+
+    private List<String> extractMediaUrls(MessageType type, String content) {
+        if (type != MessageType.IMAGE || content == null || content.isBlank()) {
+            return null;
+        }
+
+        String trimmed = content.trim();
+        if (!trimmed.startsWith("[")) {
+            return List.of(content);
+        }
+
+        try {
+            return new com.fasterxml.jackson.databind.ObjectMapper().readValue(
+                    trimmed,
+                    new com.fasterxml.jackson.core.type.TypeReference<ArrayList<String>>() {
+                    }
+            );
+        } catch (Exception ex) {
+            return List.of(content);
+        }
+    }
+
+    private RepliedMessageResponse mapRepliedMessage(String repliedMessageId) {
+        if (repliedMessageId == null || repliedMessageId.isBlank()) {
+            return null;
+        }
+
+        return messageRepository.findById(repliedMessageId)
+                .map(message -> new RepliedMessageResponse(
+                        message.getId(),
+                        message.getSenderId(),
+                        message.isActive() ? message.getContent() : null,
+                        message.getType(),
+                        message.isActive(),
+                        message.getFileFormat(),
+                        extractMediaUrls(message.getType(), message.isActive() ? message.getContent() : null)
+                ))
+                .orElse(null);
     }
 
 }

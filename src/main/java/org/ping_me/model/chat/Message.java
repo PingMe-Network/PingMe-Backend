@@ -55,6 +55,9 @@ public class Message {
     @Field("type")
     MessageType type;
 
+    @Field("file_format")
+    String fileFormat;
+
     @Field("client_msg_id")
     UUID clientMsgId;
 
@@ -72,6 +75,9 @@ public class Message {
 
     @Field("forwarded_from_sender_id")
     Long forwardedFromSenderId;
+
+    @Field("replied_message_id")
+    String repliedMessageId;
 
     @CreatedDate
     @Field("created_at")
