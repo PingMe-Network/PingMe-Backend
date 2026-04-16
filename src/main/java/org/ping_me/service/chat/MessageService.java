@@ -1,5 +1,7 @@
 package org.ping_me.service.chat;
 
+import org.ping_me.dto.request.chat.message.ForwardMessageRequest;
+import org.ping_me.dto.request.chat.message.ForwardMessagesRequest;
 import org.ping_me.dto.request.chat.message.MarkReadRequest;
 import org.ping_me.dto.request.chat.message.SendMessageRequest;
 import org.ping_me.dto.request.chat.message.SendWeatherMessageRequest;
@@ -11,6 +13,8 @@ import org.ping_me.model.User;
 import org.ping_me.model.chat.Message;
 import org.ping_me.model.chat.Room;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 /**
  * Admin 8/26/2025
@@ -31,6 +35,10 @@ public interface MessageService {
     // 2. Serialize dữ liệu thời tiết sang JSON và gán vào content của message.
     // 3. Tạo SendMessageRequest với type = WEATHER và tái sử dụng pipeline sendMessage().
     MessageResponse sendWeatherMessage(SendWeatherMessageRequest req);
+
+    MessageResponse forwardMessage(ForwardMessageRequest request);
+
+    List<MessageResponse> forwardMessages(ForwardMessagesRequest request);
 
     MessageRecalledResponse recallMessage(String messageId);
 

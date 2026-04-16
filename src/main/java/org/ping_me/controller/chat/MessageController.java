@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ping_me.dto.base.ApiResponse;
+import org.ping_me.dto.request.chat.message.ForwardMessageRequest;
+import org.ping_me.dto.request.chat.message.ForwardMessagesRequest;
 import org.ping_me.dto.request.chat.message.MarkReadRequest;
 import org.ping_me.dto.request.chat.message.SendMessageRequest;
 import org.ping_me.dto.request.chat.message.SendWeatherMessageRequest;
@@ -22,6 +24,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 /**
  * Admin 8/26/2025
@@ -107,6 +111,45 @@ public class    MessageController {
                 .body(new ApiResponse<>(messageService.sendWeatherMessage(
                         sendWeatherMessageRequest
                 )))
+        );
+    }
+
+    // ================= FORWARD =================
+    @Operation(
+            summary = "Chuyển tiếp tin nhắn",
+            description = "Tạo một tin nhắn mới ở phòng đích bằng nội dung của tin nhắn nguồn"
+    )
+    @PostMapping("/forward")
+    public ResponseEntity<ApiResponse<MessageResponse>> forwardMessage(
+            @Parameter(description = "Payload chuyển tiếp tin nhắn", required = true)
+            @RequestBody @Valid ForwardMessageRequest forwardMessageRequest
+    ) {
+        Long userId = currentUserProvider.get().getId();
+        var userLimiter = rateLimiterRegistry
+                .rateLimiter("chatSending:" + userId, CHAT_SENDING_RATE_LIMITER_KEY);
+
+        return userLimiter.executeSupplier(() -> ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(messageService.forwardMessage(forwardMessageRequest)))
+        );
+    }
+
+    @Operation(
+            summary = "Chuyển tiếp tin nhắn tới nhiều phòng",
+            description = "Tạo nhiều tin nhắn mới ở các phòng đích bằng nội dung của tin nhắn nguồn"
+    )
+    @PostMapping("/forward/bulk")
+    public ResponseEntity<ApiResponse<List<MessageResponse>>> forwardMessages(
+            @Parameter(description = "Payload chuyển tiếp tới nhiều phòng", required = true)
+            @RequestBody @Valid ForwardMessagesRequest forwardMessagesRequest
+    ) {
+        Long userId = currentUserProvider.get().getId();
+        var userLimiter = rateLimiterRegistry
+                .rateLimiter("chatSending:" + userId, CHAT_SENDING_RATE_LIMITER_KEY);
+
+        return userLimiter.executeSupplier(() -> ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(messageService.forwardMessages(forwardMessagesRequest)))
         );
     }
 

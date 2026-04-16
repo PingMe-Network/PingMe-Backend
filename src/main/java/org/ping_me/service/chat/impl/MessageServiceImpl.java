@@ -9,6 +9,8 @@ import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.ping_me.config.s3.S3Service;
 import org.ping_me.dto.event.UserChatEvent;
+import org.ping_me.dto.request.chat.message.ForwardMessageRequest;
+import org.ping_me.dto.request.chat.message.ForwardMessagesRequest;
 import org.ping_me.dto.request.chat.message.MarkReadRequest;
 import org.ping_me.dto.request.chat.message.SendMessageRequest;
 import org.ping_me.dto.request.chat.message.SendWeatherMessageRequest;
@@ -320,6 +322,139 @@ public class MessageServiceImpl implements MessageService {
         // 4) Gọi lại pipeline chuẩn
         // ============================
         return sendMessage(sendReq);
+    }
+
+    @Override
+    public MessageResponse forwardMessage(ForwardMessageRequest request) {
+        var currentUser = currentUserProvider.get();
+        var senderId = currentUser.getId();
+        var sourceMessage = validateForwardSourceMessage(request.getSourceMessageId(), senderId);
+        UUID clientMsgId = parseClientMsgId(request.getClientMsgId());
+
+        return forwardMessageToRoom(sourceMessage, senderId, request.getTargetRoomId(), clientMsgId);
+    }
+
+    @Override
+    public List<MessageResponse> forwardMessages(ForwardMessagesRequest request) {
+        var currentUser = currentUserProvider.get();
+        var senderId = currentUser.getId();
+        var sourceMessage = validateForwardSourceMessage(request.getSourceMessageId(), senderId);
+        UUID clientMsgId = parseClientMsgId(request.getClientMsgId());
+
+        var uniqueTargetRoomIds = request.getTargetRoomIds()
+                .stream()
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        if (uniqueTargetRoomIds.isEmpty()) {
+            throw new IllegalArgumentException("Danh sách phòng đích không được để trống");
+        }
+
+        List<MessageResponse> responses = new ArrayList<>();
+        for (Long targetRoomId : uniqueTargetRoomIds) {
+            responses.add(forwardMessageToRoom(sourceMessage, senderId, targetRoomId, clientMsgId));
+        }
+
+        return responses;
+    }
+
+    private Message validateForwardSourceMessage(String sourceMessageId, Long senderId) {
+        var sourceMessage = messageRepository
+                .findById(sourceMessageId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tin nhắn nguồn"));
+
+        if (!sourceMessage.isActive()) {
+            throw new IllegalArgumentException("Không thể chuyển tiếp tin nhắn đã thu hồi");
+        }
+
+        if (sourceMessage.getType() == MessageType.SYSTEM) {
+            throw new IllegalArgumentException("Không thể chuyển tiếp tin nhắn hệ thống");
+        }
+
+        var sourceMemberId = new RoomMemberId(sourceMessage.getRoomId(), senderId);
+        if (!roomParticipantRepository.existsById(sourceMemberId)) {
+            throw new AccessDeniedException("Bạn không có quyền truy cập tin nhắn nguồn");
+        }
+
+        return sourceMessage;
+    }
+
+    private UUID parseClientMsgId(String clientMsgIdRaw) {
+        try {
+            return UUID.fromString(clientMsgIdRaw);
+        } catch (Exception exception) {
+            throw new IllegalArgumentException("clientMsg không hợp lệ");
+        }
+    }
+
+    private MessageResponse forwardMessageToRoom(
+            Message sourceMessage,
+            Long senderId,
+            Long targetRoomId,
+            UUID clientMsgId
+    ) {
+        Room targetRoom = roomRepository
+                .findById(targetRoomId)
+                .orElseThrow(() -> new EntityNotFoundException("Phòng chat đích không tồn tại"));
+        var targetMemberId = new RoomMemberId(targetRoomId, senderId);
+        var targetParticipant = roomParticipantRepository
+                .findById(targetMemberId)
+                .orElseThrow(() -> new AccessDeniedException("Bạn không phải thành viên của phòng chat đích"));
+
+        var existed = messageRepository
+                .findByRoomIdAndSenderIdAndClientMsgId(targetRoomId, senderId, clientMsgId)
+                .orElse(null);
+        if (existed != null) return chatMapper.toMessageResponseDto(existed);
+
+        Message forwardedMessage = new Message();
+        forwardedMessage.setRoomId(targetRoomId);
+        forwardedMessage.setSenderId(senderId);
+        forwardedMessage.setContent(sourceMessage.getContent());
+        forwardedMessage.setType(sourceMessage.getType());
+        forwardedMessage.setClientMsgId(clientMsgId);
+        forwardedMessage.setCreatedAt(LocalDateTime.now());
+        forwardedMessage.setIsForwarded(true);
+        forwardedMessage.setForwardedFromMessageId(sourceMessage.getId());
+        forwardedMessage.setForwardedFromRoomId(sourceMessage.getRoomId());
+        forwardedMessage.setForwardedFromSenderId(sourceMessage.getSenderId());
+
+        try {
+            forwardedMessage = messageRepository.save(forwardedMessage);
+        } catch (DataIntegrityViolationException ex) {
+            forwardedMessage = messageRepository
+                    .findByRoomIdAndSenderIdAndClientMsgId(targetRoomId, senderId, clientMsgId)
+                    .orElseThrow(() -> ex);
+        }
+
+        try {
+            targetRoom.setLastMessageId(forwardedMessage.getId());
+            targetRoom.setLastMessageAt(forwardedMessage.getCreatedAt());
+
+            targetParticipant.setLastReadMessageId(forwardedMessage.getId());
+            targetParticipant.setLastReadAt(forwardedMessage.getCreatedAt());
+
+            var messageCreatedEvent = new MessageCreatedEvent(forwardedMessage);
+            var roomUpdatedEvent = new RoomUpdatedEvent(
+                    targetRoom,
+                    roomParticipantRepository.findByRoom_Id(targetRoom.getId()),
+                    null
+            );
+
+            eventPublisher.publishEvent(messageCreatedEvent);
+            eventPublisher.publishEvent(roomUpdatedEvent);
+
+            var dto = chatMapper.toMessageResponseDto(forwardedMessage);
+
+            if (cacheEnabled) {
+                messageCachingService.cacheNewMessage(targetRoomId, dto);
+            }
+
+            return dto;
+        } catch (RuntimeException ex) {
+            messageRepository.deleteById(forwardedMessage.getId());
+            throw ex;
+        }
     }
 
 
