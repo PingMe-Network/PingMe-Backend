@@ -28,6 +28,8 @@ public class MessageResponse {
     private String fileFormat;
     private List<String> mediaUrls;
     private LocalDateTime createdAt;
+    private Boolean isEdited;
+    private LocalDateTime editedAt;
 
     private Boolean isActive;
     private Boolean isForwarded;

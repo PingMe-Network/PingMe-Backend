@@ -7,6 +7,7 @@ package org.ping_me.websocket.dto.chat.common;
 public enum ChatEventType {
     // Message
     MESSAGE_CREATED,
+    MESSAGE_UPDATED,
     MESSAGE_RECALLED,
     MESSAGE_TYPING,
     READ_STATE_CHANGED,

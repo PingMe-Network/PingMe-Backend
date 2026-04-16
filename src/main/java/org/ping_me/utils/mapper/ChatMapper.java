@@ -53,6 +53,8 @@ public class ChatMapper {
                 message.getFileFormat(),
                 mediaUrls,
                 message.getCreatedAt(),
+                message.isEdited(),
+                message.getEditedAt(),
                 message.isActive(),
                 message.isForwarded(),
                 forwardMetadata,

@@ -11,6 +11,7 @@ import org.ping_me.config.s3.S3Service;
 import org.ping_me.dto.event.UserChatEvent;
 import org.ping_me.dto.request.chat.message.ForwardMessageRequest;
 import org.ping_me.dto.request.chat.message.ForwardMessagesRequest;
+import org.ping_me.dto.request.chat.message.EditMessageRequest;
 import org.ping_me.dto.request.chat.message.MarkReadRequest;
 import org.ping_me.dto.request.chat.message.SendMessageRequest;
 import org.ping_me.dto.request.chat.message.SendWeatherMessageRequest;
@@ -36,6 +37,7 @@ import org.ping_me.service.chat.MessageCachingService;
 import org.ping_me.service.chat.MessageService;
 import org.ping_me.service.chat.event.message.MessageCreatedEvent;
 import org.ping_me.service.chat.event.message.MessageRecalledEvent;
+import org.ping_me.service.chat.event.message.MessageUpdatedEvent;
 import org.ping_me.service.chat.event.room.RoomUpdatedEvent;
 import org.ping_me.service.user.CurrentUserProvider;
 import org.ping_me.service.weather.WeatherService;
@@ -449,6 +451,64 @@ public class MessageServiceImpl implements MessageService {
         }
 
         return new DeletedMessageResponse(messageId);
+    }
+
+    @Override
+    public MessageResponse editMessage(String messageId, EditMessageRequest request) {
+        var currentUser = currentUserProvider.get();
+
+        Message messageToEdit = messageRepository
+                .findById(messageId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tin nhắn"));
+
+        if (!currentUser.getId().equals(messageToEdit.getSenderId())) {
+            throw new AccessDeniedException("Không có quyền truy cập");
+        }
+
+        if (!messageToEdit.isActive()) {
+            throw new IllegalArgumentException("Không thể chỉnh sửa tin nhắn đã thu hồi");
+        }
+
+        if (messageToEdit.getType() != MessageType.TEXT) {
+            throw new IllegalArgumentException("Chỉ hỗ trợ chỉnh sửa tin nhắn văn bản");
+        }
+
+        long hours = ChronoUnit.HOURS.between(messageToEdit.getCreatedAt(), LocalDateTime.now());
+        if (hours > 24) {
+            throw new IllegalArgumentException("Bạn chỉ có thể chỉnh sửa tin nhắn trong vòng 24 giờ");
+        }
+
+        String newContent = request.getContent().trim();
+        if (newContent.equals(messageToEdit.getContent())) {
+            return chatMapper.toMessageResponseDto(messageToEdit);
+        }
+
+        messageToEdit.setContent(newContent);
+        messageToEdit.setIsEdited(true);
+        messageToEdit.setEditedAt(LocalDateTime.now());
+        messageToEdit = messageRepository.save(messageToEdit);
+
+        var dto = chatMapper.toMessageResponseDto(messageToEdit);
+        if (cacheEnabled) {
+            messageCachingService.updateMessage(messageToEdit.getRoomId(), messageId, dto);
+        }
+
+        eventPublisher.publishEvent(new MessageUpdatedEvent(messageToEdit));
+
+        Room room = roomRepository
+                .findById(messageToEdit.getRoomId())
+                .orElseThrow(() -> new EntityNotFoundException("Phòng chat này không tồn tại"));
+
+        if (messageId.equals(room.getLastMessageId())) {
+            var roomUpdatedEvent = new RoomUpdatedEvent(
+                    room,
+                    roomParticipantRepository.findByRoom_Id(room.getId()),
+                    null
+            );
+            eventPublisher.publishEvent(roomUpdatedEvent);
+        }
+
+        return dto;
     }
 
     private Message validateForwardSourceMessage(String sourceMessageId, Long senderId) {

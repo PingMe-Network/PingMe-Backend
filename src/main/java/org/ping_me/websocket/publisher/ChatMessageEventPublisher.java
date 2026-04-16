@@ -4,10 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.ping_me.dto.response.chat.message.MessageRecalledResponse;
 import org.ping_me.service.chat.event.message.MessageCreatedEvent;
 import org.ping_me.service.chat.event.message.MessageRecalledEvent;
+import org.ping_me.service.chat.event.message.MessageUpdatedEvent;
 import org.ping_me.utils.mapper.ChatMapper;
 import org.ping_me.websocket.WebSocketDestinations;
 import org.ping_me.websocket.dto.chat.message.MessageCreatedEventPayload;
 import org.ping_me.websocket.dto.chat.message.MessageRecalledEventPayload;
+import org.ping_me.websocket.dto.chat.message.MessageUpdatedEventPayload;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -39,6 +41,17 @@ public class ChatMessageEventPublisher {
         redisWsPublisher.publish(
                 WebSocketDestinations.roomMessagesTopic(event.getRoomId()),
                 payload
+        );
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onMessageUpdated(MessageUpdatedEvent event) {
+        var messageResponse = chatMapper.toMessageResponseDto(event.getMessage());
+        var roomId = event.getMessage().getRoomId();
+
+        redisWsPublisher.publish(
+                WebSocketDestinations.roomMessagesTopic(roomId),
+                new MessageUpdatedEventPayload(messageResponse)
         );
     }
 }

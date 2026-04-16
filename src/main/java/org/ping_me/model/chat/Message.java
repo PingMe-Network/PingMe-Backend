@@ -79,6 +79,12 @@ public class Message {
     @Field("replied_message_id")
     String repliedMessageId;
 
+    @Field("is_edited")
+    Boolean isEdited = false;
+
+    @Field("edited_at")
+    LocalDateTime editedAt;
+
     @CreatedDate
     @Field("created_at")
     LocalDateTime createdAt;
@@ -101,5 +107,9 @@ public class Message {
 
     public boolean isForwarded() {
         return Boolean.TRUE.equals(isForwarded);
+    }
+
+    public boolean isEdited() {
+        return Boolean.TRUE.equals(isEdited);
     }
 }

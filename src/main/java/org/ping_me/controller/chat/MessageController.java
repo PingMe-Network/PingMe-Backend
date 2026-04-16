@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.ping_me.dto.base.ApiResponse;
 import org.ping_me.dto.request.chat.message.ForwardMessageRequest;
 import org.ping_me.dto.request.chat.message.ForwardMessagesRequest;
+import org.ping_me.dto.request.chat.message.EditMessageRequest;
 import org.ping_me.dto.request.chat.message.MarkReadRequest;
 import org.ping_me.dto.response.chat.message.DeletedMessageResponse;
 import org.ping_me.dto.request.chat.message.SendMessageRequest;
@@ -206,6 +207,23 @@ public class    MessageController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new ApiResponse<>(messageService.deleteMessageForMe(id)));
+    }
+
+    @Operation(
+            summary = "Chỉnh sửa tin nhắn",
+            description = "Chỉnh sửa nội dung một tin nhắn văn bản đã gửi"
+    )
+    @PatchMapping("/{id}")
+    public ResponseEntity<ApiResponse<MessageResponse>> editMessage(
+            @Parameter(description = "ID tin nhắn", example = "msg_123", required = true)
+            @PathVariable String id,
+
+            @Parameter(description = "Payload chỉnh sửa tin nhắn", required = true)
+            @RequestBody @Valid EditMessageRequest editMessageRequest
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new ApiResponse<>(messageService.editMessage(id, editMessageRequest)));
     }
 
     // ================= MARK READ =================
