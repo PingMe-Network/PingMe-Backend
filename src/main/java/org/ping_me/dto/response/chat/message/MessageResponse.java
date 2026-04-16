@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import org.ping_me.model.constant.MessageType;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Admin 8/26/2025
@@ -25,6 +26,7 @@ public class MessageResponse {
     private String content;
     private MessageType type;
     private String fileFormat;
+    private List<String> mediaUrls;
     private LocalDateTime createdAt;
 
     private Boolean isActive;

@@ -142,8 +142,9 @@ public class MessageServiceImpl implements MessageService {
 
         // Nếu file này một dạng file thì
         // validate url hợp l
-        if (sendMessageRequest.getType() == MessageType.IMAGE
-                || sendMessageRequest.getType() == MessageType.VIDEO
+        if (sendMessageRequest.getType() == MessageType.IMAGE) {
+            validateImageContent(sendMessageRequest.getContent());
+        } else if (sendMessageRequest.getType() == MessageType.VIDEO
                 || sendMessageRequest.getType() == MessageType.FILE) {
             validateUrl(sendMessageRequest.getContent());
         }
@@ -290,6 +291,51 @@ public class MessageServiceImpl implements MessageService {
         } catch (Exception ex) {
             if (url != null) s3Service.deleteFileByUrl(url);
             throw ex;
+        }
+    }
+
+    @Override
+    public MessageResponse sendImageBatchMessage(
+            SendMessageRequest sendMessageRequest,
+            List<MultipartFile> files
+    ) {
+        if (files == null || files.isEmpty()) {
+            throw new IllegalArgumentException("Danh sách ảnh không được để trống");
+        }
+
+        if (sendMessageRequest.getType() != MessageType.IMAGE) {
+            throw new IllegalArgumentException("Chỉ hỗ trợ nhiều ảnh cho tin nhắn IMAGE");
+        }
+
+        List<String> uploadedUrls = new ArrayList<>();
+        try {
+            for (MultipartFile file : files) {
+                if (file == null || file.isEmpty()) {
+                    throw new IllegalArgumentException("Ảnh không hợp lệ");
+                }
+
+                String contentType = file.getContentType();
+                if (contentType == null || !contentType.startsWith("image/")) {
+                    throw new IllegalArgumentException("Chỉ hỗ trợ upload nhiều ảnh");
+                }
+
+                String url = s3Service.uploadFile(
+                        file,
+                        "chats",
+                        UUID.randomUUID().toString(),
+                        true,
+                        MAX_IMAGE_SIZE
+                );
+                uploadedUrls.add(url);
+            }
+
+            sendMessageRequest.setContent(objectMapper.writeValueAsString(uploadedUrls));
+            sendMessageRequest.setFileFormat(files.size() > 1 ? "image-batch" : extractFileFormat(files.getFirst()));
+
+            return sendMessage(sendMessageRequest);
+        } catch (Exception ex) {
+            uploadedUrls.forEach(s3Service::deleteFileByUrl);
+            throw new RuntimeException(ex.getMessage(), ex);
         }
     }
 
@@ -773,6 +819,38 @@ public class MessageServiceImpl implements MessageService {
             if (u.getScheme() == null || u.getHost() == null)
                 throw new IllegalArgumentException("Dữ liệu phải là URL hợp lệ");
         } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Dữ liệu phải là URL hợp lệ");
+        }
+    }
+
+    private void validateImageContent(String content) {
+        if (content == null || content.isBlank()) {
+            throw new IllegalArgumentException("Dữ liệu phải là URL hợp lệ");
+        }
+
+        String trimmed = content.trim();
+        if (!trimmed.startsWith("[")) {
+            validateUrl(content);
+            return;
+        }
+
+        try {
+            List<String> urls = objectMapper.readValue(
+                    trimmed,
+                    new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {
+                    }
+            );
+
+            if (urls.isEmpty()) {
+                throw new IllegalArgumentException("Dữ liệu phải là URL hợp lệ");
+            }
+
+            for (String url : urls) {
+                validateUrl(url);
+            }
+        } catch (IllegalArgumentException ex) {
+            throw ex;
+        } catch (Exception ex) {
             throw new IllegalArgumentException("Dữ liệu phải là URL hợp lệ");
         }
     }

@@ -29,6 +29,11 @@ public interface MessageService {
             MultipartFile file
     );
 
+    MessageResponse sendImageBatchMessage(
+            SendMessageRequest sendMessageRequest,
+            List<MultipartFile> files
+    );
+
     // Xử lý gửi tin nhắn dạng WEATHER (thời tiết).
     //
     // Quy trình thực hiện:
