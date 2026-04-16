@@ -573,10 +573,7 @@ public class MessageServiceImpl implements MessageService {
         // Disable message
         messageToRecall.setIsActive(false);
 
-        // Không phải TEXT -> xóa file
-        if (!messageToRecall.getType().equals(MessageType.TEXT)) {
-            s3Service.deleteFileByUrl(messageToRecall.getContent());
-        }
+        deleteMessageMediaSafely(messageToRecall);
 
         // Xóa content
         messageToRecall.setContent("");
@@ -601,6 +598,28 @@ public class MessageServiceImpl implements MessageService {
         eventPublisher.publishEvent(messageRecalledEvent);
 
         return new MessageRecalledResponse(messageId);
+    }
+
+    private void deleteMessageMediaSafely(Message message) {
+        if (message.getType() == MessageType.TEXT
+                || message.getType() == MessageType.SYSTEM
+                || message.getType() == MessageType.WEATHER) {
+            return;
+        }
+
+        String content = message.getContent();
+        if (content == null || content.isBlank()) {
+            return;
+        }
+
+        if (message.getType() == MessageType.IMAGE) {
+            for (String mediaUrl : extractMediaUrls(content)) {
+                tryDeleteFileByUrl(mediaUrl, message.getId());
+            }
+            return;
+        }
+
+        tryDeleteFileByUrl(content, message.getId());
     }
 
     /* ========================================================================== */
@@ -823,6 +842,37 @@ public class MessageServiceImpl implements MessageService {
                 throw new IllegalArgumentException("Dữ liệu phải là URL hợp lệ");
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Dữ liệu phải là URL hợp lệ");
+        }
+    }
+
+    private List<String> extractMediaUrls(String content) {
+        String trimmed = content.trim();
+        if (!trimmed.startsWith("[")) {
+            return List.of(content);
+        }
+
+        try {
+            List<String> urls = objectMapper.readValue(
+                    trimmed,
+                    new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {
+                    }
+            );
+            return urls == null ? List.of() : urls;
+        } catch (Exception ex) {
+            log.warn("Không thể parse danh sách media để thu hồi: {}", ex.getMessage());
+            return List.of(content);
+        }
+    }
+
+    private void tryDeleteFileByUrl(String url, String messageId) {
+        if (url == null || url.isBlank()) {
+            return;
+        }
+
+        try {
+            s3Service.deleteFileByUrl(url);
+        } catch (RuntimeException ex) {
+            log.warn("Bỏ qua lỗi xóa media khi thu hồi message {}: {}", messageId, ex.getMessage());
         }
     }
 
