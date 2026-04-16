@@ -12,6 +12,7 @@ import org.ping_me.dto.base.ApiResponse;
 import org.ping_me.dto.request.chat.message.ForwardMessageRequest;
 import org.ping_me.dto.request.chat.message.ForwardMessagesRequest;
 import org.ping_me.dto.request.chat.message.MarkReadRequest;
+import org.ping_me.dto.response.chat.message.DeletedMessageResponse;
 import org.ping_me.dto.request.chat.message.SendMessageRequest;
 import org.ping_me.dto.request.chat.message.SendWeatherMessageRequest;
 import org.ping_me.dto.response.chat.message.HistoryMessageResponse;
@@ -166,6 +167,20 @@ public class    MessageController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new ApiResponse<>(messageService.recallMessage(id)));
+    }
+
+    @Operation(
+            summary = "Xóa tin nhắn phía mình",
+            description = "Ẩn tin nhắn khỏi lịch sử chat của riêng user hiện tại"
+    )
+    @DeleteMapping("/{id}/delete-for-me")
+    public ResponseEntity<ApiResponse<DeletedMessageResponse>> deleteMessageForMe(
+            @Parameter(description = "ID tin nhắn", example = "msg_123", required = true)
+            @PathVariable String id
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new ApiResponse<>(messageService.deleteMessageForMe(id)));
     }
 
     // ================= MARK READ =================

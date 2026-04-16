@@ -55,6 +55,9 @@ public class Message {
     @Field("type")
     MessageType type;
 
+    @Field("file_format")
+    String fileFormat;
+
     @Field("client_msg_id")
     UUID clientMsgId;
 

@@ -14,17 +14,21 @@ import org.ping_me.dto.request.chat.message.ForwardMessagesRequest;
 import org.ping_me.dto.request.chat.message.MarkReadRequest;
 import org.ping_me.dto.request.chat.message.SendMessageRequest;
 import org.ping_me.dto.request.chat.message.SendWeatherMessageRequest;
+import org.ping_me.dto.response.chat.message.DeletedMessageResponse;
 import org.ping_me.dto.response.chat.message.HistoryMessageResponse;
 import org.ping_me.dto.response.chat.message.MessageRecalledResponse;
 import org.ping_me.dto.response.chat.message.MessageResponse;
 import org.ping_me.dto.response.chat.message.ReadStateResponse;
 import org.ping_me.dto.response.weather.WeatherResponse;
 import org.ping_me.model.User;
+import org.ping_me.model.chat.DeletedMessage;
 import org.ping_me.model.chat.Message;
 import org.ping_me.model.chat.Room;
 import org.ping_me.model.chat.RoomParticipant;
+import org.ping_me.model.common.DeletedMessageId;
 import org.ping_me.model.common.RoomMemberId;
 import org.ping_me.model.constant.MessageType;
+import org.ping_me.repository.jpa.chat.DeletedMessageRepository;
 import org.ping_me.repository.jpa.chat.RoomParticipantRepository;
 import org.ping_me.repository.jpa.chat.RoomRepository;
 import org.ping_me.repository.mongodb.chat.MessageRepository;
@@ -53,6 +57,7 @@ import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Admin 8/26/2025
@@ -80,6 +85,7 @@ public class MessageServiceImpl implements MessageService {
     // REPOSITORY
     private final RoomRepository roomRepository;
     private final RoomParticipantRepository roomParticipantRepository;
+    private final DeletedMessageRepository deletedMessageRepository;
     private final MessageRepository messageRepository;
 
     // PUBLISHER
@@ -175,6 +181,7 @@ public class MessageServiceImpl implements MessageService {
         message.setSenderId(senderId);
         message.setContent(sendMessageRequest.getContent());
         message.setType(sendMessageRequest.getType());
+        message.setFileFormat(sendMessageRequest.getFileFormat());
         message.setClientMsgId(clientMsgId);
         message.setCreatedAt(LocalDateTime.now());
 
@@ -277,6 +284,7 @@ public class MessageServiceImpl implements MessageService {
                     MAX_IMAGE_SIZE
             );
             sendMessageRequest.setContent(url);
+            sendMessageRequest.setFileFormat(extractFileFormat(file));
 
             return sendMessage(sendMessageRequest);
         } catch (Exception ex) {
@@ -359,6 +367,41 @@ public class MessageServiceImpl implements MessageService {
         return responses;
     }
 
+    @Override
+    public DeletedMessageResponse deleteMessageForMe(String messageId) {
+        var currentUser = currentUserProvider.get();
+
+        Message message = messageRepository
+                .findById(messageId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tin nhắn"));
+
+        var memberId = new RoomMemberId(message.getRoomId(), currentUser.getId());
+        var roomParticipant = roomParticipantRepository
+                .findById(memberId)
+                .orElseThrow(() -> new AccessDeniedException("Bạn không phải thành viên của phòng chat này"));
+
+        var deletedMessageId = new DeletedMessageId(
+                message.getRoomId(),
+                currentUser.getId(),
+                messageId
+        );
+
+        if (!deletedMessageRepository.existsById(deletedMessageId)) {
+            DeletedMessage deletedMessage = new DeletedMessage();
+            deletedMessage.setId(deletedMessageId);
+            deletedMessage.setRoom(roomParticipant.getRoom());
+            deletedMessage.setUser(currentUser);
+            deletedMessageRepository.save(deletedMessage);
+        }
+
+        if (messageId.equals(roomParticipant.getLastReadMessageId())) {
+            roomParticipant.setLastReadMessageId(null);
+            roomParticipant.setLastReadAt(null);
+        }
+
+        return new DeletedMessageResponse(messageId);
+    }
+
     private Message validateForwardSourceMessage(String sourceMessageId, Long senderId) {
         var sourceMessage = messageRepository
                 .findById(sourceMessageId)
@@ -412,6 +455,7 @@ public class MessageServiceImpl implements MessageService {
         forwardedMessage.setSenderId(senderId);
         forwardedMessage.setContent(sourceMessage.getContent());
         forwardedMessage.setType(sourceMessage.getType());
+        forwardedMessage.setFileFormat(sourceMessage.getFileFormat());
         forwardedMessage.setClientMsgId(clientMsgId);
         forwardedMessage.setCreatedAt(LocalDateTime.now());
         forwardedMessage.setIsForwarded(true);
@@ -585,12 +629,18 @@ public class MessageServiceImpl implements MessageService {
             throw new RuntimeException("Not a room member");
 
         int fixed = Math.max(1, Math.min(size, 20));
+        var deletedMessageIds = getDeletedMessageIds(roomId, currentUser.getId());
+        boolean hasDeletedMessages = !deletedMessageIds.isEmpty();
 
-        var cached = loadFromCache(roomId, beforeId, fixed);
-        if (cached != null) return cached;
+        if (!hasDeletedMessages) {
+            var cached = loadFromCache(roomId, beforeId, fixed);
+            if (cached != null) return cached;
+        }
 
-        var db = loadFromDbCursor(roomId, beforeId, fixed);
-        cacheHistoryPage(roomId, beforeId, db);
+        var db = loadFromDbCursor(roomId, beforeId, fixed, deletedMessageIds);
+        if (!hasDeletedMessages) {
+            cacheHistoryPage(roomId, beforeId, db);
+        }
 
         return db;
     }
@@ -625,38 +675,67 @@ public class MessageServiceImpl implements MessageService {
     private HistoryMessageResponse loadFromDbCursor(
             Long roomId,
             String beforeId,
-            int size
+            int size,
+            Set<String> deletedMessageIds
     ) {
-        // Query size + 1 để biết còn trang sau không
-        Pageable limit = PageRequest.of(0, size + 1);
-        List<Message> res;
+        List<Message> selectedMessages = new ArrayList<>();
+        String cursor = beforeId;
+        boolean hasMore = false;
 
-        if (beforeId == null)
-            res = messageRepository
-                    .findByRoomIdOrderByIdDesc(roomId, limit);
-        else
-            res = messageRepository
-                    .findByRoomIdAndIdLessThanOrderByIdDesc(roomId, beforeId, limit);
+        while (selectedMessages.size() < size) {
+            Pageable limit = PageRequest.of(0, size + 1);
+            List<Message> fetched;
 
-        // Kiểm tra hasMore và Cắt bớt phần tử thừa (QUAN TRỌNG)
-        boolean hasMore = res.size() > size;
-        List<Message> trimmedMessages = hasMore ? res.subList(0, size) : res;
+            if (cursor == null) {
+                fetched = messageRepository.findByRoomIdOrderByIdDesc(roomId, limit);
+            } else {
+                fetched = messageRepository.findByRoomIdAndIdLessThanOrderByIdDesc(roomId, cursor, limit);
+            }
 
-        // Convert sang DTO
+            if (fetched.isEmpty()) {
+                hasMore = false;
+                break;
+            }
+
+            hasMore = fetched.size() > size;
+            List<Message> trimmed = hasMore ? fetched.subList(0, size) : fetched;
+
+            for (Message message : trimmed) {
+                if (!deletedMessageIds.contains(message.getId())) {
+                    selectedMessages.add(message);
+                    if (selectedMessages.size() == size) break;
+                }
+            }
+
+            if (!hasMore || trimmed.isEmpty()) {
+                break;
+            }
+
+            cursor = trimmed.getLast().getId();
+        }
+
         List<MessageResponse> responses = new ArrayList<>(
-                trimmedMessages.stream().map(chatMapper::toMessageResponseDto).toList()
+                selectedMessages.stream()
+                        .limit(size)
+                        .map(chatMapper::toMessageResponseDto)
+                        .toList()
         );
 
-        // Tính nextBeforeId dựa trên tin nhắn CŨ NHẤT (tin cuối cùng của list giảm dần)
         String nextBeforeId = null;
-        if (!responses.isEmpty())
+        if (!responses.isEmpty()) {
             nextBeforeId = responses.getLast().getId();
+        }
 
-
-        // Đảo ngược lại thành Tăng Dần (Cũ -> Mới) để khớp với UI Chat
         Collections.reverse(responses);
 
         return new HistoryMessageResponse(responses, hasMore, nextBeforeId);
+    }
+
+    private Set<String> getDeletedMessageIds(Long roomId, Long userId) {
+        return deletedMessageRepository.findByIdRoomIdAndIdUserId(roomId, userId)
+                .stream()
+                .map(entry -> entry.getId().getMessageId())
+                .collect(Collectors.toSet());
     }
 
     /* ========================================================================== */
@@ -696,6 +775,26 @@ public class MessageServiceImpl implements MessageService {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Dữ liệu phải là URL hợp lệ");
         }
+    }
+
+    private static String extractFileFormat(MultipartFile file) {
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename != null) {
+            int dotIndex = originalFilename.lastIndexOf('.');
+            if (dotIndex >= 0 && dotIndex < originalFilename.length() - 1) {
+                return originalFilename.substring(dotIndex + 1).toLowerCase(Locale.ROOT);
+            }
+        }
+
+        String contentType = file.getContentType();
+        if (contentType != null) {
+            int slashIndex = contentType.lastIndexOf('/');
+            if (slashIndex >= 0 && slashIndex < contentType.length() - 1) {
+                return contentType.substring(slashIndex + 1).toLowerCase(Locale.ROOT);
+            }
+        }
+
+        return null;
     }
 
     private void publishUserChatAudit(long senderId, String message) {

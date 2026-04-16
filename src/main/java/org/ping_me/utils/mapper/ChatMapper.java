@@ -45,6 +45,7 @@ public class ChatMapper {
                 message.getSenderId(),
                 content,
                 message.getType(),
+                message.getFileFormat(),
                 message.getCreatedAt(),
                 message.isActive(),
                 message.isForwarded(),

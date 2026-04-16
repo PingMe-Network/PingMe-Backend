@@ -6,6 +6,7 @@ import org.ping_me.dto.request.chat.message.MarkReadRequest;
 import org.ping_me.dto.request.chat.message.SendMessageRequest;
 import org.ping_me.dto.request.chat.message.SendWeatherMessageRequest;
 import org.ping_me.dto.response.chat.message.HistoryMessageResponse;
+import org.ping_me.dto.response.chat.message.DeletedMessageResponse;
 import org.ping_me.dto.response.chat.message.MessageRecalledResponse;
 import org.ping_me.dto.response.chat.message.MessageResponse;
 import org.ping_me.dto.response.chat.message.ReadStateResponse;
@@ -39,6 +40,8 @@ public interface MessageService {
     MessageResponse forwardMessage(ForwardMessageRequest request);
 
     List<MessageResponse> forwardMessages(ForwardMessagesRequest request);
+
+    DeletedMessageResponse deleteMessageForMe(String messageId);
 
     MessageRecalledResponse recallMessage(String messageId);
 

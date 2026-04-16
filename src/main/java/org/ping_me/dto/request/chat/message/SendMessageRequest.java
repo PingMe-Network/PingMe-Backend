@@ -27,6 +27,8 @@ public class SendMessageRequest {
     @Schema(allowableValues = {"TEXT", "IMAGE", "VIDEO", "FILE"})
     private MessageType type;
 
+    private String fileFormat;
+
     @NotNull(message = "Mã phòng không được để trống")
     private Long roomId;
 }

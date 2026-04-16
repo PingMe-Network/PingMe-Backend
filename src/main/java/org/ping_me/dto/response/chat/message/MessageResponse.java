@@ -24,6 +24,7 @@ public class MessageResponse {
 
     private String content;
     private MessageType type;
+    private String fileFormat;
     private LocalDateTime createdAt;
 
     private Boolean isActive;
