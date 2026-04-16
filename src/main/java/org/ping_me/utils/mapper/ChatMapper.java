@@ -2,6 +2,7 @@ package org.ping_me.utils.mapper;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.ping_me.dto.response.chat.message.ForwardMetadataResponse;
 import org.ping_me.dto.response.chat.message.MessageResponse;
 import org.ping_me.dto.response.chat.room.RoomParticipantResponse;
 import org.ping_me.dto.response.chat.room.RoomResponse;
@@ -27,6 +28,15 @@ public class ChatMapper {
 
         String clientMsgId = message.getClientMsgId() == null ? null : message.getClientMsgId().toString();
         String content = message.isActive() ? message.getContent() : null;
+        ForwardMetadataResponse forwardMetadata = null;
+
+        if (message.isForwarded()) {
+            forwardMetadata = new ForwardMetadataResponse(
+                    message.getForwardedFromMessageId(),
+                    message.getForwardedFromRoomId(),
+                    message.getForwardedFromSenderId()
+            );
+        }
 
         return new MessageResponse(
                 message.getId(),
@@ -36,7 +46,9 @@ public class ChatMapper {
                 content,
                 message.getType(),
                 message.getCreatedAt(),
-                message.isActive()
+                message.isActive(),
+                message.isForwarded(),
+                forwardMetadata
         );
     }
 

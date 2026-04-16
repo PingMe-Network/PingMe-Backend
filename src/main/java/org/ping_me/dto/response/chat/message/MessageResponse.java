@@ -27,4 +27,6 @@ public class MessageResponse {
     private LocalDateTime createdAt;
 
     private Boolean isActive;
+    private Boolean isForwarded;
+    private ForwardMetadataResponse forwardMetadata;
 }

@@ -61,6 +61,18 @@ public class Message {
     @Field("is_active")
     Boolean isActive = true;
 
+    @Field("is_forwarded")
+    Boolean isForwarded = false;
+
+    @Field("forwarded_from_message_id")
+    String forwardedFromMessageId;
+
+    @Field("forwarded_from_room_id")
+    Long forwardedFromRoomId;
+
+    @Field("forwarded_from_sender_id")
+    Long forwardedFromSenderId;
+
     @CreatedDate
     @Field("created_at")
     LocalDateTime createdAt;
@@ -79,5 +91,9 @@ public class Message {
 
     public boolean isActive() {
         return Boolean.TRUE.equals(isActive);
+    }
+
+    public boolean isForwarded() {
+        return Boolean.TRUE.equals(isForwarded);
     }
 }
