@@ -11,7 +11,7 @@ import org.ping_me.model.common.RoomMemberId;
 import org.ping_me.repository.jpa.chat.RoomParticipantRepository;
 import org.ping_me.service.call.SignalingService;
 import org.ping_me.service.user.CurrentUserProvider;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -28,7 +28,7 @@ public class SignalingServiceImpl implements SignalingService {
     private final SimpMessagingTemplate messagingTemplate;
     private final RoomParticipantRepository roomParticipantRepository;
     private final CurrentUserProvider currentUserProvider;
-    private final RedisTemplate<String, String> redisTemplate;
+    private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
 
     private static final Duration SESSION_TTL = Duration.ofHours(1);
