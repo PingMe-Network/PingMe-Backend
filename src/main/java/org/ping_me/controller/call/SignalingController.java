@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.ping_me.dto.request.call.SignalingRequest;
-import org.ping_me.service.call.impl.SignalingServiceImpl;
+import org.ping_me.service.call.SignalingService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,18 +25,20 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class SignalingController {
 
-    private final SignalingServiceImpl signalingService;
+    private final SignalingService signalingService;
 
     // ================= SIGNAL =================
     @Operation(
             summary = "Gửi tín hiệu cuộc gọi",
             description = """
-                    Gửi signaling message phục vụ thiết lập / duy trì cuộc gọi realtime.
-                    Dùng cho các loại tín hiệu như:
-                    - offer
-                    - answer
-                    - ice-candidate
-                    """
+        Gửi signaling message để thiết lập / điều phối cuộc gọi realtime qua Zego.
+        Các loại tín hiệu hỗ trợ:
+        - INVITE  : Mời người dùng vào cuộc gọi
+        - ACCEPT  : Chấp nhận cuộc gọi
+        - REJECT  : Từ chối cuộc gọi
+        - LEAVE   : Rời cuộc gọi (call vẫn tiếp tục nếu còn người)
+        - HANGUP  : Kết thúc cuộc gọi
+        """
     )
     @PostMapping
     public ResponseEntity<Void> sendSignal(

@@ -12,5 +12,6 @@ import lombok.Data;
 public class SignalingRequest {
     private Long roomId;
     private String type; // "OFFER", "ANSWER", "CANDIDATE", "HANGUP"
-    private Object payload; // SDP hoặc Candidate object
+    private String callSessionId;
+    private SignalingPayload payload;
 }
