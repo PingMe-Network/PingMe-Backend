@@ -116,7 +116,7 @@ public class MessageServiceImpl implements MessageService {
     // index increase -> newest messages
     //
     //
-    // Kkhông sửa cấu trúc này
+    // Không sửa cấu trúc này
 
     /* ========================================================================== */
     /*                         CÁC HÀM XỬ LÝ GỬI TIN NHẮN                         */
