@@ -246,7 +246,7 @@ public class MessageServiceImpl implements MessageService {
                 messageCachingService.cacheNewMessage(roomId, dto);
 
             // send chat event kafka
-            publishUserChatAudit(senderId, sendMessageRequest.getContent());
+            publishUserChatAudit(currentUser, sendMessageRequest.getContent());
 
             return dto;
         } catch (RuntimeException ex) {
@@ -1002,10 +1002,13 @@ public class MessageServiceImpl implements MessageService {
         return null;
     }
 
-    private void publishUserChatAudit(long senderId, String message) {
+    // Sửa lại tham số nhận vào là User thay vì chỉ senderId
+    private void publishUserChatAudit(User sender, String message) {
         try {
+            // Lưu ý: Nhớ update DTO UserChatEvent thêm trường senderName
             UserChatEvent event = new UserChatEvent(
-                    senderId,
+                    sender.getId(),
+                    sender.getName(),
                     message,
                     System.currentTimeMillis()
             );
@@ -1013,7 +1016,7 @@ public class MessageServiceImpl implements MessageService {
             kafkaObjectTemplate.send(userChatTopic, event)
                     .whenComplete((result, ex) -> {
                         if (ex == null) {
-                            log.info("Kafka: Send event senderId {} send message {}", senderId, message);
+                            log.info("Kafka: Send event senderId {} ({}) send message {}", sender.getId(), sender.getName(), message);
                         } else {
                             log.error("Kafka: Send event failed: {}", ex.getMessage());
                         }
