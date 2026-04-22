@@ -18,6 +18,7 @@ import org.ping_me.model.chat.Message;
 @Builder
 public class UserChatEvent {
     Long senderId;
+    String senderName;
     String message;
     long timestamp;
 }
