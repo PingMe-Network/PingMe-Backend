@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ping_me.dto.base.ApiResponse;
+import org.ping_me.dto.request.chat.message.CreatePollMessageRequest;
 import org.ping_me.dto.request.chat.message.ForwardMessageRequest;
 import org.ping_me.dto.request.chat.message.ForwardMessagesRequest;
 import org.ping_me.dto.request.chat.message.EditMessageRequest;
@@ -16,6 +17,7 @@ import org.ping_me.dto.request.chat.message.MarkReadRequest;
 import org.ping_me.dto.response.chat.message.DeletedMessageResponse;
 import org.ping_me.dto.request.chat.message.SendMessageRequest;
 import org.ping_me.dto.request.chat.message.SendWeatherMessageRequest;
+import org.ping_me.dto.request.chat.message.VotePollRequest;
 import org.ping_me.dto.response.chat.message.HistoryMessageResponse;
 import org.ping_me.dto.response.chat.message.MessageRecalledResponse;
 import org.ping_me.dto.response.chat.message.MessageResponse;
@@ -141,6 +143,42 @@ public class    MessageController {
         );
     }
 
+    @Operation(
+            summary = "Tạo bình chọn",
+            description = "Tạo một tin nhắn bình chọn trong phòng chat"
+    )
+    @PostMapping("/polls")
+    public ResponseEntity<ApiResponse<MessageResponse>> createPollMessage(
+            @Parameter(description = "Payload tạo bình chọn", required = true)
+            @RequestBody @Valid CreatePollMessageRequest createPollMessageRequest
+    ) {
+        Long userId = currentUserProvider.get().getId();
+        var userLimiter = rateLimiterRegistry
+                .rateLimiter("chatSending:" + userId, CHAT_SENDING_RATE_LIMITER_KEY);
+
+        return userLimiter.executeSupplier(() -> ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(messageService.createPollMessage(createPollMessageRequest)))
+        );
+    }
+
+    @Operation(
+            summary = "Bỏ phiếu bình chọn",
+            description = "Cập nhật lựa chọn bình chọn của user hiện tại. Gửi optionIds rỗng để bỏ phiếu."
+    )
+    @PatchMapping("/{id}/poll/vote")
+    public ResponseEntity<ApiResponse<MessageResponse>> votePoll(
+            @Parameter(description = "ID tin nhắn bình chọn", example = "msg_123", required = true)
+            @PathVariable String id,
+
+            @Parameter(description = "Payload lựa chọn bình chọn", required = true)
+            @RequestBody @Valid VotePollRequest votePollRequest
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new ApiResponse<>(messageService.votePoll(id, votePollRequest)));
+    }
+
     // ================= FORWARD =================
     @Operation(
             summary = "Chuyển tiếp tin nhắn",
@@ -224,6 +262,48 @@ public class    MessageController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new ApiResponse<>(messageService.editMessage(id, editMessageRequest)));
+    }
+
+    @Operation(
+            summary = "Ghim tin nhắn",
+            description = "Ghim một tin nhắn trong phòng chat"
+    )
+    @PatchMapping("/{id}/pin")
+    public ResponseEntity<ApiResponse<MessageResponse>> pinMessage(
+            @Parameter(description = "ID tin nhắn", example = "msg_123", required = true)
+            @PathVariable String id
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new ApiResponse<>(messageService.pinMessage(id)));
+    }
+
+    @Operation(
+            summary = "Bỏ ghim tin nhắn",
+            description = "Bỏ ghim một tin nhắn trong phòng chat"
+    )
+    @PatchMapping("/{id}/unpin")
+    public ResponseEntity<ApiResponse<MessageResponse>> unpinMessage(
+            @Parameter(description = "ID tin nhắn", example = "msg_123", required = true)
+            @PathVariable String id
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new ApiResponse<>(messageService.unpinMessage(id)));
+    }
+
+    @Operation(
+            summary = "Danh sách tin nhắn đã ghim",
+            description = "Lấy các tin nhắn đã ghim trong một phòng chat"
+    )
+    @GetMapping("/pinned")
+    public ResponseEntity<ApiResponse<List<MessageResponse>>> getPinnedMessages(
+            @Parameter(description = "ID phòng chat", example = "1", required = true)
+            @RequestParam Long roomId
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new ApiResponse<>(messageService.getPinnedMessages(roomId)));
     }
 
     // ================= MARK READ =================

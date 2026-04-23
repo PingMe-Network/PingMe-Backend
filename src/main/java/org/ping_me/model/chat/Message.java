@@ -30,6 +30,10 @@ import java.util.UUID;
         @CompoundIndex(
                 name = "idx_msg_room_created_id",
                 def = "{'roomId': 1, 'createdAt': -1, '_id': -1}"
+        ),
+        @CompoundIndex(
+                name = "idx_msg_room_pinned_at",
+                def = "{'roomId': 1, 'isPinned': 1, 'pinnedAt': -1}"
         )
 })
 @AllArgsConstructor
@@ -79,11 +83,23 @@ public class Message {
     @Field("replied_message_id")
     String repliedMessageId;
 
+    @Field("poll")
+    Poll poll;
+
     @Field("is_edited")
     Boolean isEdited = false;
 
     @Field("edited_at")
     LocalDateTime editedAt;
+
+    @Field("is_pinned")
+    Boolean isPinned = false;
+
+    @Field("pinned_at")
+    LocalDateTime pinnedAt;
+
+    @Field("pinned_by_user_id")
+    Long pinnedByUserId;
 
     @CreatedDate
     @Field("created_at")
@@ -111,5 +127,9 @@ public class Message {
 
     public boolean isEdited() {
         return Boolean.TRUE.equals(isEdited);
+    }
+
+    public boolean isPinned() {
+        return Boolean.TRUE.equals(isPinned);
     }
 }

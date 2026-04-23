@@ -4,10 +4,14 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.ping_me.dto.response.chat.message.ForwardMetadataResponse;
 import org.ping_me.dto.response.chat.message.MessageResponse;
+import org.ping_me.dto.response.chat.message.PollOptionResponse;
+import org.ping_me.dto.response.chat.message.PollResponse;
 import org.ping_me.dto.response.chat.message.RepliedMessageResponse;
 import org.ping_me.dto.response.chat.room.RoomParticipantResponse;
 import org.ping_me.dto.response.chat.room.RoomResponse;
 import org.ping_me.model.chat.Message;
+import org.ping_me.model.chat.Poll;
+import org.ping_me.model.chat.PollOption;
 import org.ping_me.model.chat.Room;
 import org.ping_me.model.chat.RoomParticipant;
 import org.ping_me.model.constant.MessageType;
@@ -55,10 +59,14 @@ public class ChatMapper {
                 message.getCreatedAt(),
                 message.isEdited(),
                 message.getEditedAt(),
+                message.isPinned(),
+                message.getPinnedAt(),
+                message.getPinnedByUserId(),
                 message.isActive(),
                 message.isForwarded(),
                 forwardMetadata,
-                repliedMessage
+                repliedMessage,
+                mapPoll(message.getPoll())
         );
     }
 
@@ -152,6 +160,50 @@ public class ChatMapper {
                         extractMediaUrls(message.getType(), message.isActive() ? message.getContent() : null)
                 ))
                 .orElse(null);
+    }
+
+    private PollResponse mapPoll(Poll poll) {
+        if (poll == null) {
+            return null;
+        }
+
+        List<PollOptionResponse> options = poll.getOptions() == null
+                ? List.of()
+                : poll.getOptions()
+                .stream()
+                .map(this::mapPollOption)
+                .toList();
+
+        int totalVotes = options.stream()
+                .map(PollOptionResponse::getVoteCount)
+                .filter(java.util.Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .sum();
+
+        boolean expired = poll.getExpiresAt() != null
+                && poll.getExpiresAt().isBefore(java.time.LocalDateTime.now());
+
+        return new PollResponse(
+                poll.getQuestion(),
+                poll.allowMultiple(),
+                poll.getExpiresAt(),
+                expired,
+                totalVotes,
+                options
+        );
+    }
+
+    private PollOptionResponse mapPollOption(PollOption option) {
+        List<Long> voterIds = option.getVoterIds() == null
+                ? List.of()
+                : option.getVoterIds().stream().sorted().toList();
+
+        return new PollOptionResponse(
+                option.getId(),
+                option.getText(),
+                voterIds.size(),
+                voterIds
+        );
     }
 
 }

@@ -2,6 +2,7 @@ package org.ping_me.websocket.publisher;
 
 import lombok.RequiredArgsConstructor;
 import org.ping_me.service.chat.event.room.RoomCreatedEvent;
+import org.ping_me.service.chat.event.room.RoomDeletedEvent;
 import org.ping_me.service.chat.event.room.RoomMemberAddedEvent;
 import org.ping_me.service.chat.event.room.RoomMemberRemovedEvent;
 import org.ping_me.service.chat.event.room.RoomMemberRoleChangedEvent;
@@ -9,6 +10,7 @@ import org.ping_me.service.chat.event.room.RoomUpdatedEvent;
 import org.ping_me.utils.mapper.ChatMapper;
 import org.ping_me.websocket.WebSocketDestinations;
 import org.ping_me.websocket.dto.chat.room.RoomCreatedEventPayload;
+import org.ping_me.websocket.dto.chat.room.RoomDeletedEventPayload;
 import org.ping_me.websocket.dto.chat.room.RoomMemberAddedEventPayload;
 import org.ping_me.websocket.dto.chat.room.RoomMemberRemovedEventPayload;
 import org.ping_me.websocket.dto.chat.room.RoomMemberRoleChangedEventPayload;
@@ -51,6 +53,18 @@ public class ChatRoomEventPublisher {
                     chatMapper.toRoomResponseDto(room, participants)
             );
 
+            redisWsPublisher.publish(WebSocketDestinations.userQueueRooms(userId), payload);
+        }
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onRoomDeleted(RoomDeletedEvent event) {
+        var payload = new RoomDeletedEventPayload(
+                event.getRoom().getId(),
+                event.getActorUserId()
+        );
+
+        for (Long userId : event.getParticipants().stream().map(p -> p.getUser().getId()).toList()) {
             redisWsPublisher.publish(WebSocketDestinations.userQueueRooms(userId), payload);
         }
     }

@@ -10,6 +10,7 @@ import org.ping_me.dto.base.PageResponse;
 import org.ping_me.dto.request.chat.room.AddGroupMembersRequest;
 import org.ping_me.dto.request.chat.room.CreateGroupRoomRequest;
 import org.ping_me.dto.request.chat.room.CreateOrGetDirectRoomRequest;
+import org.ping_me.dto.request.chat.room.LeaveGroupRequest;
 import org.ping_me.dto.response.chat.room.RoomResponse;
 import org.ping_me.model.constant.RoomRole;
 import org.ping_me.service.chat.RoomService;
@@ -130,6 +131,35 @@ public class RoomController {
         return ResponseEntity.ok(
                 new ApiResponse<>(roomService.removeGroupMember(roomId, memberId))
         );
+    }
+
+    @Operation(
+            summary = "Rời khỏi group",
+            description = "Thành viên tự rời nhóm. Owner cần chọn Owner mới trước khi rời."
+    )
+    @DeleteMapping("/group/{roomId}/leave")
+    public ResponseEntity<ApiResponse<RoomResponse>> leaveGroup(
+            @Parameter(description = "ID phòng group", example = "1", required = true)
+            @PathVariable Long roomId,
+
+            @RequestBody(required = false) LeaveGroupRequest leaveGroupRequest
+    ) {
+        return ResponseEntity.ok(
+                new ApiResponse<>(roomService.leaveGroup(roomId, leaveGroupRequest))
+        );
+    }
+
+    @Operation(
+            summary = "Giải tán group",
+            description = "Owner giải tán phòng chat group"
+    )
+    @DeleteMapping("/group/{roomId}")
+    public ResponseEntity<ApiResponse<Void>> dissolveGroup(
+            @Parameter(description = "ID phòng group", example = "1", required = true)
+            @PathVariable Long roomId
+    ) {
+        roomService.dissolveGroup(roomId);
+        return ResponseEntity.ok(new ApiResponse<>((Void) null));
     }
 
     @Operation(

@@ -34,6 +34,8 @@ public interface MessageRepository extends MongoRepository<Message, String> {
             Pageable pageable
     );
 
+    List<Message> findByRoomIdAndIsPinnedTrueOrderByPinnedAtDesc(Long roomId);
+
     long countByRoomIdAndCreatedAtGreaterThan(
             Long roomId,
             LocalDateTime createdAt
