@@ -12,4 +12,6 @@ public interface DeletedMessageRepository extends JpaRepository<DeletedMessage, 
     boolean existsByIdRoomIdAndIdUserId(Long roomId, Long userId);
 
     List<DeletedMessage> findByIdRoomIdAndIdUserId(Long roomId, Long userId);
+
+    long deleteByIdRoomId(Long roomId);
 }

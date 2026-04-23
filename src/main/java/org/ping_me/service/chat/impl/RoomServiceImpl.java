@@ -13,6 +13,7 @@ import org.ping_me.model.common.RoomMemberId;
 import org.ping_me.model.constant.RoomRole;
 import org.ping_me.model.constant.RoomType;
 import org.ping_me.repository.jpa.auth.UserRepository;
+import org.ping_me.repository.jpa.chat.DeletedMessageRepository;
 import org.ping_me.repository.jpa.chat.RoomParticipantRepository;
 import org.ping_me.repository.jpa.chat.RoomRepository;
 import org.ping_me.service.chat.MessageService;
@@ -53,6 +54,7 @@ public class RoomServiceImpl implements RoomService {
     // REPOSITORY
     private final RoomRepository roomRepository;
     private final RoomParticipantRepository roomParticipantRepository;
+    private final DeletedMessageRepository deletedMessageRepository;
     private final UserRepository userRepository;
 
     // PUBLISHER
@@ -367,6 +369,8 @@ public class RoomServiceImpl implements RoomService {
         requireOwner(caller, "Chỉ trưởng nhóm mới có quyền giải tán nhóm");
 
         var participants = roomParticipantRepository.findByRoom_Id(roomId);
+        // "Delete for me" records keep FK(room_id -> rooms.id). Must clean them first.
+        deletedMessageRepository.deleteByIdRoomId(roomId);
         roomParticipantRepository.deleteAll(participants);
         roomRepository.delete(room);
 
