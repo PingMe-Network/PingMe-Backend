@@ -47,4 +47,11 @@ public class Room extends BaseEntity {
 
     @Column(name = "last_message_at")
     private LocalDateTime lastMessageAt;
+
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
+
+    public boolean isActive() {
+        return Boolean.TRUE.equals(isActive);
+    }
 }

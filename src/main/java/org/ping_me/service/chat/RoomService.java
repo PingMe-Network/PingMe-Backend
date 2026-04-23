@@ -3,6 +3,7 @@ package org.ping_me.service.chat;
 import org.ping_me.dto.request.chat.room.AddGroupMembersRequest;
 import org.ping_me.dto.request.chat.room.CreateGroupRoomRequest;
 import org.ping_me.dto.request.chat.room.CreateOrGetDirectRoomRequest;
+import org.ping_me.dto.request.chat.room.LeaveGroupRequest;
 import org.ping_me.dto.response.chat.room.RoomResponse;
 import org.ping_me.model.constant.RoomRole;
 import org.springframework.data.domain.Page;
@@ -21,6 +22,10 @@ public interface RoomService {
     RoomResponse addGroupMembers(AddGroupMembersRequest request);
 
     RoomResponse removeGroupMember(Long roomId, Long targetUserId);
+
+    RoomResponse leaveGroup(Long roomId, LeaveGroupRequest request);
+
+    void dissolveGroup(Long roomId);
 
     RoomResponse changeMemberRole(Long roomId, Long targetUserId, RoomRole newRole);
 

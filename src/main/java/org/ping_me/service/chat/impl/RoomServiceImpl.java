@@ -5,6 +5,7 @@ import org.ping_me.config.s3.S3Service;
 import org.ping_me.dto.request.chat.room.AddGroupMembersRequest;
 import org.ping_me.dto.request.chat.room.CreateGroupRoomRequest;
 import org.ping_me.dto.request.chat.room.CreateOrGetDirectRoomRequest;
+import org.ping_me.dto.request.chat.room.LeaveGroupRequest;
 import org.ping_me.dto.response.chat.room.RoomResponse;
 import org.ping_me.model.chat.Room;
 import org.ping_me.model.chat.RoomParticipant;
@@ -293,6 +294,87 @@ public class RoomServiceImpl implements RoomService {
                 room,
                 members
         );
+    }
+
+    @Override
+    public RoomResponse leaveGroup(Long roomId, LeaveGroupRequest request) {
+        var currentUser = currentUserProvider.get();
+        var room = getGroupRoom(roomId);
+
+        var caller = getParticipant(roomId, currentUser.getId(), "Bạn không thuộc nhóm");
+        var participantsBeforeLeave = roomParticipantRepository.findByRoom_Id(roomId);
+
+        if (participantsBeforeLeave.size() <= 3)
+            throw new IllegalArgumentException("Phòng phải có ít nhất 3 thành viên. Trưởng nhóm có thể giải tán nhóm");
+
+        if (caller.getRole() == RoomRole.OWNER) {
+            Long newOwnerId = request == null ? null : request.getNewOwnerId();
+            if (newOwnerId == null)
+                throw new IllegalArgumentException("Trưởng nhóm cần chọn trưởng nhóm mới trước khi rời nhóm");
+
+            if (currentUser.getId().equals(newOwnerId))
+                throw new IllegalArgumentException("Trưởng nhóm mới phải là thành viên khác");
+
+            var newOwner = getParticipant(roomId, newOwnerId, "Trưởng nhóm mới không thuộc nhóm");
+            RoomRole oldRole = newOwner.getRole();
+            newOwner.setRole(RoomRole.OWNER);
+            roomParticipantRepository.save(newOwner);
+
+            var transferMsg = messageService.createSystemMessage(
+                    room,
+                    currentUser.getName() + " đã chuyển quyền trưởng nhóm cho " + newOwner.getUser().getName(),
+                    currentUser
+            );
+
+            var membersAfterTransfer = roomParticipantRepository.findByRoom_Id(roomId);
+            eventPublisher.publishEvent(new RoomMemberRoleChangedEvent(
+                    room,
+                    membersAfterTransfer,
+                    newOwnerId,
+                    oldRole,
+                    RoomRole.OWNER,
+                    currentUser.getId(),
+                    transferMsg
+            ));
+        }
+
+        roomParticipantRepository.delete(caller);
+
+        var membersAfterLeave = roomParticipantRepository.findByRoom_Id(roomId);
+        var leaveMsg = messageService.createSystemMessage(
+                room,
+                currentUser.getName() + " đã rời khỏi nhóm",
+                currentUser
+        );
+
+        eventPublisher.publishEvent(new RoomMemberRemovedEvent(
+                room,
+                membersAfterLeave,
+                currentUser.getId(),
+                currentUser.getId(),
+                leaveMsg
+        ));
+
+        return chatMapper.toRoomResponseDto(room, membersAfterLeave);
+    }
+
+    @Override
+    public void dissolveGroup(Long roomId) {
+        var currentUser = currentUserProvider.get();
+        var room = getGroupRoom(roomId);
+        var caller = getParticipant(roomId, currentUser.getId(), "Bạn không thuộc nhóm");
+
+        requireOwner(caller, "Chỉ trưởng nhóm mới có quyền giải tán nhóm");
+
+        var participants = roomParticipantRepository.findByRoom_Id(roomId);
+        room.setIsActive(false);
+        roomRepository.save(room);
+
+        eventPublisher.publishEvent(new RoomDeletedEvent(
+                room,
+                participants,
+                currentUser.getId()
+        ));
     }
 
     @Override
@@ -596,6 +678,9 @@ public class RoomServiceImpl implements RoomService {
 
         if (room.getRoomType() != RoomType.GROUP)
             throw new IllegalArgumentException("Chỉ phòng nhóm mới được thực hiện thao tác này");
+
+        if (!room.isActive())
+            throw new IllegalArgumentException("Nhóm đã bị giải tán");
 
         return room;
     }
