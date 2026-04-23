@@ -19,6 +19,7 @@ import org.ping_me.dto.request.chat.message.SendMessageRequest;
 import org.ping_me.dto.request.chat.message.SendWeatherMessageRequest;
 import org.ping_me.dto.request.chat.message.VotePollRequest;
 import org.ping_me.dto.response.chat.message.HistoryMessageResponse;
+import org.ping_me.dto.response.chat.message.GroupMessageSummaryResponse;
 import org.ping_me.dto.response.chat.message.MessageRecalledResponse;
 import org.ping_me.dto.response.chat.message.MessageResponse;
 import org.ping_me.dto.response.chat.message.ReadStateResponse;
@@ -304,6 +305,20 @@ public class    MessageController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new ApiResponse<>(messageService.getPinnedMessages(roomId)));
+    }
+
+    @Operation(
+            summary = "Tóm tắt AI 20 tin nhắn gần nhất của nhóm",
+            description = "Chỉ áp dụng cho phòng chat nhóm mà user hiện tại là thành viên"
+    )
+    @GetMapping("/summary")
+    public ResponseEntity<ApiResponse<GroupMessageSummaryResponse>> summarizeLatestGroupMessages(
+            @Parameter(description = "ID phòng chat nhóm", example = "1", required = true)
+            @RequestParam Long roomId
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new ApiResponse<>(messageService.summarizeLatestGroupMessages(roomId)));
     }
 
     // ================= MARK READ =================

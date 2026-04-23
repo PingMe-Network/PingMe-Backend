@@ -18,6 +18,7 @@ import org.ping_me.dto.request.chat.message.SendMessageRequest;
 import org.ping_me.dto.request.chat.message.SendWeatherMessageRequest;
 import org.ping_me.dto.request.chat.message.VotePollRequest;
 import org.ping_me.dto.response.chat.message.DeletedMessageResponse;
+import org.ping_me.dto.response.chat.message.GroupMessageSummaryResponse;
 import org.ping_me.dto.response.chat.message.HistoryMessageResponse;
 import org.ping_me.dto.response.chat.message.MessageRecalledResponse;
 import org.ping_me.dto.response.chat.message.MessageResponse;
@@ -33,10 +34,12 @@ import org.ping_me.model.chat.RoomParticipant;
 import org.ping_me.model.common.DeletedMessageId;
 import org.ping_me.model.common.RoomMemberId;
 import org.ping_me.model.constant.MessageType;
+import org.ping_me.model.constant.RoomType;
 import org.ping_me.repository.jpa.chat.DeletedMessageRepository;
 import org.ping_me.repository.jpa.chat.RoomParticipantRepository;
 import org.ping_me.repository.jpa.chat.RoomRepository;
 import org.ping_me.repository.mongodb.chat.MessageRepository;
+import org.ping_me.utils.AIChatHelper;
 import org.ping_me.service.chat.MessageCachingService;
 import org.ping_me.service.chat.MessageService;
 import org.ping_me.service.chat.event.message.MessageCreatedEvent;
@@ -54,7 +57,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -100,6 +102,7 @@ public class MessageServiceImpl implements MessageService {
     // UTILS
     private final ObjectMapper objectMapper;
     private final ChatMapper chatMapper;
+    private final AIChatHelper aiChatHelper;
 
     @NonFinal
     @Value("${spring.kafka.topic.user-chat-dev}")
@@ -712,6 +715,76 @@ public class MessageServiceImpl implements MessageService {
                 .toList();
     }
 
+    @Override
+    public GroupMessageSummaryResponse summarizeLatestGroupMessages(Long roomId) {
+        var currentUser = currentUserProvider.get();
+        Long currentUserId = currentUser.getId();
+
+        Room room = roomRepository
+                .findById(roomId)
+                .orElseThrow(() -> new EntityNotFoundException("Phòng chat này không tồn tại"));
+
+        if (room.getRoomType() != RoomType.GROUP) {
+            throw new IllegalArgumentException("Tính năng tóm tắt chỉ hỗ trợ phòng chat nhóm");
+        }
+
+        validateRoomMember(roomId, currentUserId);
+
+        Set<String> deletedMessageIds = getDeletedMessageIds(roomId, currentUserId);
+        List<Message> latestMessages = messageRepository
+                .findByRoomIdOrderByIdDesc(roomId, PageRequest.of(0, 60))
+                .stream()
+                .filter(Message::isActive)
+                .filter(message -> !deletedMessageIds.contains(message.getId()))
+                .limit(20)
+                .toList();
+
+        if (latestMessages.isEmpty()) {
+            return new GroupMessageSummaryResponse(
+                    roomId,
+                    0,
+                    "Nhóm chưa có đủ nội dung để tóm tắt.",
+                    LocalDateTime.now()
+            );
+        }
+
+        Map<Long, String> participantNames = roomParticipantRepository
+                .findByRoom_Id(roomId)
+                .stream()
+                .collect(Collectors.toMap(
+                        participant -> participant.getUser().getId(),
+                        participant -> participant.getUser().getName(),
+                        (left, right) -> left
+                ));
+
+        List<Message> chronologicallySorted = new ArrayList<>(latestMessages);
+        Collections.reverse(chronologicallySorted);
+
+        StringBuilder conversation = new StringBuilder();
+        for (Message message : chronologicallySorted) {
+            String senderName = participantNames.getOrDefault(message.getSenderId(), "Thành viên");
+            conversation
+                    .append("- [")
+                    .append(senderName)
+                    .append("] ")
+                    .append(formatSummaryMessageContent(message))
+                    .append("\n");
+        }
+
+        String prompt = buildGroupSummaryPrompt(conversation.toString());
+        String summary = aiChatHelper.useAi(prompt, List.of(), "gpt-4o-mini", 600);
+        if (summary == null || summary.isBlank()) {
+            summary = "Chưa thể tạo tóm tắt ở thời điểm hiện tại.";
+        }
+
+        return new GroupMessageSummaryResponse(
+                roomId,
+                chronologicallySorted.size(),
+                summary.trim(),
+                LocalDateTime.now()
+        );
+    }
+
     private void validatePollRequest(CreatePollMessageRequest request) {
         if (request.getOptions() == null || request.getOptions().size() < 2) {
             throw new IllegalArgumentException("Bình chọn cần ít nhất 2 lựa chọn");
@@ -1268,6 +1341,47 @@ public class MessageServiceImpl implements MessageService {
         }
 
         return null;
+    }
+
+    private String buildGroupSummaryPrompt(String conversation) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Bạn là trợ lý tóm tắt cuộc trò chuyện nhóm của ứng dụng PingMe.\n");
+        sb.append("Hãy đọc 20 tin nhắn gần nhất và tóm tắt bằng tiếng Việt, ngắn gọn, dễ hiểu.\n");
+        sb.append("Yêu cầu:\n");
+        sb.append("1) 1 đoạn tóm tắt chính (tối đa 3 câu).\n");
+        sb.append("2) 2-4 gạch đầu dòng về các điểm quan trọng hoặc việc cần chú ý.\n");
+        sb.append("3) Không bịa thêm thông tin ngoài đoạn hội thoại.\n");
+        sb.append("4) Không dùng markdown code block.\n\n");
+        sb.append("Hội thoại:\n");
+        sb.append(conversation);
+        return sb.toString();
+    }
+
+    private String formatSummaryMessageContent(Message message) {
+        if (message.getType() == MessageType.TEXT || message.getType() == MessageType.SYSTEM) {
+            return message.getContent() == null || message.getContent().isBlank()
+                    ? "(Tin nhắn trống)"
+                    : message.getContent();
+        }
+        if (message.getType() == MessageType.IMAGE) {
+            return "(Đã gửi hình ảnh)";
+        }
+        if (message.getType() == MessageType.VIDEO) {
+            return "(Đã gửi video)";
+        }
+        if (message.getType() == MessageType.FILE) {
+            return "(Đã gửi tệp đính kèm)";
+        }
+        if (message.getType() == MessageType.WEATHER) {
+            return "(Đã gửi thông tin thời tiết)";
+        }
+        if (message.getType() == MessageType.POLL) {
+            if (message.getPoll() != null && message.getPoll().getQuestion() != null) {
+                return "Bình chọn: " + message.getPoll().getQuestion();
+            }
+            return "(Đã tạo bình chọn)";
+        }
+        return "(Tin nhắn không xác định)";
     }
 
     // Sửa lại tham số nhận vào là User thay vì chỉ senderId
