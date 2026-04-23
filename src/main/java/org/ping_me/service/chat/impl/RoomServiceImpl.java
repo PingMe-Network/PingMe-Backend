@@ -181,23 +181,15 @@ public class RoomServiceImpl implements RoomService {
     public RoomResponse addGroupMembers(AddGroupMembersRequest request) {
         var currentUser = currentUserProvider.get();
 
-        var room = roomRepository.findById(request.getRoomId())
-                .orElseThrow(() -> new IllegalArgumentException("Phòng không tồn tại"));
-
-        if (room.getRoomType() != RoomType.GROUP)
-            throw new IllegalArgumentException("Chỉ được thêm thành viên vào phòng nhóm");
+        var room = getGroupRoom(request.getRoomId());
 
         // --------------------------------------------------------------------------------
         // Phân quyền
         // OWNER và ADMIN có quyền thêm thành viên mới
         // MEMBER không có quyền thêm thành viên mới
         // --------------------------------------------------------------------------------
-        var callerPk = new RoomMemberId(room.getId(), currentUser.getId());
-        var caller = roomParticipantRepository.findById(callerPk)
-                .orElseThrow(() -> new IllegalArgumentException("Bạn không thuộc phòng"));
-
-        if (caller.getRole() == RoomRole.MEMBER)
-            throw new IllegalArgumentException("Bạn không có quyền thêm thành viên");
+        var caller = getParticipant(room.getId(), currentUser.getId(), "Bạn không thuộc phòng");
+        requireOwnerOrAdmin(caller, "Bạn không có quyền thêm thành viên");
         // --------------------------------------------------------------------------------
 
         // Lọc thành viên không tồn tại
@@ -249,22 +241,13 @@ public class RoomServiceImpl implements RoomService {
     public RoomResponse removeGroupMember(Long roomId, Long targetUserId) {
         var currentUser = currentUserProvider.get();
 
-        var room = roomRepository.findById(roomId)
-                .orElseThrow(() -> new IllegalArgumentException("Phòng không tồn tại"));
-
-        if (room.getRoomType() != RoomType.GROUP)
-            throw new IllegalArgumentException("Chỉ phòng nhóm mới được xóa thành viên");
+        var room = getGroupRoom(roomId);
 
         if (currentUser.getId().equals(targetUserId))
             throw new IllegalArgumentException("Không thể tự xóa chính mình này");
 
-        var callerPk = new RoomMemberId(roomId, currentUser.getId());
-        var caller = roomParticipantRepository.findById(callerPk)
-                .orElseThrow(() -> new IllegalArgumentException("Bạn không thuộc phòng"));
-
-        var targetPk = new RoomMemberId(roomId, targetUserId);
-        var target = roomParticipantRepository.findById(targetPk)
-                .orElseThrow(() -> new IllegalArgumentException("Người dùng không thuộc phòng"));
+        var caller = getParticipant(roomId, currentUser.getId(), "Bạn không thuộc phòng");
+        var target = getParticipant(roomId, targetUserId, "Người dùng không thuộc phòng");
 
         // --------------------------------------------------------------------------------
         // Phân quyền
@@ -273,11 +256,7 @@ public class RoomServiceImpl implements RoomService {
         // MEMBER: không remove được ai
         // --------------------------------------------------------------------------------
 
-        if (caller.getRole() == RoomRole.MEMBER)
-            throw new IllegalArgumentException("Bạn không có quyền xóa thành viên");
-
-        if (caller.getRole() == RoomRole.ADMIN && target.getRole() != RoomRole.MEMBER)
-            throw new IllegalArgumentException("Admin chỉ được xóa Member");
+        requireCanRemoveMember(caller, target);
 
         // --------------------------------------------------------------------------------
         // Xóa thành viên
@@ -320,43 +299,42 @@ public class RoomServiceImpl implements RoomService {
     public RoomResponse changeMemberRole(Long roomId, Long targetUserId, RoomRole newRole) {
         var currentUser = currentUserProvider.get();
 
-        var room = roomRepository.findById(roomId)
-                .orElseThrow(() -> new IllegalArgumentException("Phòng không tồn tại"));
-
-        if (room.getRoomType() != RoomType.GROUP)
-            throw new IllegalArgumentException("Chỉ phòng nhóm mới đổi quyền");
+        var room = getGroupRoom(roomId);
 
         // ------------------------------------------------------
         // Kiểm tra caller
         // ------------------------------------------------------
-        var callerPk = new RoomMemberId(roomId, currentUser.getId());
-        var caller = roomParticipantRepository.findById(callerPk)
-                .orElseThrow(() -> new IllegalArgumentException("Bạn không thuộc nhóm"));
-
-        if (caller.getRole() == RoomRole.MEMBER)
-            throw new IllegalArgumentException("Bạn không có quyền đổi role");
+        var caller = getParticipant(roomId, currentUser.getId(), "Bạn không thuộc nhóm");
+        requireOwner(caller, "Chỉ Owner mới có quyền đổi role");
 
         // ------------------------------------------------------
         // Target
         // ------------------------------------------------------
-        var targetPk = new RoomMemberId(roomId, targetUserId);
-        var target = roomParticipantRepository.findById(targetPk)
-                .orElseThrow(() -> new IllegalArgumentException("Người dùng không thuộc nhóm"));
+        var target = getParticipant(roomId, targetUserId, "Người dùng không thuộc nhóm");
 
         var oldRole = target.getRole();
 
         if (oldRole == newRole)
             throw new IllegalArgumentException("Người dùng đã có role này");
 
-        // ADMIN không được chỉnh OWNER
-        if (caller.getRole() == RoomRole.ADMIN && oldRole == RoomRole.OWNER)
-            throw new IllegalArgumentException("Admin không thể chỉnh role Owner");
-
         // ------------------------------------------------------
         // Update role
         // ------------------------------------------------------
-        target.setRole(newRole);
-        roomParticipantRepository.save(target);
+        if (newRole == RoomRole.OWNER) {
+            if (currentUser.getId().equals(targetUserId))
+                throw new IllegalArgumentException("Bạn đã là Owner của nhóm");
+
+            caller.setRole(RoomRole.ADMIN);
+            target.setRole(RoomRole.OWNER);
+            roomParticipantRepository.save(caller);
+            roomParticipantRepository.save(target);
+        } else {
+            if (oldRole == RoomRole.OWNER && currentUser.getId().equals(targetUserId))
+                throw new IllegalArgumentException("Owner không thể tự hạ quyền. Hãy chuyển Owner cho người khác");
+
+            target.setRole(newRole);
+            roomParticipantRepository.save(target);
+        }
 
         var members = roomParticipantRepository.findByRoom_Id(roomId);
 
@@ -392,21 +370,13 @@ public class RoomServiceImpl implements RoomService {
     public RoomResponse renameGroup(Long roomId, String newName) {
         var currentUser = currentUserProvider.get();
 
-        var room = roomRepository.findById(roomId)
-                .orElseThrow(() -> new IllegalArgumentException("Phòng không tồn tại"));
-
-        if (room.getRoomType() != RoomType.GROUP)
-            throw new IllegalArgumentException("Chỉ nhóm mới đổi tên");
+        var room = getGroupRoom(roomId);
 
         // --------------------------
         // Kiểm tra role
         // --------------------------
-        var callerPk = new RoomMemberId(roomId, currentUser.getId());
-        var caller = roomParticipantRepository.findById(callerPk)
-                .orElseThrow(() -> new IllegalArgumentException("Bạn không thuộc nhóm"));
-
-        if (caller.getRole() == RoomRole.MEMBER)
-            throw new IllegalArgumentException("Bạn không có quyền đổi tên nhóm");
+        var caller = getParticipant(roomId, currentUser.getId(), "Bạn không thuộc nhóm");
+        requireOwnerOrAdmin(caller, "Bạn không có quyền đổi tên nhóm");
 
         // --------------------------
         // Update tên nhóm
@@ -442,18 +412,10 @@ public class RoomServiceImpl implements RoomService {
     public RoomResponse updateGroupImage(Long roomId, MultipartFile file) {
         var currentUser = currentUserProvider.get();
 
-        var room = roomRepository.findById(roomId)
-                .orElseThrow(() -> new IllegalArgumentException("Phòng không tồn tại"));
+        var room = getGroupRoom(roomId);
 
-        if (room.getRoomType() != RoomType.GROUP)
-            throw new IllegalArgumentException("Chỉ group mới đổi ảnh");
-
-        var callerPk = new RoomMemberId(roomId, currentUser.getId());
-        var caller = roomParticipantRepository.findById(callerPk)
-                .orElseThrow(() -> new IllegalArgumentException("Bạn không thuộc nhóm"));
-
-        if (caller.getRole() == RoomRole.MEMBER)
-            throw new IllegalArgumentException("Bạn không có quyền đổi ảnh nhóm");
+        var caller = getParticipant(roomId, currentUser.getId(), "Bạn không thuộc nhóm");
+        requireOwnerOrAdmin(caller, "Bạn không có quyền đổi ảnh nhóm");
 
         var members = roomParticipantRepository.findByRoom_Id(roomId);
 
@@ -553,12 +515,8 @@ public class RoomServiceImpl implements RoomService {
         // ------------------------------------------------------
         // GROUP ROOM → cần kiểm tra quyền
         // ------------------------------------------------------
-        var callerPk = new RoomMemberId(roomId, currentUser.getId());
-        var caller = roomParticipantRepository.findById(callerPk)
-                .orElseThrow(() -> new IllegalArgumentException("Bạn không thuộc nhóm"));
-
-        if (caller.getRole() == RoomRole.MEMBER)
-            throw new IllegalArgumentException("Bạn không có quyền đổi theme nhóm");
+        var caller = getParticipant(roomId, currentUser.getId(), "Bạn không thuộc nhóm");
+        requireOwnerOrAdmin(caller, "Bạn không có quyền đổi theme nhóm");
 
         // ------------------------------------------------------
         // Update theme
@@ -630,6 +588,43 @@ public class RoomServiceImpl implements RoomService {
     private void ensureParticipants(Room room, Long currentUserId, Long targetUserId) {
         addParticipant(room, currentUserId);
         addParticipant(room, targetUserId);
+    }
+
+    private Room getGroupRoom(Long roomId) {
+        var room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("Phòng không tồn tại"));
+
+        if (room.getRoomType() != RoomType.GROUP)
+            throw new IllegalArgumentException("Chỉ phòng nhóm mới được thực hiện thao tác này");
+
+        return room;
+    }
+
+    private RoomParticipant getParticipant(Long roomId, Long userId, String errorMessage) {
+        var memberId = new RoomMemberId(roomId, userId);
+        return roomParticipantRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException(errorMessage));
+    }
+
+    private void requireOwner(RoomParticipant caller, String errorMessage) {
+        if (caller.getRole() != RoomRole.OWNER)
+            throw new IllegalArgumentException(errorMessage);
+    }
+
+    private void requireOwnerOrAdmin(RoomParticipant caller, String errorMessage) {
+        if (caller.getRole() == RoomRole.MEMBER)
+            throw new IllegalArgumentException(errorMessage);
+    }
+
+    private void requireCanRemoveMember(RoomParticipant caller, RoomParticipant target) {
+        if (caller.getRole() == RoomRole.MEMBER)
+            throw new IllegalArgumentException("Bạn không có quyền xóa thành viên");
+
+        if (target.getRole() == RoomRole.OWNER)
+            throw new IllegalArgumentException("Không thể xóa Owner khỏi nhóm");
+
+        if (caller.getRole() == RoomRole.ADMIN && target.getRole() != RoomRole.MEMBER)
+            throw new IllegalArgumentException("Admin chỉ được xóa Member");
     }
 
     private void addParticipant(Room room, Long userId) {

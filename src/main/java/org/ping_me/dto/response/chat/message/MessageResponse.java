@@ -30,9 +30,13 @@ public class MessageResponse {
     private LocalDateTime createdAt;
     private Boolean isEdited;
     private LocalDateTime editedAt;
+    private Boolean isPinned;
+    private LocalDateTime pinnedAt;
+    private Long pinnedByUserId;
 
     private Boolean isActive;
     private Boolean isForwarded;
     private ForwardMetadataResponse forwardMetadata;
     private RepliedMessageResponse repliedMessage;
+    private PollResponse poll;
 }

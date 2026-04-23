@@ -9,12 +9,14 @@ import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.ping_me.config.s3.S3Service;
 import org.ping_me.dto.event.UserChatEvent;
+import org.ping_me.dto.request.chat.message.CreatePollMessageRequest;
 import org.ping_me.dto.request.chat.message.ForwardMessageRequest;
 import org.ping_me.dto.request.chat.message.ForwardMessagesRequest;
 import org.ping_me.dto.request.chat.message.EditMessageRequest;
 import org.ping_me.dto.request.chat.message.MarkReadRequest;
 import org.ping_me.dto.request.chat.message.SendMessageRequest;
 import org.ping_me.dto.request.chat.message.SendWeatherMessageRequest;
+import org.ping_me.dto.request.chat.message.VotePollRequest;
 import org.ping_me.dto.response.chat.message.DeletedMessageResponse;
 import org.ping_me.dto.response.chat.message.HistoryMessageResponse;
 import org.ping_me.dto.response.chat.message.MessageRecalledResponse;
@@ -24,6 +26,8 @@ import org.ping_me.dto.response.weather.WeatherResponse;
 import org.ping_me.model.User;
 import org.ping_me.model.chat.DeletedMessage;
 import org.ping_me.model.chat.Message;
+import org.ping_me.model.chat.Poll;
+import org.ping_me.model.chat.PollOption;
 import org.ping_me.model.chat.Room;
 import org.ping_me.model.chat.RoomParticipant;
 import org.ping_me.model.common.DeletedMessageId;
@@ -141,6 +145,10 @@ public class MessageServiceImpl implements MessageService {
         // + Mã phòng chat người đã gửi
         var senderId = currentUser.getId();
         var roomId = sendMessageRequest.getRoomId();
+
+        if (sendMessageRequest.getType() == MessageType.POLL) {
+            throw new IllegalArgumentException("Vui lòng dùng API tạo bình chọn");
+        }
 
         // Nếu file này một dạng file thì
         // validate url hợp l
@@ -384,6 +392,135 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
+    public MessageResponse createPollMessage(CreatePollMessageRequest request) {
+        var currentUser = currentUserProvider.get();
+        var senderId = currentUser.getId();
+        var roomId = request.getRoomId();
+
+        UUID clientMsgId = parseClientMsgId(request.getClientMsgId());
+
+        Room room = roomRepository
+                .findById(roomId)
+                .orElseThrow(() -> new EntityNotFoundException("Phòng chat này không tồn tại"));
+        RoomParticipant roomParticipant = validateRoomMember(roomId, senderId);
+        validateReplyMessage(request.getRepliedMessageId(), roomId);
+
+        validatePollRequest(request);
+
+        var existed = messageRepository
+                .findByRoomIdAndSenderIdAndClientMsgId(roomId, senderId, clientMsgId)
+                .orElse(null);
+        if (existed != null) return chatMapper.toMessageResponseDto(existed);
+
+        Message message = new Message();
+        message.setRoomId(roomId);
+        message.setSenderId(senderId);
+        message.setContent(request.getQuestion().trim());
+        message.setType(MessageType.POLL);
+        message.setPoll(buildPoll(request));
+        message.setRepliedMessageId(request.getRepliedMessageId());
+        message.setClientMsgId(clientMsgId);
+        message.setCreatedAt(LocalDateTime.now());
+
+        try {
+            message = messageRepository.save(message);
+        } catch (DataIntegrityViolationException ex) {
+            message = messageRepository
+                    .findByRoomIdAndSenderIdAndClientMsgId(roomId, senderId, clientMsgId)
+                    .orElseThrow(() -> ex);
+        }
+
+        try {
+            room.setLastMessageId(message.getId());
+            room.setLastMessageAt(message.getCreatedAt());
+
+            Message finalMsg = message;
+            roomParticipant.setLastReadMessageId(finalMsg.getId());
+            roomParticipant.setLastReadAt(finalMsg.getCreatedAt());
+
+            eventPublisher.publishEvent(new MessageCreatedEvent(message));
+            eventPublisher.publishEvent(new RoomUpdatedEvent(
+                    room,
+                    roomParticipantRepository.findByRoom_Id(room.getId()),
+                    null
+            ));
+
+            var dto = chatMapper.toMessageResponseDto(message);
+            if (cacheEnabled) {
+                messageCachingService.cacheNewMessage(roomId, dto);
+            }
+
+            publishUserChatAudit(currentUser, request.getQuestion());
+            return dto;
+        } catch (RuntimeException ex) {
+            messageRepository.deleteById(message.getId());
+            throw ex;
+        }
+    }
+
+    @Override
+    public MessageResponse votePoll(String messageId, VotePollRequest request) {
+        var currentUser = currentUserProvider.get();
+        Long userId = currentUser.getId();
+
+        Message message = messageRepository
+                .findById(messageId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tin nhắn"));
+
+        validateRoomMember(message.getRoomId(), userId);
+
+        if (!message.isActive()) {
+            throw new IllegalArgumentException("Không thể bình chọn tin nhắn đã thu hồi");
+        }
+
+        if (message.getType() != MessageType.POLL || message.getPoll() == null) {
+            throw new IllegalArgumentException("Tin nhắn này không phải bình chọn");
+        }
+
+        Poll poll = message.getPoll();
+        if (poll.getExpiresAt() != null && poll.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Bình chọn đã hết hạn");
+        }
+
+        List<String> selectedOptionIds = request.getOptionIds() == null
+                ? List.of()
+                : request.getOptionIds().stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(optionId -> !optionId.isBlank())
+                .distinct()
+                .toList();
+
+        if (!poll.allowMultiple() && selectedOptionIds.size() > 1) {
+            throw new IllegalArgumentException("Bình chọn này chỉ cho phép chọn một lựa chọn");
+        }
+
+        Set<String> validOptionIds = poll.getOptions()
+                .stream()
+                .map(PollOption::getId)
+                .collect(Collectors.toSet());
+
+        for (String optionId : selectedOptionIds) {
+            if (!validOptionIds.contains(optionId)) {
+                throw new IllegalArgumentException("Lựa chọn bình chọn không hợp lệ");
+            }
+        }
+
+        poll.getOptions().forEach(option -> {
+            if (option.getVoterIds() == null) {
+                option.setVoterIds(new HashSet<>());
+            }
+            option.getVoterIds().remove(userId);
+            if (selectedOptionIds.contains(option.getId())) {
+                option.getVoterIds().add(userId);
+            }
+        });
+
+        message = messageRepository.save(message);
+        return syncUpdatedMessage(message);
+    }
+
+    @Override
     public MessageResponse forwardMessage(ForwardMessageRequest request) {
         var currentUser = currentUserProvider.get();
         var senderId = currentUser.getId();
@@ -511,6 +648,112 @@ public class MessageServiceImpl implements MessageService {
         return dto;
     }
 
+    @Override
+    public MessageResponse pinMessage(String messageId) {
+        var currentUser = currentUserProvider.get();
+
+        Message message = messageRepository
+                .findById(messageId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tin nhắn"));
+
+        validateRoomMember(message.getRoomId(), currentUser.getId());
+
+        if (!message.isActive()) {
+            throw new IllegalArgumentException("Không thể ghim tin nhắn đã thu hồi");
+        }
+
+        if (message.getType() == MessageType.SYSTEM) {
+            throw new IllegalArgumentException("Không thể ghim tin nhắn hệ thống");
+        }
+
+        if (message.isPinned()) {
+            return chatMapper.toMessageResponseDto(message);
+        }
+
+        message.setIsPinned(true);
+        message.setPinnedAt(LocalDateTime.now());
+        message.setPinnedByUserId(currentUser.getId());
+        message = messageRepository.save(message);
+
+        return syncUpdatedMessage(message);
+    }
+
+    @Override
+    public MessageResponse unpinMessage(String messageId) {
+        var currentUser = currentUserProvider.get();
+
+        Message message = messageRepository
+                .findById(messageId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tin nhắn"));
+
+        validateRoomMember(message.getRoomId(), currentUser.getId());
+
+        if (!message.isPinned()) {
+            return chatMapper.toMessageResponseDto(message);
+        }
+
+        message.setIsPinned(false);
+        message.setPinnedAt(null);
+        message.setPinnedByUserId(null);
+        message = messageRepository.save(message);
+
+        return syncUpdatedMessage(message);
+    }
+
+    @Override
+    public List<MessageResponse> getPinnedMessages(Long roomId) {
+        var currentUser = currentUserProvider.get();
+        validateRoomMember(roomId, currentUser.getId());
+
+        return messageRepository.findByRoomIdAndIsPinnedTrueOrderByPinnedAtDesc(roomId)
+                .stream()
+                .filter(Message::isActive)
+                .map(chatMapper::toMessageResponseDto)
+                .toList();
+    }
+
+    private void validatePollRequest(CreatePollMessageRequest request) {
+        if (request.getOptions() == null || request.getOptions().size() < 2) {
+            throw new IllegalArgumentException("Bình chọn cần ít nhất 2 lựa chọn");
+        }
+
+        if (request.getOptions().size() > 10) {
+            throw new IllegalArgumentException("Bình chọn không được vượt quá 10 lựa chọn");
+        }
+
+        Set<String> normalizedOptions = request.getOptions()
+                .stream()
+                .map(option -> option == null ? "" : option.trim().toLowerCase(Locale.ROOT))
+                .collect(Collectors.toSet());
+
+        if (normalizedOptions.size() != request.getOptions().size()) {
+            throw new IllegalArgumentException("Các lựa chọn bình chọn không được trùng nhau");
+        }
+
+        if (request.getExpiresAt() != null && !request.getExpiresAt().isAfter(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Thời gian hết hạn bình chọn phải nằm trong tương lai");
+        }
+    }
+
+    private Poll buildPoll(CreatePollMessageRequest request) {
+        List<PollOption> options = request.getOptions()
+                .stream()
+                .map(String::trim)
+                .map(optionText -> new PollOption(
+                        UUID.randomUUID().toString(),
+                        optionText,
+                        new HashSet<>()
+                ))
+                .toList();
+
+        return new Poll(
+                request.getQuestion().trim(),
+                options,
+                Boolean.TRUE.equals(request.getAllowMultiple()),
+                request.getExpiresAt()
+        );
+    }
+
     private Message validateForwardSourceMessage(String sourceMessageId, Long senderId) {
         var sourceMessage = messageRepository
                 .findById(sourceMessageId)
@@ -524,12 +767,33 @@ public class MessageServiceImpl implements MessageService {
             throw new IllegalArgumentException("Không thể chuyển tiếp tin nhắn hệ thống");
         }
 
+        if (sourceMessage.getType() == MessageType.POLL) {
+            throw new IllegalArgumentException("Không thể chuyển tiếp bình chọn");
+        }
+
         var sourceMemberId = new RoomMemberId(sourceMessage.getRoomId(), senderId);
         if (!roomParticipantRepository.existsById(sourceMemberId)) {
             throw new AccessDeniedException("Bạn không có quyền truy cập tin nhắn nguồn");
         }
 
         return sourceMessage;
+    }
+
+    private RoomParticipant validateRoomMember(Long roomId, Long userId) {
+        var memberId = new RoomMemberId(roomId, userId);
+        return roomParticipantRepository
+                .findById(memberId)
+                .orElseThrow(() -> new AccessDeniedException("Bạn không phải thành viên của phòng chat này"));
+    }
+
+    private MessageResponse syncUpdatedMessage(Message message) {
+        var dto = chatMapper.toMessageResponseDto(message);
+        if (cacheEnabled) {
+            messageCachingService.updateMessage(message.getRoomId(), message.getId(), dto);
+        }
+
+        eventPublisher.publishEvent(new MessageUpdatedEvent(message));
+        return dto;
     }
 
     private UUID parseClientMsgId(String clientMsgIdRaw) {
@@ -632,6 +896,9 @@ public class MessageServiceImpl implements MessageService {
 
         // Disable message
         messageToRecall.setIsActive(false);
+        messageToRecall.setIsPinned(false);
+        messageToRecall.setPinnedAt(null);
+        messageToRecall.setPinnedByUserId(null);
 
         deleteMessageMediaSafely(messageToRecall);
 
@@ -663,7 +930,8 @@ public class MessageServiceImpl implements MessageService {
     private void deleteMessageMediaSafely(Message message) {
         if (message.getType() == MessageType.TEXT
                 || message.getType() == MessageType.SYSTEM
-                || message.getType() == MessageType.WEATHER) {
+                || message.getType() == MessageType.WEATHER
+                || message.getType() == MessageType.POLL) {
             return;
         }
 

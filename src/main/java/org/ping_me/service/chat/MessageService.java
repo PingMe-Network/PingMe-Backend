@@ -2,10 +2,12 @@ package org.ping_me.service.chat;
 
 import org.ping_me.dto.request.chat.message.ForwardMessageRequest;
 import org.ping_me.dto.request.chat.message.ForwardMessagesRequest;
+import org.ping_me.dto.request.chat.message.CreatePollMessageRequest;
 import org.ping_me.dto.request.chat.message.EditMessageRequest;
 import org.ping_me.dto.request.chat.message.MarkReadRequest;
 import org.ping_me.dto.request.chat.message.SendMessageRequest;
 import org.ping_me.dto.request.chat.message.SendWeatherMessageRequest;
+import org.ping_me.dto.request.chat.message.VotePollRequest;
 import org.ping_me.dto.response.chat.message.HistoryMessageResponse;
 import org.ping_me.dto.response.chat.message.DeletedMessageResponse;
 import org.ping_me.dto.response.chat.message.MessageRecalledResponse;
@@ -43,6 +45,10 @@ public interface MessageService {
     // 3. Tạo SendMessageRequest với type = WEATHER và tái sử dụng pipeline sendMessage().
     MessageResponse sendWeatherMessage(SendWeatherMessageRequest req);
 
+    MessageResponse createPollMessage(CreatePollMessageRequest request);
+
+    MessageResponse votePoll(String messageId, VotePollRequest request);
+
     MessageResponse forwardMessage(ForwardMessageRequest request);
 
     List<MessageResponse> forwardMessages(ForwardMessagesRequest request);
@@ -50,6 +56,12 @@ public interface MessageService {
     DeletedMessageResponse deleteMessageForMe(String messageId);
 
     MessageResponse editMessage(String messageId, EditMessageRequest request);
+
+    MessageResponse pinMessage(String messageId);
+
+    MessageResponse unpinMessage(String messageId);
+
+    List<MessageResponse> getPinnedMessages(Long roomId);
 
     MessageRecalledResponse recallMessage(String messageId);
 
