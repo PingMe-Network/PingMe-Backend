@@ -29,13 +29,17 @@ public class SecurityConfiguration {
 
             // Health check
             "/actuator/health",
-            "/actuator/health/**"
+            "/actuator/health/**",
+
+            // Spring Boot error dispatch
+            "/error"
     };
 
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity httpSecurity,
-            CustomAuthenticationEntryPoint customAuthenticationEntryPoint
+            CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
+            CustomAccessDeniedHandler customAccessDeniedHandler
     ) throws Exception {
         httpSecurity
                 // 1. TẮT CORS (Gateway đã thầu vụ này rồi)
@@ -58,6 +62,9 @@ public class SecurityConfiguration {
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(Customizer.withDefaults())
                         .authenticationEntryPoint(customAuthenticationEntryPoint)
+                )
+                .exceptionHandling(exception -> exception
+                        .accessDeniedHandler(customAccessDeniedHandler)
                 );
 
         return httpSecurity.build();

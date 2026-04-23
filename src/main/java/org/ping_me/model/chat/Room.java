@@ -52,6 +52,6 @@ public class Room extends BaseEntity {
     private Boolean isActive = true;
 
     public boolean isActive() {
-        return Boolean.TRUE.equals(isActive);
+        return !Boolean.FALSE.equals(isActive);
     }
 }

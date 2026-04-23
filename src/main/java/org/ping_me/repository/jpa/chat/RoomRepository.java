@@ -22,7 +22,6 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
                 select r from Room r
                 join RoomParticipant rp on rp.room = r
                 where rp.id.userId = :userId
-                and r.isActive = true
                 order by r.lastMessageAt desc nulls last, r.id desc
             """)
     Page<Room> findAllByMember(@Param("userId") Long userId, Pageable pageable);

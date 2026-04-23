@@ -367,8 +367,8 @@ public class RoomServiceImpl implements RoomService {
         requireOwner(caller, "Chỉ trưởng nhóm mới có quyền giải tán nhóm");
 
         var participants = roomParticipantRepository.findByRoom_Id(roomId);
-        room.setIsActive(false);
-        roomRepository.save(room);
+        roomParticipantRepository.deleteAll(participants);
+        roomRepository.delete(room);
 
         eventPublisher.publishEvent(new RoomDeletedEvent(
                 room,
@@ -678,9 +678,6 @@ public class RoomServiceImpl implements RoomService {
 
         if (room.getRoomType() != RoomType.GROUP)
             throw new IllegalArgumentException("Chỉ phòng nhóm mới được thực hiện thao tác này");
-
-        if (!room.isActive())
-            throw new IllegalArgumentException("Nhóm đã bị giải tán");
 
         return room;
     }
