@@ -10,6 +10,7 @@ import org.ping_me.dto.request.chat.message.SendWeatherMessageRequest;
 import org.ping_me.dto.request.chat.message.VotePollRequest;
 import org.ping_me.dto.response.chat.message.HistoryMessageResponse;
 import org.ping_me.dto.response.chat.message.DeletedMessageResponse;
+import org.ping_me.dto.response.chat.message.GroupMessageSummaryResponse;
 import org.ping_me.dto.response.chat.message.MessageRecalledResponse;
 import org.ping_me.dto.response.chat.message.MessageResponse;
 import org.ping_me.dto.response.chat.message.ReadStateResponse;
@@ -70,6 +71,8 @@ public interface MessageService {
     HistoryMessageResponse getHistoryMessages(
             Long roomId, String beforeId, Integer size
     );
+
+    GroupMessageSummaryResponse summarizeLatestGroupMessages(Long roomId);
 
     Message createSystemMessage(Room room, String content, User user);
 }
