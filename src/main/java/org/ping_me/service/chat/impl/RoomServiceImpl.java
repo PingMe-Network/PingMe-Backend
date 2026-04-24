@@ -264,10 +264,6 @@ public class RoomServiceImpl implements RoomService {
         // --------------------------------------------------------------------------------
         // Xóa thành viên
         // --------------------------------------------------------------------------------
-        int count = roomParticipantRepository.findByRoom_Id(room.getId()).size();
-        if (count <= 3)
-            throw new IllegalArgumentException("Phòng phải có ít nhất 3 thành viên");
-
         roomParticipantRepository.delete(target);
         var members = roomParticipantRepository.findByRoom_Id(room.getId());
 
@@ -306,8 +302,11 @@ public class RoomServiceImpl implements RoomService {
         var caller = getParticipant(roomId, currentUser.getId(), "Bạn không thuộc nhóm");
         var participantsBeforeLeave = roomParticipantRepository.findByRoom_Id(roomId);
 
-        if (participantsBeforeLeave.size() <= 3)
-            throw new IllegalArgumentException("Phòng phải có ít nhất 3 thành viên. Trưởng nhóm có thể giải tán nhóm");
+        // If owner is the last remaining member and leaves, auto-dissolve the group.
+        if (caller.getRole() == RoomRole.OWNER && participantsBeforeLeave.size() == 1) {
+            dissolveGroupInternal(room, participantsBeforeLeave, currentUser.getId());
+            return null;
+        }
 
         if (caller.getRole() == RoomRole.OWNER) {
             Long newOwnerId = request == null ? null : request.getNewOwnerId();
@@ -369,16 +368,7 @@ public class RoomServiceImpl implements RoomService {
         requireOwner(caller, "Chỉ trưởng nhóm mới có quyền giải tán nhóm");
 
         var participants = roomParticipantRepository.findByRoom_Id(roomId);
-        // "Delete for me" records keep FK(room_id -> rooms.id). Must clean them first.
-        deletedMessageRepository.deleteByIdRoomId(roomId);
-        roomParticipantRepository.deleteAll(participants);
-        roomRepository.delete(room);
-
-        eventPublisher.publishEvent(new RoomDeletedEvent(
-                room,
-                participants,
-                currentUser.getId()
-        ));
+        dissolveGroupInternal(room, participants, currentUser.getId());
     }
 
     @Override
@@ -728,6 +718,20 @@ public class RoomServiceImpl implements RoomService {
         } catch (DataIntegrityViolationException ignored) {
 
         }
+    }
+
+    private void dissolveGroupInternal(Room room, List<RoomParticipant> participants, Long actorUserId) {
+        Long roomId = room.getId();
+        // "Delete for me" records keep FK(room_id -> rooms.id). Must clean them first.
+        deletedMessageRepository.deleteByIdRoomId(roomId);
+        roomParticipantRepository.deleteAll(participants);
+        roomRepository.delete(room);
+
+        eventPublisher.publishEvent(new RoomDeletedEvent(
+                room,
+                participants,
+                actorUserId
+        ));
     }
 
 }
